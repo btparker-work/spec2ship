@@ -1,0 +1,26 @@
+{
+  "$schema": "https://code.claude.com/schemas/plugin.json",
+  "name": "s2s",
+  "version": "0.1.0",
+  "description": "Spec2Ship: AI-assisted development framework for the full software lifecycle - from specifications to shipping",
+  "author": {
+    "name": "Spec2Ship",
+    "url": "https://github.com/spec2ship"
+  },
+  "repository": "https://github.com/spec2ship/spec2ship",
+  "license": "MIT",
+  "keywords": [
+    "development",
+    "planning",
+    "architecture",
+    "specifications",
+    "adr",
+    "roundtable",
+    "multi-repo"
+  ],
+  "capabilities": {
+    "commands": true,
+    "skills": true,
+    "agents": true
+  }
+}
