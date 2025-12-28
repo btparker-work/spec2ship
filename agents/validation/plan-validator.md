@@ -1,6 +1,9 @@
 ---
 name: plan-validator
-description: Use this agent to validate implementation plans for completeness, feasibility, and alignment with project standards.
+description: "Use this agent when user asks to 'validate a plan', 'check plan completeness',
+  'review implementation plan', 'verify plan is ready'. Validates implementation plans for
+  completeness, feasibility, and alignment with project standards.
+  Example: 'Is this plan ready for execution?'"
 model: haiku
 color: green
 tools: ["Read", "Glob"]

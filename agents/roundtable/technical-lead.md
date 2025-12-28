@@ -1,7 +1,10 @@
 ---
 name: roundtable-technical-lead
-description: Technical Lead participant in Technical Roundtable discussions. Provides implementation perspective on feasibility, code quality, and development approach.
-model: sonnet
+description: "Use this agent when user asks to 'assess implementation feasibility', 'review code approach',
+  'estimate development effort', 'evaluate technical risk'. Activated by facilitator during
+  roundtable sessions. Provides implementation perspective on feasibility, code quality, and
+  development approach. Example: 'Is this approach feasible with our current stack?'"
+model: inherit
 color: green
 tools: ["Read", "Glob", "Grep"]
 ---

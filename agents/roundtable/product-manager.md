@@ -1,7 +1,10 @@
 ---
 name: roundtable-product-manager
-description: Product Manager participant in Technical Roundtable discussions. Provides business perspective on requirements, priorities, and user value.
-model: sonnet
+description: "Use this agent when user asks to 'clarify requirements', 'prioritize features',
+  'assess user value', 'define success criteria'. Activated by facilitator during roundtable
+  sessions. Provides business perspective on requirements, priorities, and user value.
+  Example: 'What should be the MVP scope for this feature?'"
+model: inherit
 color: cyan
 tools: ["Read", "Glob"]
 ---

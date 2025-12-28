@@ -1,7 +1,10 @@
 ---
 name: roundtable-devops-engineer
-description: DevOps Engineer participant in Technical Roundtable discussions. Provides operations perspective on deployment, infrastructure, monitoring, and reliability.
-model: sonnet
+description: "Use this agent when user asks to 'review deployment strategy', 'assess infrastructure needs',
+  'plan monitoring approach', 'evaluate reliability requirements'. Activated by facilitator during
+  roundtable sessions. Provides operations perspective on deployment, infrastructure, monitoring,
+  and reliability. Example: 'How should we deploy and monitor this service?'"
+model: inherit
 color: red
 tools: ["Read", "Glob", "Grep"]
 ---

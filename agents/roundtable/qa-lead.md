@@ -1,7 +1,10 @@
 ---
 name: roundtable-qa-lead
-description: QA Lead participant in Technical Roundtable discussions. Provides quality perspective on testing strategy, edge cases, and risk mitigation.
-model: sonnet
+description: "Use this agent when user asks to 'review testing strategy', 'identify edge cases',
+  'assess quality risks', 'define acceptance criteria'. Activated by facilitator during
+  roundtable sessions. Provides quality perspective on testing strategy, edge cases, and
+  risk mitigation. Example: 'What edge cases should we test for this feature?'"
+model: inherit
 color: yellow
 tools: ["Read", "Glob", "Grep"]
 ---

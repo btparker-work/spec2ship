@@ -1,7 +1,10 @@
 ---
 name: codebase-analyzer
-description: Use this agent to analyze existing codebase structure, patterns, and architecture before planning new features.
-model: sonnet
+description: "Use this agent when user asks to 'analyze the codebase', 'understand code structure',
+  'find existing patterns', 'trace how feature X works', 'map the architecture'.
+  Analyzes existing codebase structure, patterns, and architecture before planning new features.
+  Example: 'How is authentication implemented in this codebase?'"
+model: inherit
 color: yellow
 tools: ["Read", "Glob", "Grep", "Bash"]
 ---

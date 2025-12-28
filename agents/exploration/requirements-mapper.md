@@ -1,7 +1,10 @@
 ---
 name: requirements-mapper
-description: Use this agent to map requirements to existing code, identify gaps, and trace feature coverage across the codebase.
-model: sonnet
+description: "Use this agent when user asks to 'map requirements to code', 'find implementation gaps',
+  'trace feature coverage', 'check which requirements are implemented', 'identify missing features'.
+  Maps requirements to existing code, identifies gaps, and traces feature coverage across the codebase.
+  Example: 'Which requirements from the spec are already implemented?'"
+model: inherit
 color: cyan
 tools: ["Read", "Glob", "Grep"]
 ---

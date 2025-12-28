@@ -1,7 +1,10 @@
 ---
 name: roundtable-software-architect
-description: Software Architect participant in Technical Roundtable discussions. Provides architecture perspective on system design, patterns, and technical decisions.
-model: sonnet
+description: "Use this agent when user asks to 'get architecture perspective', 'review system design',
+  'evaluate architectural trade-offs', 'assess component structure'. Activated by facilitator
+  during roundtable sessions. Provides architecture perspective on system design, patterns, and
+  technical decisions. Example: 'What does the architect think about this API design?'"
+model: inherit
 color: blue
 tools: ["Read", "Glob", "Grep"]
 ---

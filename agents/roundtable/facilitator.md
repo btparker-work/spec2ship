@@ -1,7 +1,10 @@
 ---
 name: roundtable-facilitator
-description: Use this agent to facilitate Technical Roundtable discussions. Orchestrates turns between domain experts, tracks consensus, and synthesizes outcomes.
-model: sonnet
+description: "Use this agent when user asks to 'start a roundtable', 'facilitate technical discussion',
+  'run design review meeting', 'orchestrate expert discussion'. Orchestrates turns between domain
+  experts, tracks consensus, and synthesizes outcomes into ADRs or plans.
+  Example: 'Start a roundtable about API versioning strategy'"
+model: opus
 color: magenta
 tools: ["Read", "Write", "Glob", "Task", "AskUserQuestion"]
 ---

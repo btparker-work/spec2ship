@@ -1,6 +1,9 @@
 ---
 name: spec-validator
-description: Use this agent to validate specifications for completeness, consistency, and adherence to standards (ISO 25010, arc42).
+description: "Use this agent when user asks to 'validate specifications', 'check documentation quality',
+  'review requirements completeness', 'verify arc42 compliance'. Validates specifications for
+  completeness, consistency, and adherence to standards (ISO 25010, arc42).
+  Example: 'Are our specifications complete and consistent?'"
 model: haiku
 color: green
 tools: ["Read", "Glob"]
