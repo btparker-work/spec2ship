@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "s2s",
-      "source": ".",
+      "source": "./",
       "description": "AI-assisted development framework for the full software lifecycle",
       "version": "0.1.0"
     }
