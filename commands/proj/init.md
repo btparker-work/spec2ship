@@ -14,28 +14,78 @@ argument-hint: [--workspace | --workspace-hub | --component]
 - Parent has workspace: !`[ -f "../.s2s/workspace.yaml" ] && echo "yes" || echo "no"`
 - Subdirectories with git: !`for d in */; do [ -d "$d/.git" ] && echo "$d"; done 2>/dev/null | tr -d '/' | head -5 || echo "none"`
 
-## Instructions
+---
 
-### Parse arguments
+## Phase 1: Determine Mode
 
-Check $ARGUMENTS for mode:
-- **(no flags)**: Initialize as standalone project
-- **--workspace**: Initialize parent directory as workspace
-- **--workspace-hub**: Initialize current repo as workspace hub
-- **--component**: Initialize as component linking to workspace
+Goal: Parse arguments and determine initialization type.
 
-### Check existing initialization
+Actions:
+1. Check $ARGUMENTS for flags:
+   - **(no flags)**: Standalone project
+   - **--workspace**: Parent directory workspace
+   - **--workspace-hub**: Stack repo as workspace hub
+   - **--component**: Component linking to workspace
+2. Store the selected mode for subsequent phases.
 
-If S2S already initialized is "yes":
-- Warn user that .s2s/ already exists
-- Ask if they want to reinitialize using AskUserQuestion
-- If no, stop
+---
+
+## Phase 2: Validate Environment
+
+Goal: Check prerequisites and handle existing initialization.
+
+Actions:
+1. If S2S already initialized is "yes":
+   - Warn user that .s2s/ already exists
+   - Ask if they want to reinitialize using AskUserQuestion
+   - If user declines, stop execution
+2. For standalone/workspace modes: if not a git repo, suggest "git init" but allow continuing
+3. For component mode: verify workspace can be located (parent or sibling)
+
+---
+
+## Phase 3: Confirm with User
+
+Goal: Present initialization plan and get user approval.
+
+Actions:
+1. Display summary of what will be created:
+   - Project type (standalone/workspace/workspace-hub/component)
+   - Directories to create
+   - Files to generate
+   - Configuration values
+2. Ask for confirmation using AskUserQuestion
+3. If user declines, stop execution
+
+---
+
+## Phase 4: Create Structure
+
+Goal: Generate all required files and directories.
+
+Actions:
+1. Create directory structure using Bash mkdir
+2. Generate configuration files using Write tool
+3. Apply mode-specific content (see Mode Specifications below)
+
+---
+
+## Phase 5: Output Results
+
+Goal: Confirm success and guide next steps.
+
+Actions:
+1. Display confirmation message with created resources
+2. Show relevant next steps based on project type
+3. Suggest immediate actions (review config, define requirements, create plan)
+
+---
+
+## Mode Specifications
 
 ### Mode: Standalone Project (no flags)
 
-If not a git repo, suggest running "git init" first but allow continuing.
-
-Create this structure using Write and Bash mkdir:
+**Structure**:
 
     .s2s/
     ├── config.yaml
@@ -61,7 +111,7 @@ Create this structure using Write and Bash mkdir:
 
     CLAUDE.md
 
-**config.yaml** content:
+**config.yaml**:
 
     name: "{directory-name}"
     type: "standalone"
@@ -78,7 +128,7 @@ Create this structure using Write and Bash mkdir:
         - technical-lead
       strategy: "round-robin"
 
-**state.yaml** content:
+**state.yaml**:
 
     current_plan: null
     plans: {}
@@ -86,7 +136,7 @@ Create this structure using Write and Bash mkdir:
 
 **CONTEXT.md**: Import from plugin templates or create with project overview.
 
-**CLAUDE.md** content:
+**CLAUDE.md**:
 
     # {Project Name}
 
@@ -96,7 +146,7 @@ Create this structure using Write and Bash mkdir:
 
 ### Mode: Workspace (--workspace)
 
-Create in current directory:
+**Structure**:
 
     .s2s/
     ├── workspace.yaml
@@ -109,7 +159,7 @@ Create in current directory:
     docs/
     └── (same structure as standalone)
 
-**workspace.yaml** content:
+**workspace.yaml**:
 
     name: "{directory-name}"
     type: "workspace"
@@ -133,9 +183,9 @@ Same as workspace but:
 
 If parent has workspace is "no":
 - Search sibling directories for workspace-hub
-- If not found, ask user for workspace path
+- If not found, ask user for workspace path using AskUserQuestion
 
-Create minimal structure:
+**Structure**:
 
     .s2s/
     ├── component.yaml
@@ -143,22 +193,18 @@ Create minimal structure:
 
     CLAUDE.md
 
-**component.yaml** content:
+**component.yaml**:
 
     name: "{directory-name}"
     workspace:
       type: "{parent-directory | peer-repo}"
       path: "{relative-path-to-workspace}"
 
-**CLAUDE.md** content referencing workspace context.
+**CLAUDE.md**: Content referencing workspace context.
 
-### Confirm before creating
+---
 
-Present summary of what will be created and ask for confirmation.
-
-### Output
-
-Display confirmation:
+## Output Template
 
     Spec2Ship initialized successfully!
 
