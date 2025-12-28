@@ -14,7 +14,7 @@ argument-hint: [--workspace | --workspace-hub | --component [path]]
 - S2S config: !`ls .s2s/config.yaml`
 - S2S workspace: !`ls .s2s/workspace.yaml`
 - S2S component: !`ls .s2s/component.yaml`
-- Subdirectories: !`ls -d */`
+- Directory contents: !`ls -la`
 
 ---
 
@@ -25,7 +25,7 @@ Based on the context output above, determine:
 - **Directory name**: Extract the last segment from the `pwd` output
 - **Is git repo**: If `ls -d .git` succeeded (no error) → "yes", otherwise → "no"
 - **S2S already initialized**: If `ls -d .s2s` succeeded → "yes", otherwise → "no"
-- **Subdirs with git**: Check which subdirectories have a `.git` folder by examining the Subdirectories output
+- **Subdirectories**: From `ls -la` output, identify entries starting with `d` (directories) excluding `.` and `..`
 
 ---
 
