@@ -213,15 +213,19 @@ argument-hint: "topic" [--branch]
 
 Context commands (prefixed with `!`) are executed before the Instructions phase to gather environment information. These commands are **also subject to `allowed-tools` restrictions**.
 
-**Critical Rule: Use `test` instead of `[`**
+**Critical Rules**
 
-The shell test syntax `[ ... ]` uses `[` as the command name, which cannot be matched by patterns (special character). Use `test` instead:
+1. **Use `test` instead of `[`**: The shell test syntax `[ ... ]` uses `[` as the command name, which cannot be matched by patterns. Use `test` instead.
 
-| Incorrect (fails) | Correct (works) |
-|-------------------|-----------------|
-| `[ -f "file" ]` | `test -f "file"` |
-| `[ -d "dir" ]` | `test -d "dir"` |
-| `[ -z "$var" ]` | `test -z "$var"` |
+2. **Avoid command substitution `$(...)`**: Command substitution is blocked for security. Use pipes instead.
+
+| Incorrect (fails) | Correct (works) | Reason |
+|-------------------|-----------------|--------|
+| `[ -f "file" ]` | `test -f "file"` | `[` not matchable |
+| `[ -d "dir" ]` | `test -d "dir"` | `[` not matchable |
+| `[ -z "$var" ]` | `test -z "$var"` | `[` not matchable |
+| `basename "$(pwd)"` | `pwd \| xargs basename` | `$()` blocked |
+| `echo "$(date)"` | `date` | `$()` blocked |
 
 **Common Context Patterns**
 
@@ -230,13 +234,14 @@ Commands gathering context typically need these patterns in `allowed-tools`:
 | Pattern | Use Case | Example |
 |---------|----------|---------|
 | `Bash(test:*)` | File/directory existence checks | `test -f ".s2s/config.yaml"` |
+| `Bash(pwd:*)` | Get current directory | `pwd \| xargs basename` |
 | `Bash(echo:*)` | Output fallback values | `... \|\| echo "none"` |
 | `Bash(grep:*)` | Extract values from files | `grep "key:" file.yaml` |
 | `Bash(cut:*)` | Parse extracted values | `cut -d: -f2` |
 | `Bash(tr:*)` | Transform characters | `tr -d ' "'` |
 | `Bash(sed:*)` | Text substitution | `sed 's/old/new/'` |
 | `Bash(head:*)` | Limit output | `head -5` |
-| `Bash(basename:*)` | Extract filename | `basename "$(pwd)"` |
+| `Bash(basename:*)` | Extract filename (in pipe) | `pwd \| xargs basename` |
 | `Bash(xargs:*)` | Pipe transformation | `xargs -I {} basename {}` |
 
 **Shell Constructs to Avoid**
@@ -254,16 +259,18 @@ These shell constructs cannot be matched by patterns:
 ```markdown
 ## Context
 
+- Current directory: !`pwd | xargs basename`
 - Project type: !`test -f ".s2s/config.yaml" && echo "standalone" || echo "unknown"`
 - Current plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
 - Is git repo: !`test -d ".git" && echo "yes" || echo "no"`
+- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
 - Subdirs with git: !`(ls -d */.git 2>/dev/null | sed 's|/.git||' | head -5) || echo "none"`
 ```
 
 With corresponding `allowed-tools`:
 
 ```yaml
-allowed-tools: Bash(test:*), Bash(grep:*), Bash(cut:*), Bash(tr:*), Bash(ls:*), Bash(sed:*), Bash(head:*), Bash(echo:*), Read, Write
+allowed-tools: Bash(pwd:*), Bash(test:*), Bash(git:*), Bash(grep:*), Bash(cut:*), Bash(tr:*), Bash(ls:*), Bash(sed:*), Bash(head:*), Bash(xargs:*), Bash(echo:*), Read, Write
 ```
 
 ---
@@ -757,6 +764,7 @@ Common mistakes when writing plugin components:
 | Anti-Pattern | Problem | Correct Approach |
 |--------------|---------|------------------|
 | Using `[ ... ]` in context | `[` not matchable by patterns | Use `test ...` instead |
+| Using `$(...)` substitution | Blocked for security | Use pipes: `pwd \| xargs basename` |
 | Using `for`/`if`/`while` in context | Shell constructs not matchable | Use pipe commands with `ls`, `grep` |
 | Bash code blocks as pseudo-code | Claude executes them literally | Use prose instructions |
 | Goal/Action in simple commands | Over-engineering, adds noise | Direct step-by-step instructions |

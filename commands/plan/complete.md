@@ -9,7 +9,7 @@ argument-hint: [--merge] [--no-delete-branch]
 ## Context
 
 - Current plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
-- Git status clean: !`test -z "$(git status --porcelain 2>/dev/null)" && echo "clean" || echo "dirty"`
+- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
 - Current branch: !`git branch --show-current 2>/dev/null || echo "unknown"`
 - Default branch: !`(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || echo "main"`
 

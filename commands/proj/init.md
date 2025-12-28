@@ -1,6 +1,6 @@
 ---
 description: Initialize a Spec2Ship project. Use --workspace for parent directory, --workspace-hub for stack repo, --component to link to workspace.
-allowed-tools: Bash(mkdir:*), Bash(git:*), Bash(ls:*), Bash(test:*), Bash(basename:*), Bash(sed:*), Bash(head:*), Bash(echo:*), Read, Write, Glob, Grep, TodoWrite, AskUserQuestion
+allowed-tools: Bash(mkdir:*), Bash(git:*), Bash(ls:*), Bash(pwd:*), Bash(test:*), Bash(basename:*), Bash(sed:*), Bash(head:*), Bash(xargs:*), Bash(echo:*), Read, Write, Glob, Grep, TodoWrite, AskUserQuestion
 argument-hint: [--workspace | --workspace-hub | --component]
 ---
 
@@ -8,7 +8,7 @@ argument-hint: [--workspace | --workspace-hub | --component]
 
 ## Context
 
-- Current directory: !`basename "$(pwd)"`
+- Current directory: !`pwd | xargs basename`
 - Is git repo: !`test -d ".git" && echo "yes" || echo "no"`
 - S2S already initialized: !`test -d ".s2s" && echo "yes" || echo "no"`
 - Parent has workspace: !`test -f "../.s2s/workspace.yaml" && echo "yes" || echo "no"`

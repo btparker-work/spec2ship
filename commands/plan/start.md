@@ -12,7 +12,7 @@ argument-hint: "plan-id"
 - Available plans: !`(ls .s2s/plans/*.md 2>/dev/null | xargs -I {} basename {} .md) || echo "NO_PLANS"`
 - Current plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
 - Current git branch: !`git branch --show-current 2>/dev/null || echo "unknown"`
-- Git status clean: !`test -z "$(git status --porcelain 2>/dev/null)" && echo "clean" || echo "dirty"`
+- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
 
 ## Instructions
 

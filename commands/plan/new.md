@@ -12,7 +12,7 @@ argument-hint: "topic" [--branch]
 - Current timestamp: !`date +"%Y%m%d-%H%M%S"`
 - ISO timestamp: !`date -u +"%Y-%m-%dT%H:%M:%SZ"`
 - Existing feature branches: !`(git branch --list 'feature/F*' 2>/dev/null | wc -l | tr -d ' ') || echo "0"`
-- Git status clean: !`test -z "$(git status --porcelain 2>/dev/null)" && echo "clean" || echo "dirty"`
+- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
 - Plans directory exists: !`test -d ".s2s/plans" && echo "yes" || echo "no"`
 
 ## Instructions
