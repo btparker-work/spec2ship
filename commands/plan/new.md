@@ -1,6 +1,6 @@
 ---
 description: Create a new implementation plan. Use --branch to also create a git feature branch.
-allowed-tools: Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(wc:*), Bash(test:*), Bash(tr:*), Bash(echo:*), Read, Write, Glob, Edit, TodoWrite, AskUserQuestion
+allowed-tools: Bash(date:*), Bash(ls:*), Bash(mkdir:*), Bash(git:*), Read, Write, Glob, Edit, TodoWrite, AskUserQuestion
 argument-hint: "topic" [--branch]
 ---
 
@@ -8,12 +8,23 @@ argument-hint: "topic" [--branch]
 
 ## Context
 
-- Project type: !`test -f ".s2s/config.yaml" && echo "standalone" || (test -f ".s2s/workspace.yaml" && echo "workspace" || (test -f ".s2s/component.yaml" && echo "component" || echo "NOT_S2S"))`
+- S2S config: !`ls .s2s/config.yaml`
+- S2S workspace: !`ls .s2s/workspace.yaml`
+- S2S component: !`ls .s2s/component.yaml`
 - Current timestamp: !`date +"%Y%m%d-%H%M%S"`
 - ISO timestamp: !`date -u +"%Y-%m-%dT%H:%M:%SZ"`
-- Existing feature branches: !`(git branch --list 'feature/F*' 2>/dev/null | wc -l | tr -d ' ') || echo "0"`
-- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
-- Plans directory exists: !`test -d ".s2s/plans" && echo "yes" || echo "no"`
+- Feature branches: !`git branch --list 'feature/F*'`
+- Git status: !`git status --porcelain`
+- Plans directory: !`ls -d .s2s/plans`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Project type**: If config.yaml exists → "standalone", if workspace.yaml exists → "workspace", if component.yaml exists → "component", otherwise → "NOT_S2S"
+- **Existing feature branches count**: Count the lines in Feature branches output (0 if empty/error)
+- **Git status clean**: If Git status output is empty → "clean", otherwise → "dirty"
+- **Plans directory exists**: If `ls -d .s2s/plans` succeeded → "yes", otherwise → "no"
 
 ## Instructions
 

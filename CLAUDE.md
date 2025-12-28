@@ -211,66 +211,79 @@ argument-hint: "topic" [--branch]
 
 #### Context Section Patterns
 
-Context commands (prefixed with `!`) are executed before the Instructions phase to gather environment information. These commands are **also subject to `allowed-tools` restrictions**.
+Context commands (prefixed with `!`) gather environment information before Instructions execute.
 
-**Critical Rules**
+**Critical Limitation**: Claude Code blocks ALL shell operators in context commands for security:
+- NO pipes: `|`
+- NO logical operators: `&&`, `||`
+- NO subshells: `()`
+- NO redirects: `>`, `2>`
+- NO command substitution: `$()`
 
-1. **Use `test` instead of `[`**: The shell test syntax `[ ... ]` uses `[` as the command name, which cannot be matched by patterns. Use `test` instead.
+**Rule: Use ONLY single, simple commands**
 
-2. **Avoid command substitution `$(...)`**: Command substitution is blocked for security. Use pipes instead.
+| Correct | Incorrect |
+|---------|-----------|
+| `!`git status`` | `!`git status \| grep something`` |
+| `!`ls .s2s/config.yaml`` | `!`test -f .s2s/config.yaml && echo yes`` |
+| `!`cat .s2s/state.yaml`` | `!`grep "key:" file \| cut -d: -f2`` |
+| `!`pwd`` | `!`pwd \| xargs basename`` |
+| `!`git branch --show-current`` | `!`git branch --show-current \|\| echo "unknown"`` |
 
-| Incorrect (fails) | Correct (works) | Reason |
-|-------------------|-----------------|--------|
-| `[ -f "file" ]` | `test -f "file"` | `[` not matchable |
-| `[ -d "dir" ]` | `test -d "dir"` | `[` not matchable |
-| `[ -z "$var" ]` | `test -z "$var"` | `[` not matchable |
-| `basename "$(pwd)"` | `pwd \| xargs basename` | `$()` blocked |
-| `echo "$(date)"` | `date` | `$()` blocked |
+**Pattern: Move Logic to Instructions**
+
+Context gathers raw data, an "Interpret Context" section analyzes it:
+
+```markdown
+## Context
+
+- Config file: !`ls .s2s/config.yaml`
+- Git status: !`git status --porcelain`
+- State file: !`cat .s2s/state.yaml`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Project initialized**: If "ls .s2s/config.yaml" succeeded → yes
+- **Git status clean**: If Git status output is empty → clean, otherwise → dirty
+- **Current plan**: Extract `current_plan:` value from State file content
+```
 
 **Common Context Patterns**
 
-Commands gathering context typically need these patterns in `allowed-tools`:
-
 | Pattern | Use Case | Example |
 |---------|----------|---------|
-| `Bash(test:*)` | File/directory existence checks | `test -f ".s2s/config.yaml"` |
-| `Bash(pwd:*)` | Get current directory | `pwd \| xargs basename` |
-| `Bash(echo:*)` | Output fallback values | `... \|\| echo "none"` |
-| `Bash(grep:*)` | Extract values from files | `grep "key:" file.yaml` |
-| `Bash(cut:*)` | Parse extracted values | `cut -d: -f2` |
-| `Bash(tr:*)` | Transform characters | `tr -d ' "'` |
-| `Bash(sed:*)` | Text substitution | `sed 's/old/new/'` |
-| `Bash(head:*)` | Limit output | `head -5` |
-| `Bash(basename:*)` | Extract filename (in pipe) | `pwd \| xargs basename` |
-| `Bash(xargs:*)` | Pipe transformation | `xargs -I {} basename {}` |
-
-**Shell Constructs to Avoid**
-
-These shell constructs cannot be matched by patterns:
-
-| Construct | Problem | Alternative |
-|-----------|---------|-------------|
-| `for d in */; do...` | `for` not matchable | Use `ls -d */ \| ...` |
-| `if [ ... ]; then` | `if` not matchable | Use `test ... && ... \|\| ...` |
-| `while read` | `while` not matchable | Use pipe commands |
+| `Bash(ls:*)` | Check file/directory existence | `ls .s2s/config.yaml` |
+| `Bash(cat:*)` | Read file contents | `cat .s2s/state.yaml` |
+| `Bash(pwd:*)` | Get current directory | `pwd` |
+| `Bash(git:*)` | Git operations | `git status --porcelain` |
+| `Bash(date:*)` | Get timestamps | `date +"%Y%m%d-%H%M%S"` |
 
 **Example - Correct Context Section**:
 
 ```markdown
 ## Context
 
-- Current directory: !`pwd | xargs basename`
-- Project type: !`test -f ".s2s/config.yaml" && echo "standalone" || echo "unknown"`
-- Current plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
-- Is git repo: !`test -d ".git" && echo "yes" || echo "no"`
-- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
-- Subdirs with git: !`(ls -d */.git 2>/dev/null | sed 's|/.git||' | head -5) || echo "none"`
+- Current directory: !`pwd`
+- Git status: !`git status --porcelain`
+- Current branch: !`git branch --show-current`
+- Config exists: !`ls .s2s/config.yaml`
+- State file: !`cat .s2s/state.yaml`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Directory name**: Extract the last segment from the pwd output
+- **Git status clean**: If Git status output is empty → clean
+- **Project type**: If ls .s2s/config.yaml succeeded → standalone
 ```
 
 With corresponding `allowed-tools`:
 
 ```yaml
-allowed-tools: Bash(pwd:*), Bash(test:*), Bash(git:*), Bash(grep:*), Bash(cut:*), Bash(tr:*), Bash(ls:*), Bash(sed:*), Bash(head:*), Bash(xargs:*), Bash(echo:*), Read, Write
+allowed-tools: Bash(pwd:*), Bash(git:*), Bash(ls:*), Bash(cat:*), Read, Write
 ```
 
 ---
@@ -361,7 +374,7 @@ Use inline bash with `!` prefix to gather context that becomes part of Claude's 
 ```markdown
 ---
 description: Brief description
-allowed-tools: Bash(ls:*), Bash(cat:*), Bash(grep:*), Read, Glob
+allowed-tools: Bash(ls:*), Bash(cat:*), Read, Glob
 argument-hint: [--option]
 ---
 
@@ -369,16 +382,22 @@ argument-hint: [--option]
 
 ## Context
 
-- Directory contents: !`ls .s2s/plans/*.md 2>/dev/null || echo "NO_PLANS"`
-- Current state: !`cat .s2s/state.yaml 2>/dev/null || echo "no state"`
-- Is git repo: !`[ -d ".git" ] && echo "yes" || echo "no"`
+- Plans directory: !`ls .s2s/plans/`
+- State file: !`cat .s2s/state.yaml`
+- Git directory: !`ls -d .git`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Plans exist**: If Plans directory listing shows .md files → yes
+- **State available**: If State file content is valid YAML → parse values
 ```
 
 **Key rules for `!` commands**:
 - Must be inline (single backticks, one line)
-- Simple commands only
-- Always handle errors with `|| echo "FALLBACK"`
-- Output becomes context for Claude to use
+- Single commands only - NO shell operators (`|`, `&&`, `||`, `()`)
+- Output becomes context for Claude to interpret in Instructions
 
 #### Pattern 2: Descriptive Instructions
 
@@ -430,7 +449,7 @@ This format is ambiguous and causes parsing errors.
 ```markdown
 ---
 description: List all implementation plans
-allowed-tools: Bash(ls:*), Bash(grep:*), Read, Glob
+allowed-tools: Bash(ls:*), Bash(cat:*), Read, Glob
 argument-hint: [--status planning|active|completed]
 ---
 
@@ -438,8 +457,15 @@ argument-hint: [--status planning|active|completed]
 
 ## Context
 
-- Plans: !`ls .s2s/plans/*.md 2>/dev/null || echo "NO_PLANS"`
-- Current: !`grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "' || echo "none"`
+- Plans directory: !`ls .s2s/plans/`
+- State file: !`cat .s2s/state.yaml`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Plans exist**: If Plans directory shows .md files → yes, otherwise → "NO_PLANS"
+- **Current plan**: Extract `current_plan:` value from State file content
 
 ## Instructions
 
@@ -763,12 +789,10 @@ Common mistakes when writing plugin components:
 
 | Anti-Pattern | Problem | Correct Approach |
 |--------------|---------|------------------|
-| Using `[ ... ]` in context | `[` not matchable by patterns | Use `test ...` instead |
-| Using `$(...)` substitution | Blocked for security | Use pipes: `pwd \| xargs basename` |
-| Using `for`/`if`/`while` in context | Shell constructs not matchable | Use pipe commands with `ls`, `grep` |
+| Using shell operators in context | `\|`, `&&`, `\|\|`, `()` blocked | Single commands only |
+| Complex logic in context | Can't conditionally output | Move logic to Interpret Context section |
 | Bash code blocks as pseudo-code | Claude executes them literally | Use prose instructions |
 | Goal/Action in simple commands | Over-engineering, adds noise | Direct step-by-step instructions |
-| Missing error handling in `!` commands | Context gathering fails silently | Always use `\|\| echo "FALLBACK"` |
 | Full Bash access when not needed | Security risk | Use pattern format: `Bash(git:*)` |
 | Vague descriptions | Poor discoverability | Action verb + object + outcome |
 

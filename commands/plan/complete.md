@@ -1,6 +1,6 @@
 ---
 description: Mark the current implementation plan as completed. Optionally merge the branch.
-allowed-tools: Bash(git:*), Bash(grep:*), Bash(test:*), Bash(cut:*), Bash(tr:*), Bash(sed:*), Bash(echo:*), Read, Write, Edit, TodoWrite, AskUserQuestion
+allowed-tools: Bash(git:*), Bash(cat:*), Read, Write, Edit, TodoWrite, AskUserQuestion
 argument-hint: [--merge] [--no-delete-branch]
 ---
 
@@ -8,10 +8,18 @@ argument-hint: [--merge] [--no-delete-branch]
 
 ## Context
 
-- Current plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
-- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
-- Current branch: !`git branch --show-current 2>/dev/null || echo "unknown"`
-- Default branch: !`(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@') || echo "main"`
+- State file: !`cat .s2s/state.yaml`
+- Git status: !`git status --porcelain`
+- Current branch: !`git branch --show-current`
+- Remote HEAD: !`git symbolic-ref refs/remotes/origin/HEAD`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Current plan**: Extract the `current_plan:` value from the State file content (or "none" if not set/null)
+- **Git status clean**: If Git status output is empty → "clean", otherwise → "dirty"
+- **Default branch**: Extract branch name from Remote HEAD (remove "refs/remotes/origin/" prefix), default to "main" if error
 
 ## Instructions
 

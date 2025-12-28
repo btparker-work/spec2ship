@@ -1,6 +1,6 @@
 ---
 description: Initialize a Spec2Ship project. Use --workspace for parent directory, --workspace-hub for stack repo, --component to link to workspace.
-allowed-tools: Bash(mkdir:*), Bash(git:*), Bash(ls:*), Bash(pwd:*), Bash(test:*), Bash(basename:*), Bash(sed:*), Bash(head:*), Bash(xargs:*), Bash(echo:*), Read, Write, Glob, Grep, TodoWrite, AskUserQuestion
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(git:*), Read, Write, Glob, Grep, TodoWrite, AskUserQuestion
 argument-hint: [--workspace | --workspace-hub | --component]
 ---
 
@@ -8,11 +8,26 @@ argument-hint: [--workspace | --workspace-hub | --component]
 
 ## Context
 
-- Current directory: !`pwd | xargs basename`
-- Is git repo: !`test -d ".git" && echo "yes" || echo "no"`
-- S2S already initialized: !`test -d ".s2s" && echo "yes" || echo "no"`
-- Parent has workspace: !`test -f "../.s2s/workspace.yaml" && echo "yes" || echo "no"`
-- Subdirectories with git: !`(ls -d */.git 2>/dev/null | sed 's|/.git||' | head -5) || echo "none"`
+- Current directory: !`pwd`
+- Git directory: !`ls -d .git`
+- S2S directory: !`ls -d .s2s`
+- S2S config: !`ls .s2s/config.yaml`
+- S2S workspace: !`ls .s2s/workspace.yaml`
+- S2S component: !`ls .s2s/component.yaml`
+- Parent workspace: !`ls ../.s2s/workspace.yaml`
+- Subdirectories: !`ls -d */`
+
+---
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Directory name**: Extract the last segment from the `pwd` output
+- **Is git repo**: If `ls -d .git` succeeded (no error) → "yes", otherwise → "no"
+- **S2S already initialized**: If `ls -d .s2s` succeeded → "yes", otherwise → "no"
+- **Parent has workspace**: If `ls ../.s2s/workspace.yaml` succeeded → "yes", otherwise → "no"
+- **Subdirs with git**: Check which subdirectories have a `.git` folder by examining the Subdirectories output
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 description: Start working on an implementation plan. Switches to the plan's branch and marks it as active.
-allowed-tools: Bash(git:*), Bash(ls:*), Bash(test:*), Bash(grep:*), Bash(xargs:*), Bash(basename:*), Bash(cut:*), Bash(tr:*), Bash(echo:*), Read, Write, Edit, Glob, TodoWrite, AskUserQuestion
+allowed-tools: Bash(git:*), Bash(ls:*), Bash(cat:*), Read, Write, Edit, Glob, TodoWrite, AskUserQuestion
 argument-hint: "plan-id"
 ---
 
@@ -8,11 +8,22 @@ argument-hint: "plan-id"
 
 ## Context
 
-- Project type: !`test -f ".s2s/config.yaml" && echo "standalone" || (test -f ".s2s/workspace.yaml" && echo "workspace" || (test -f ".s2s/component.yaml" && echo "component" || echo "NOT_S2S"))`
-- Available plans: !`(ls .s2s/plans/*.md 2>/dev/null | xargs -I {} basename {} .md) || echo "NO_PLANS"`
-- Current plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
-- Current git branch: !`git branch --show-current 2>/dev/null || echo "unknown"`
-- Git status clean: !`git status --porcelain 2>/dev/null | grep -q . && echo "dirty" || echo "clean"`
+- S2S config: !`ls .s2s/config.yaml`
+- S2S workspace: !`ls .s2s/workspace.yaml`
+- S2S component: !`ls .s2s/component.yaml`
+- Plans directory: !`ls .s2s/plans/`
+- State file: !`cat .s2s/state.yaml`
+- Current branch: !`git branch --show-current`
+- Git status: !`git status --porcelain`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Project type**: If config.yaml exists → "standalone", if workspace.yaml exists → "workspace", if component.yaml exists → "component", otherwise → "NOT_S2S"
+- **Available plans**: Extract plan IDs from the Plans directory listing (filenames without .md extension)
+- **Current plan**: Extract the `current_plan:` value from the State file content (or "none" if not set/null)
+- **Git status clean**: If Git status output is empty → "clean", otherwise → "dirty"
 
 ## Instructions
 

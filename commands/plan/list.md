@@ -1,6 +1,6 @@
 ---
 description: List all implementation plans with their status.
-allowed-tools: Bash(ls:*), Bash(cat:*), Bash(grep:*), Bash(cut:*), Bash(tr:*), Bash(echo:*), Read, Glob, Grep
+allowed-tools: Bash(ls:*), Bash(cat:*), Read, Glob, Grep
 argument-hint: [--status planning|active|completed|blocked]
 ---
 
@@ -8,8 +8,15 @@ argument-hint: [--status planning|active|completed|blocked]
 
 ## Context
 
-- Plans directory contents: !`ls .s2s/plans/*.md 2>/dev/null || echo "NO_PLANS"`
-- Current active plan: !`(grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "') || echo "none"`
+- Plans directory: !`ls .s2s/plans/`
+- State file: !`cat .s2s/state.yaml`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **Plans exist**: If Plans directory listing succeeded and shows .md files → plans exist, otherwise → "NO_PLANS"
+- **Current active plan**: Extract the `current_plan:` value from the State file content (or "none" if not set/null)
 
 ## Instructions
 
