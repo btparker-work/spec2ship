@@ -127,59 +127,111 @@ plans:
 
 ### Commands
 
-Commands are workflow orchestrators. Structure:
+Commands use two patterns for instructing Claude Code:
+
+#### Pattern 1: Context Gathering with `!` Prefix
+
+Use inline bash with `!` prefix to gather context that becomes part of Claude's input:
 
 ```markdown
 ---
-description: What this command does
-allowed-tools: ["Bash", "Read", "Write", "Edit", "Glob", "TodoWrite", "AskUserQuestion", "Task"]
-argument-hint: "required" [--optional]
+description: Brief description
+allowed-tools: Bash(ls:*), Bash(cat:*), Bash(grep:*), Read, Glob
+argument-hint: [--option]
 ---
 
-# Command Title
+# Command Name
 
-Brief description.
+## Context
 
-## Core Principles
-- Use TodoWrite to track progress
-- Ask confirmation before significant operations
-- Launch agents for parallel analysis
-
-## Arguments
-Parse `$ARGUMENTS`: ...
-
-## Phase 1: Validation
-**Goal**: Ensure prerequisites are met
-**Actions**: ...
-
-## Phase N: Confirmation
-**WAIT FOR USER APPROVAL BEFORE PROCEEDING**
-
-## Phase N+1: Execution
-**Goal**: Perform the operation
-**Actions**:
-1. For exploration, launch agents via Task tool
-2. Collect results
-3. Apply changes
-
-## Output
-Present results and next steps.
-
-## Error Handling
-- **Error case**: How to handle
+- Directory contents: !`ls .s2s/plans/*.md 2>/dev/null || echo "NO_PLANS"`
+- Current state: !`cat .s2s/state.yaml 2>/dev/null || echo "no state"`
+- Is git repo: !`[ -d ".git" ] && echo "yes" || echo "no"`
 ```
 
-**Example - Launching agents from command**:
-```markdown
-## Phase 2: Codebase Exploration
-**Goal**: Understand existing code patterns
+**Key rules for `!` commands**:
+- Must be inline (single backticks, one line)
+- Simple commands only
+- Always handle errors with `|| echo "FALLBACK"`
+- Output becomes context for Claude to use
 
-**Actions**:
-1. Launch exploration agents in parallel via Task tool:
-   - codebase-analyzer: "Analyze architecture patterns in src/"
-   - requirements-mapper: "Map existing features to requirements"
-2. Wait for agent results
-3. Synthesize findings for user
+#### Pattern 2: Descriptive Instructions
+
+Use prose instructions that Claude interprets and implements using available tools:
+
+```markdown
+## Instructions
+
+### Validate environment
+
+If project type is "NOT_S2S" (from context), display error and stop.
+
+### Process files
+
+For each plan file found in the context:
+1. Read the file using the Read tool
+2. Extract the Topic from "# Implementation Plan: " line
+3. Count tasks matching "- [ ]" pattern
+
+### Format output
+
+Display results grouped by status with summary counts.
+```
+
+**Key rules for instructions**:
+- No bash code blocks (Claude misinterprets them as executable)
+- Write clear prose describing what to do
+- Reference context values gathered in Pattern 1
+- Let Claude choose the appropriate tools
+
+#### What NOT to Do
+
+**WRONG** - Bash code blocks as pseudo-code:
+```markdown
+## Step 2: Process files
+
+```bash
+for file in .s2s/plans/*.md; do
+  TOPIC=$(grep "# Implementation Plan:" "$file")
+  # ...
+done
+```⁣
+```
+
+This format is ambiguous and causes parsing errors.
+
+#### Complete Command Example
+
+```markdown
+---
+description: List all implementation plans
+allowed-tools: Bash(ls:*), Bash(grep:*), Read, Glob
+argument-hint: [--status planning|active|completed]
+---
+
+# List Plans
+
+## Context
+
+- Plans: !`ls .s2s/plans/*.md 2>/dev/null || echo "NO_PLANS"`
+- Current: !`grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "' || echo "none"`
+
+## Instructions
+
+### If no plans exist
+
+If context shows "NO_PLANS", display empty state message and stop.
+
+### Process each plan
+
+For each plan file:
+1. Read the file content
+2. Extract: Topic, Status, Branch, task counts
+3. Group by status
+
+### Format and display
+
+Show grouped list with summary counts at the end.
 ```
 
 ### Agents

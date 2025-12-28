@@ -1,154 +1,124 @@
 ---
 description: Create a new implementation plan. Use --branch to also create a git feature branch.
-allowed-tools: ["Bash", "Read", "Write", "Edit", "Glob", "TodoWrite", "AskUserQuestion"]
+allowed-tools: Bash(date:*), Bash(mkdir:*), Bash(git:*), Bash(wc:*), Read, Write, Glob, Edit, TodoWrite, AskUserQuestion
 argument-hint: "topic" [--branch]
 ---
 
 # Create New Implementation Plan
 
-Create a new implementation plan file with optional git branch.
+## Context
 
-## Core Principles
+- Project type: !`[ -f ".s2s/config.yaml" ] && echo "standalone" || ([ -f ".s2s/workspace.yaml" ] && echo "workspace" || ([ -f ".s2s/component.yaml" ] && echo "component" || echo "NOT_S2S"))`
+- Current timestamp: !`date +"%Y%m%d-%H%M%S"`
+- ISO timestamp: !`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+- Existing feature branches: !`git branch --list 'feature/F*' 2>/dev/null | wc -l | tr -d ' '`
+- Git status clean: !`[ -z "$(git status --porcelain 2>/dev/null)" ] && echo "clean" || echo "dirty"`
+- Plans directory exists: !`[ -d ".s2s/plans" ] && echo "yes" || echo "no"`
 
-- Use TodoWrite to track progress through phases
-- Ask for user confirmation before git operations
-- Generate unique identifiers using timestamp
+## Instructions
 
-## Arguments
+### Validate environment
 
-Parse `$ARGUMENTS`:
-- First argument (required): Topic/title for the plan (can be quoted string)
-- `--branch`: Also create a git feature branch
+If project type is "NOT_S2S", display this message and stop:
 
----
+    Error: Not an s2s project. Run /s2s:proj:init first.
 
-## Phase 1: Validation
-**Goal**: Ensure we're in a valid s2s project
+### Parse arguments
 
-**Actions**:
-1. Check for s2s project files:
-   - `.s2s/config.yaml` (standalone)
-   - `.s2s/workspace.yaml` (workspace)
-   - `.s2s/component.yaml` (component)
-2. If none found: inform user to run `/s2s:proj:init` first and exit
-3. Extract topic from `$ARGUMENTS`
-4. If no topic provided: ask user for the plan topic
+Extract from $ARGUMENTS:
+- **Topic**: The first quoted string or unquoted words (required)
+- **--branch flag**: Whether to create a git branch
 
----
+If no topic is provided, ask the user for one using AskUserQuestion.
 
-## Phase 2: Generate Identifiers
-**Goal**: Create unique plan ID and optional branch name
+### Generate identifiers
 
-**Actions**:
-1. Generate timestamp in format: `YYYYMMDD-HHMMSS` (current local time)
-2. Generate slug from topic:
-   - Convert to lowercase
-   - Replace spaces with hyphens
-   - Remove special characters (keep only a-z, 0-9, hyphens)
-   - Truncate to max 50 characters
-3. Create Plan ID: `{timestamp}-{slug}`
-4. Create file path: `.s2s/plans/{plan-id}.md`
+Using the timestamp from context:
+1. **Plan ID**: Combine timestamp with a slug of the topic
+   - Slug: lowercase, spaces to hyphens, only a-z 0-9 hyphens, max 50 chars
+   - Format: {timestamp}-{slug}
+2. **File path**: .s2s/plans/{plan-id}.md
 
-**If `--branch` flag present**:
-5. Count existing feature branches to get next number
-6. Generate branch name: `feature/F{NN}-{slug}` where NN is zero-padded
+If --branch flag is present:
+3. **Branch number**: existing feature branches count + 1, zero-padded to 2 digits
+4. **Branch name**: feature/F{NN}-{slug}
 
----
+### Pre-flight checks
 
-## Phase 3: Pre-flight Checks
-**Goal**: Verify safe to proceed
+If plans directory does not exist, create it using Bash mkdir.
 
-**Actions**:
-1. Check if plan file already exists (unlikely with timestamp, but verify)
-2. Create `.s2s/plans/` directory if it doesn't exist
+If --branch flag and git status is "dirty":
+- Warn user about uncommitted changes
+- Ask if they want to proceed using AskUserQuestion
 
-**If `--branch` flag present**:
-3. Check git status for uncommitted changes
-   - If dirty: warn user and ask if they want to proceed anyway
-4. Verify current branch (store for reference)
+### Confirm with user
 
----
+Present the following and ask for confirmation:
+- Plan topic
+- Plan ID
+- File path
+- Branch name (if --branch)
 
-## Phase 4: Confirmation
-**Goal**: Get user approval before creating files
+### Create the plan file
 
-**WAIT FOR USER APPROVAL BEFORE PROCEEDING**
+Write a new file at .s2s/plans/{plan-id}.md with this content:
 
-Present to user:
-- Plan topic: {topic}
-- Plan ID: {plan-id}
-- File path: `.s2s/plans/{plan-id}.md`
-- Branch (if --branch): `feature/F{NN}-{slug}`
+    # Implementation Plan: {Topic}
 
-Ask: "Create this plan?"
+    **ID**: {plan-id}
+    **Status**: planning
+    **Branch**: {branch-name or N/A}
+    **Created**: {ISO timestamp}
+    **Updated**: {ISO timestamp}
 
----
+    ## References
 
-## Phase 5: Create Plan
-**Goal**: Generate plan file and optionally create branch
+    ### Requirements
+    <!-- Link to relevant requirements -->
 
-**Actions**:
-1. Load plan template from `${CLAUDE_PLUGIN_ROOT}/templates/plan.md`
-2. Apply substitutions:
-   - `{Topic}` → User-provided topic
-   - `{plan-id}` → Generated plan ID
-   - `{branch-name}` → Generated branch name or "N/A"
-   - `{timestamp}` → Current ISO timestamp
-3. Write file to `.s2s/plans/{plan-id}.md`
+    ### Architecture
+    <!-- Link to relevant architecture sections -->
 
-**If `--branch` flag present**:
-4. Create git branch: `git checkout -b feature/F{NN}-{slug}`
-5. Update plan file with actual branch name
+    ### Decisions
+    <!-- Link to relevant ADRs -->
 
-**For multi-repo workspace** (if component.yaml exists):
-6. Note: Branch should be created in component repo only
-7. If workspace coordination needed, inform user about `/s2s:git:branch`
+    ## Design Notes
 
----
+    <!-- Component-specific technical decisions -->
 
-## Phase 6: Update State
-**Goal**: Register the new plan in state
+    ## Tasks
 
-**Actions**:
-1. Read `.s2s/state.yaml` (or create if doesn't exist)
-2. Add plan entry:
-   ```yaml
-   plans:
-     "{plan-id}":
-       status: "planning"
-       branch: "{branch-name}"  # or null
-       created: "{ISO timestamp}"
-       updated: "{ISO timestamp}"
-   ```
-3. Write updated state.yaml
+    - [ ] Task 1
+    - [ ] Task 2
+    - [ ] Task 3
 
----
+    ## Notes
 
-## Output
+    <!-- Progress notes, blockers, etc. -->
 
-Present to user:
+### Create git branch (if --branch)
 
-```
-Implementation plan created!
+Run: git checkout -b {branch-name}
 
-Plan ID: {plan-id}
-File: .s2s/plans/{plan-id}.md
-Topic: {topic}
-Status: planning
-{Branch: feature/F{NN}-{slug}}  # if --branch
+Update the plan file to include the actual branch name.
 
-Next steps:
-1. Edit the plan to add references and tasks
-2. Run /s2s:plan:start "{plan-id}" when ready to begin
-3. Use /s2s:decision:new if architectural decisions needed
-```
+### Update state
 
----
+Read .s2s/state.yaml (or create if missing) and add the plan entry with status "planning".
 
-## Error Handling
+### Output
 
-- **No topic provided**: Ask user for topic interactively
-- **Not in s2s project**: Direct to `/s2s:proj:init`
-- **Git dirty** (with --branch): Warn but allow user to proceed
-- **Branch creation fails**: Report error but keep plan file
-- **File write fails**: Report specific error
+Display confirmation:
+
+    Implementation plan created!
+
+    Plan ID: {plan-id}
+    File: .s2s/plans/{plan-id}.md
+    Topic: {topic}
+    Status: planning
+    Branch: {branch-name if created}
+
+    Next steps:
+    1. Edit the plan to add references and tasks
+    2. Run /s2s:plan:start "{plan-id}" when ready to begin
+    3. Use /s2s:decision:new if architectural decisions needed

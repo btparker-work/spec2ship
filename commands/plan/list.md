@@ -1,131 +1,68 @@
 ---
 description: List all implementation plans with their status.
-allowed-tools: ["Bash", "Read", "Glob", "Grep"]
+allowed-tools: Bash(ls:*), Bash(cat:*), Bash(grep:*), Read, Glob, Grep
 argument-hint: [--status planning|active|completed|blocked]
 ---
 
 # List Implementation Plans
 
-Display all plans in the project with their status and progress.
+## Context
 
-## Arguments
+- Plans directory contents: !`ls .s2s/plans/*.md 2>/dev/null || echo "NO_PLANS"`
+- Current active plan: !`grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "' || echo "none"`
 
-Parse `$ARGUMENTS`:
-- `--status <status>`: Filter by status (planning, active, completed, blocked)
-- (no args): Show all plans
+## Instructions
 
----
+### If no plans exist
 
-## Phase 1: Validation
-**Goal**: Ensure plans directory exists
+If the context shows "NO_PLANS", display this message and stop:
 
-**Actions**:
-1. Check if `.s2s/plans/` directory exists
-2. If not exists: show empty state message and exit
+    No implementation plans found.
 
----
+    Create your first plan:
+      /s2s:plan:new "feature name"
 
-## Phase 2: Collect Plan Data
-**Goal**: Read all plan files and extract metadata
+    Or with a git branch:
+      /s2s:plan:new "feature name" --branch
 
-**Actions**:
-For each `.md` file in `.s2s/plans/`:
+### If plans exist
 
-1. Extract plan ID from filename (without .md extension)
-2. Read file and extract:
-   - Topic: from `# Implementation Plan: {topic}` line
-   - Status: from `**Status**: {status}` line
-   - Branch: from `**Branch**: {branch}` line
-   - Created: from `**Created**: {date}` line
-   - Updated: from `**Updated**: {date}` line
-3. Count tasks:
-   - Total: lines matching `- [ ]` or `- [x]`
-   - Completed: lines matching `- [x]`
+For each plan file found in the context:
 
----
+1. Read the file using the Read tool
+2. Extract these fields from the content:
+   - **Plan ID**: filename without .md extension
+   - **Topic**: text after "# Implementation Plan: "
+   - **Status**: value after "**Status**: "
+   - **Branch**: value after "**Branch**: "
+   - **Created**: value after "**Created**: "
+   - **Updated**: value after "**Updated**: "
+3. Count tasks by searching for checkbox patterns:
+   - Total tasks: count lines containing "- [ ]" or "- [x]"
+   - Completed tasks: count lines containing "- [x]"
 
-## Phase 3: Filter (if requested)
-**Goal**: Apply status filter if specified
+### Filter by status (if requested)
 
-**Actions**:
-1. If `$ARGUMENTS` contains `--status`:
-   - Extract status value
-   - Filter plans to only those matching status
-2. Check `.s2s/state.yaml` for `current_plan` to mark active plan
+If $ARGUMENTS contains "--status", filter the results to show only plans matching that status.
 
----
+### Format output
 
-## Phase 4: Format Output
-**Goal**: Display plans in organized format
+Group plans by status and display:
 
-**Group by status and display**:
+**Active plans** (prefix with *):
+- Show plan ID, topic, branch, progress (completed/total tasks), start date
 
-**Active plans** (marked with `*`):
-```
-* {plan-id}
-  Topic: {topic}
-  Branch: {branch}
-  Progress: {completed}/{total} tasks
-  Started: {date}
-```
+**Planning plans** (prefix with -):
+- Show plan ID, topic, task count, creation date
 
-**Planning plans** (marked with `-`):
-```
-- {plan-id}
-  Topic: {topic}
-  Tasks: {total} defined
-  Created: {date}
-```
+**Completed plans** (prefix with ✓):
+- Show plan ID, topic, completion date
 
-**Completed plans** (marked with `✓`):
-```
-✓ {plan-id}
-  Topic: {topic}
-  Completed: {date}
-```
+**Blocked plans** (prefix with !):
+- Show plan ID, topic, branch
 
-**Blocked plans** (marked with `!`):
-```
-! {plan-id}
-  Topic: {topic}
-  Branch: {branch}
-```
+End with a summary line showing total counts by status.
 
----
+### Mark current plan
 
-## Output
-
-Present formatted list followed by summary:
-
-```
-Implementation Plans
-====================
-
-{grouped plan listings}
-
-Total: {count} plans ({active} active, {planning} planning, {completed} completed)
-```
-
----
-
-## Empty State
-
-If no plans exist, show:
-
-```
-No implementation plans found.
-
-Create your first plan:
-  /s2s:plan:new "feature name"
-
-Or with a git branch:
-  /s2s:plan:new "feature name" --branch
-```
-
----
-
-## Error Handling
-
-- **Directory doesn't exist**: Show empty state (not an error)
-- **Malformed plan file**: Skip file, warn user about specific file
-- **Invalid status filter**: Show valid options
+If the "current active plan" from context matches a plan ID, highlight it in the output.

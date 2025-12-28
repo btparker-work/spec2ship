@@ -1,142 +1,104 @@
 ---
 description: Mark the current implementation plan as completed. Optionally merge the branch.
-allowed-tools: ["Bash", "Read", "Write", "Edit", "TodoWrite", "AskUserQuestion"]
+allowed-tools: Bash(git:*), Bash(grep:*), Read, Write, Edit, TodoWrite, AskUserQuestion
 argument-hint: [--merge] [--no-delete-branch]
 ---
 
 # Complete Implementation Plan
 
-Mark the active plan as completed with optional branch operations.
+## Context
 
-## Core Principles
+- Current plan: !`grep "current_plan:" .s2s/state.yaml 2>/dev/null | cut -d: -f2 | tr -d ' "' || echo "none"`
+- Git status clean: !`[ -z "$(git status --porcelain 2>/dev/null)" ] && echo "clean" || echo "dirty"`
+- Current branch: !`git branch --show-current 2>/dev/null || echo "unknown"`
+- Default branch: !`git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main"`
 
-- Use TodoWrite to track completion steps
-- Warn about incomplete tasks before completing
-- Require explicit confirmation for git operations
+## Instructions
 
-## Arguments
+### Check for active plan
 
-Parse `$ARGUMENTS`:
-- `--merge`: Also merge the feature branch to default branch
-- `--no-delete-branch`: Keep the branch after completion (only with --merge)
+If current plan is "none", display this message and stop:
 
----
+    No active plan found.
 
-## Phase 1: Find Active Plan
-**Goal**: Identify the current active plan
+    Use /s2s:plan:list to see available plans.
+    Use /s2s:plan:start "plan-id" to activate a plan.
 
-**Actions**:
-1. Read `.s2s/state.yaml`
-2. Get `current_plan` value
-3. If no active plan: inform user and exit
-4. Load plan file from `.s2s/plans/{current_plan}.md`
+### Read plan file
 
----
+Read .s2s/plans/{current-plan}.md and extract:
+- Topic from "# Implementation Plan: " line
+- Branch from "**Branch**: " line
+- Created date from "**Created**: " line
+- Tasks: count lines with "- [ ]" (incomplete) and "- [x]" (complete)
 
-## Phase 2: Task Check
-**Goal**: Verify task completion status
+### Check task completion
 
-**Actions**:
-1. Count tasks in plan file:
-   - Total: lines matching `- [ ]` or `- [x]`
-   - Incomplete: lines matching `- [ ]`
-2. If incomplete tasks exist:
-   - List incomplete tasks
-   - Ask: "Complete plan with {n} incomplete tasks?"
-   - If user declines: exit
+If there are incomplete tasks:
+- List them to the user
+- Ask: "Complete plan with {n} incomplete tasks?" using AskUserQuestion
+- If user declines, stop
 
----
+### Parse arguments
 
-## Phase 3: Confirmation
-**Goal**: Get user approval for completion
+Check $ARGUMENTS for:
+- **--merge**: Merge feature branch to default branch
+- **--no-delete-branch**: Keep branch after merge (only with --merge)
 
-**WAIT FOR USER APPROVAL BEFORE PROCEEDING**
+### Confirm completion
 
-Present to user:
-- Plan: {plan-id}
-- Topic: {topic}
-- Tasks: {completed}/{total} completed
-- Branch: {branch}
-- Merge requested: {yes/no}
+Present summary and ask for confirmation:
+- Plan ID and topic
+- Task completion status
+- Branch operation (merge/keep/none)
 
-Ask: "Mark this plan as completed?"
+### Git operations (if --merge)
 
----
+If --merge flag is present:
 
-## Phase 4: Git Operations (if --merge)
-**Goal**: Merge feature branch to default branch
+1. If git status is "dirty":
+   - Warn user and ask them to commit first
+   - Stop if they don't want to commit
 
-**Pre-conditions**:
-- Check for uncommitted changes
-- If dirty: warn and ask to commit first
+2. Checkout default branch: git checkout {default-branch}
 
-**Actions**:
-1. Get default branch (main or develop, check git config)
-2. Checkout default branch
-3. Pull latest changes
-4. Merge feature branch: `git merge {branch}`
-5. If merge conflicts: report and exit (user must resolve)
-6. If `--no-delete-branch` NOT present: delete feature branch
+3. Pull latest: git pull origin {default-branch}
 
----
+4. Merge feature branch: git merge {branch}
+   - If merge conflict, report and stop (user must resolve manually)
 
-## Phase 5: Update Plan
-**Goal**: Mark plan as completed
+5. If --no-delete-branch NOT present:
+   - Delete the feature branch: git branch -d {branch}
 
-**Actions**:
-1. Update plan file:
-   - Change `**Status**: active` to `**Status**: completed`
-   - Update `**Updated**:` to current timestamp
-   - Add `**Completed**:` with current timestamp
+### Update plan file
 
----
+Edit .s2s/plans/{current-plan}.md:
+- Change "**Status**: active" to "**Status**: completed"
+- Update "**Updated**:" to current ISO timestamp
+- Add "**Completed**: {current ISO timestamp}" after Updated line
 
-## Phase 6: Update State
-**Goal**: Clear active plan from state
+### Update state
 
-**Actions**:
-1. Update `.s2s/state.yaml`:
-   ```yaml
-   current_plan: null
-   ```
-2. Update plan entry:
-   ```yaml
-   plans:
-     "{plan-id}":
-       status: "completed"
-       completed: "{ISO timestamp}"
-   ```
+Update .s2s/state.yaml:
+- Set current_plan to null
+- Update the plan entry status to "completed"
 
----
+### Output
 
-## Output
+Display confirmation:
 
-Present to user:
+    Plan completed!
 
-```
-Plan completed!
+    Plan: {plan-id}
+    Topic: {topic}
+    Tasks: {completed}/{total} completed
+    Duration: {days since created} days
 
-Plan: {plan-id}
-Topic: {topic}
-Tasks: {completed}/{total} completed
-Duration: {days since created}
+    {if --merge}
+    Branch merged: {branch} → {default-branch}
+    Branch deleted: {yes/no}
+    {end if}
 
-{if --merge}
-Branch merged: {branch} → {default-branch}
-Branch deleted: {yes/no}
-{/if}
-
-Next steps:
-- View completed plans: /s2s:plan:list --status completed
-- Create new plan: /s2s:plan:new "next feature"
-```
-
----
-
-## Error Handling
-
-- **No active plan**: Inform user, suggest `/s2s:plan:list`
-- **Uncommitted changes** (with --merge): Ask user to commit first
-- **Merge conflicts**: Report conflict, exit without completing plan
-- **Branch delete fails**: Warn but complete the plan anyway
-- **Not on feature branch** (with --merge): Warn and ask confirmation
+    Next steps:
+    - View completed plans: /s2s:plan:list --status completed
+    - Create new plan: /s2s:plan:new "next feature"
