@@ -1,152 +1,142 @@
 ---
 description: Mark the current implementation plan as completed. Optionally merge the branch.
-allowed-tools: ["Bash", "Read", "Write", "Edit"]
+allowed-tools: ["Bash", "Read", "Write", "Edit", "TodoWrite", "AskUserQuestion"]
 argument-hint: [--merge] [--no-delete-branch]
 ---
 
 # Complete Implementation Plan
 
+Mark the active plan as completed with optional branch operations.
+
+## Core Principles
+
+- Use TodoWrite to track completion steps
+- Warn about incomplete tasks before completing
+- Require explicit confirmation for git operations
+
 ## Arguments
 
-- `--merge`: Also merge the feature branch to main
-- `--no-delete-branch`: Keep the branch after completion (default: delete on merge)
+Parse `$ARGUMENTS`:
+- `--merge`: Also merge the feature branch to default branch
+- `--no-delete-branch`: Keep the branch after completion (only with --merge)
 
-## Workflow
+---
 
-### Step 1: Validate Current Plan
+## Phase 1: Find Active Plan
+**Goal**: Identify the current active plan
 
-```bash
-# Check for state file
-if [ ! -f ".s2s/state.yaml" ]; then
-  echo "Error: No s2s state found."
-  exit 1
-fi
+**Actions**:
+1. Read `.s2s/state.yaml`
+2. Get `current_plan` value
+3. If no active plan: inform user and exit
+4. Load plan file from `.s2s/plans/{current_plan}.md`
 
-# Get current plan
-CURRENT_PLAN=$(grep "current_plan:" .s2s/state.yaml | awk '{print $2}')
+---
 
-if [ -z "$CURRENT_PLAN" ] || [ "$CURRENT_PLAN" = "null" ]; then
-  echo "Error: No active plan to complete."
-  echo "Use /s2s:plan:list to see all plans."
-  exit 1
-fi
+## Phase 2: Task Check
+**Goal**: Verify task completion status
 
-PLAN_FILE=".s2s/plans/${CURRENT_PLAN}.md"
+**Actions**:
+1. Count tasks in plan file:
+   - Total: lines matching `- [ ]` or `- [x]`
+   - Incomplete: lines matching `- [ ]`
+2. If incomplete tasks exist:
+   - List incomplete tasks
+   - Ask: "Complete plan with {n} incomplete tasks?"
+   - If user declines: exit
 
-if [ ! -f "$PLAN_FILE" ]; then
-  echo "Error: Plan file not found: $PLAN_FILE"
-  exit 1
-fi
-```
+---
 
-### Step 2: Check Task Completion
+## Phase 3: Confirmation
+**Goal**: Get user approval for completion
 
-Read the plan file and count incomplete tasks:
+**WAIT FOR USER APPROVAL BEFORE PROCEEDING**
 
-```bash
-INCOMPLETE_TASKS=$(grep -c "^- \\[ \\]" "$PLAN_FILE")
+Present to user:
+- Plan: {plan-id}
+- Topic: {topic}
+- Tasks: {completed}/{total} completed
+- Branch: {branch}
+- Merge requested: {yes/no}
 
-if [ "$INCOMPLETE_TASKS" -gt 0 ]; then
-  echo "Warning: $INCOMPLETE_TASKS task(s) still incomplete."
-  grep "^- \\[ \\]" "$PLAN_FILE"
-  echo ""
-  echo "Do you want to mark the plan as completed anyway? [y/N]"
-  # Handle user response
-fi
-```
+Ask: "Mark this plan as completed?"
 
-### Step 3: Update Plan Status
+---
 
-Update the plan file:
-- Change `**Status**: active` to `**Status**: completed`
-- Update `**Updated**:` timestamp
+## Phase 4: Git Operations (if --merge)
+**Goal**: Merge feature branch to default branch
 
-### Step 4: Update State
+**Pre-conditions**:
+- Check for uncommitted changes
+- If dirty: warn and ask to commit first
 
-Update `.s2s/state.yaml`:
+**Actions**:
+1. Get default branch (main or develop, check git config)
+2. Checkout default branch
+3. Pull latest changes
+4. Merge feature branch: `git merge {branch}`
+5. If merge conflicts: report and exit (user must resolve)
+6. If `--no-delete-branch` NOT present: delete feature branch
 
-```yaml
-current_plan: null
-plans:
-  "{PLAN_ID}":
-    status: "completed"
-    completed: "{ISO_TIMESTAMP}"
-    updated: "{ISO_TIMESTAMP}"
-```
+---
 
-### Step 5: Handle Branch (if --merge)
+## Phase 5: Update Plan
+**Goal**: Mark plan as completed
 
-If `--merge` flag provided:
+**Actions**:
+1. Update plan file:
+   - Change `**Status**: active` to `**Status**: completed`
+   - Update `**Updated**:` to current timestamp
+   - Add `**Completed**:` with current timestamp
 
-```bash
-# Extract branch from plan
-BRANCH=$(grep "^\\*\\*Branch\\*\\*:" "$PLAN_FILE" | sed 's/.*: //' | tr -d '`')
+---
 
-if [ -n "$BRANCH" ] && [ "$BRANCH" != "N/A" ]; then
-  # Get default branch
-  DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-  DEFAULT_BRANCH=${DEFAULT_BRANCH:-main}
+## Phase 6: Update State
+**Goal**: Clear active plan from state
 
-  # Verify we're on the feature branch
-  CURRENT_BRANCH=$(git branch --show-current)
-  if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
-    echo "Warning: Not currently on plan branch ($BRANCH)."
-    echo "Current branch: $CURRENT_BRANCH"
-    echo "Switch to $BRANCH before merging."
-    exit 1
-  fi
+**Actions**:
+1. Update `.s2s/state.yaml`:
+   ```yaml
+   current_plan: null
+   ```
+2. Update plan entry:
+   ```yaml
+   plans:
+     "{plan-id}":
+       status: "completed"
+       completed: "{ISO timestamp}"
+   ```
 
-  # Check for uncommitted changes
-  if [ -n "$(git status --porcelain)" ]; then
-    echo "Error: Uncommitted changes. Commit before merging."
-    exit 1
-  fi
+---
 
-  # Checkout default branch and merge
-  git checkout "$DEFAULT_BRANCH"
-  git merge "$BRANCH" --no-ff -m "Merge $BRANCH: Complete ${CURRENT_PLAN}"
+## Output
 
-  # Delete branch (unless --no-delete-branch)
-  if [[ "$*" != *"--no-delete-branch"* ]]; then
-    git branch -d "$BRANCH"
-    echo "Deleted branch: $BRANCH"
-  fi
-
-  echo "Merged $BRANCH into $DEFAULT_BRANCH"
-fi
-```
-
-For multi-repo context:
-
-```bash
-# If component or workspace, handle across repos
-if [ -f ".s2s/component.yaml" ] || [ -f ".s2s/workspace.yaml" ]; then
-  echo "Multi-repo merge requires manual coordination or PR workflow."
-  echo "Use /s2s:git:pr to create pull requests."
-fi
-```
-
-### Step 6: Output Summary
+Present to user:
 
 ```
-Plan completed: {PLAN_ID}
+Plan completed!
 
-Topic: {extracted from plan file}
-Status: completed
-Duration: {calculated from created to completed}
-{Merged to: {DEFAULT_BRANCH} (if --merge)}
+Plan: {plan-id}
+Topic: {topic}
+Tasks: {completed}/{total} completed
+Duration: {days since created}
 
-Summary:
-- Total tasks: {count}
-- Completed: {count}
-- Skipped: {count if any [ ] remain}
+{if --merge}
+Branch merged: {branch} → {default-branch}
+Branch deleted: {yes/no}
+{/if}
 
-Completed plans are archived in .s2s/plans/
-Use /s2s:plan:list to see all plans.
+Next steps:
+- View completed plans: /s2s:plan:list --status completed
+- Create new plan: /s2s:plan:new "next feature"
 ```
 
-## Notes
+---
 
-- Completed plans remain in `.s2s/plans/` for reference
-- The state.yaml tracks completion timestamp
-- For PRs instead of direct merge, use `/s2s:git:pr`
+## Error Handling
+
+- **No active plan**: Inform user, suggest `/s2s:plan:list`
+- **Uncommitted changes** (with --merge): Ask user to commit first
+- **Merge conflicts**: Report conflict, exit without completing plan
+- **Branch delete fails**: Warn but complete the plan anyway
+- **Not on feature branch** (with --merge): Warn and ask confirmation

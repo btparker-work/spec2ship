@@ -1,113 +1,116 @@
 ---
 description: List all implementation plans with their status.
-allowed-tools: ["Bash", "Read", "Grep", "Glob"]
+allowed-tools: ["Bash", "Read", "Glob", "Grep"]
 argument-hint: [--status planning|active|completed|blocked]
 ---
 
 # List Implementation Plans
 
+Display all plans in the project with their status and progress.
+
 ## Arguments
 
+Parse `$ARGUMENTS`:
 - `--status <status>`: Filter by status (planning, active, completed, blocked)
 - (no args): Show all plans
 
-## Workflow
+---
 
-### Step 1: Validate Environment
+## Phase 1: Validation
+**Goal**: Ensure plans directory exists
 
-```bash
-if [ ! -d ".s2s/plans" ]; then
-  echo "No plans directory found."
-  echo "Use /s2s:plan:new to create your first plan."
-  exit 0
-fi
+**Actions**:
+1. Check if `.s2s/plans/` directory exists
+2. If not exists: show empty state message and exit
+
+---
+
+## Phase 2: Collect Plan Data
+**Goal**: Read all plan files and extract metadata
+
+**Actions**:
+For each `.md` file in `.s2s/plans/`:
+
+1. Extract plan ID from filename (without .md extension)
+2. Read file and extract:
+   - Topic: from `# Implementation Plan: {topic}` line
+   - Status: from `**Status**: {status}` line
+   - Branch: from `**Branch**: {branch}` line
+   - Created: from `**Created**: {date}` line
+   - Updated: from `**Updated**: {date}` line
+3. Count tasks:
+   - Total: lines matching `- [ ]` or `- [x]`
+   - Completed: lines matching `- [x]`
+
+---
+
+## Phase 3: Filter (if requested)
+**Goal**: Apply status filter if specified
+
+**Actions**:
+1. If `$ARGUMENTS` contains `--status`:
+   - Extract status value
+   - Filter plans to only those matching status
+2. Check `.s2s/state.yaml` for `current_plan` to mark active plan
+
+---
+
+## Phase 4: Format Output
+**Goal**: Display plans in organized format
+
+**Group by status and display**:
+
+**Active plans** (marked with `*`):
+```
+* {plan-id}
+  Topic: {topic}
+  Branch: {branch}
+  Progress: {completed}/{total} tasks
+  Started: {date}
 ```
 
-### Step 2: Collect Plan Information
-
-For each plan file in `.s2s/plans/`:
-
-```bash
-for plan_file in .s2s/plans/*.md; do
-  [ -f "$plan_file" ] || continue
-
-  # Extract plan ID from filename
-  PLAN_ID=$(basename "$plan_file" .md)
-
-  # Extract metadata from file
-  TOPIC=$(grep "^# Implementation Plan:" "$plan_file" | sed 's/^# Implementation Plan: //')
-  STATUS=$(grep "^\\*\\*Status\\*\\*:" "$plan_file" | sed 's/.*: //')
-  BRANCH=$(grep "^\\*\\*Branch\\*\\*:" "$plan_file" | sed 's/.*: //' | tr -d '`')
-  CREATED=$(grep "^\\*\\*Created\\*\\*:" "$plan_file" | sed 's/.*: //')
-
-  # Count tasks
-  TOTAL_TASKS=$(grep -c "^- \\[" "$plan_file" || echo "0")
-  DONE_TASKS=$(grep -c "^- \\[x\\]" "$plan_file" || echo "0")
-
-  # Output
-  echo "$PLAN_ID|$STATUS|$TOPIC|$BRANCH|$TOTAL_TASKS|$DONE_TASKS|$CREATED"
-done
+**Planning plans** (marked with `-`):
+```
+- {plan-id}
+  Topic: {topic}
+  Tasks: {total} defined
+  Created: {date}
 ```
 
-### Step 3: Filter by Status (if requested)
-
-```bash
-if [ -n "$STATUS_FILTER" ]; then
-  # Filter results by status column
-  RESULTS=$(echo "$RESULTS" | grep "|${STATUS_FILTER}|")
-fi
+**Completed plans** (marked with `✓`):
+```
+✓ {plan-id}
+  Topic: {topic}
+  Completed: {date}
 ```
 
-### Step 4: Format Output
+**Blocked plans** (marked with `!`):
+```
+! {plan-id}
+  Topic: {topic}
+  Branch: {branch}
+```
 
-Display as a formatted table:
+---
+
+## Output
+
+Present formatted list followed by summary:
 
 ```
 Implementation Plans
 ====================
 
-Active:
-  * 20240115-143022-user-auth
-    Topic: User Authentication
-    Branch: feature/F01-user-auth
-    Progress: 3/7 tasks
-    Started: 2024-01-15
+{grouped plan listings}
 
-Planning:
-  - 20240116-091500-api-versioning
-    Topic: API Versioning Strategy
-    Branch: (none)
-    Tasks: 0 defined
-
-Completed:
-  ✓ 20240110-100000-project-setup
-    Topic: Initial Project Setup
-    Completed: 2024-01-12
-    Duration: 2 days
-
-Total: 3 plans (1 active, 1 planning, 1 completed)
+Total: {count} plans ({active} active, {planning} planning, {completed} completed)
 ```
 
-### Step 5: Highlight Current Plan
-
-If `.s2s/state.yaml` has a `current_plan`, mark it with `*` or highlight.
-
-```bash
-CURRENT_PLAN=$(grep "current_plan:" .s2s/state.yaml 2>/dev/null | awk '{print $2}')
-```
-
-## Output Formatting
-
-- **Active plans**: Show with `*` prefix, include progress
-- **Planning plans**: Show with `-` prefix
-- **Completed plans**: Show with `✓` prefix
-- **Blocked plans**: Show with `!` prefix
-
-Group by status, most recent first within each group.
+---
 
 ## Empty State
 
-If no plans exist:
+If no plans exist, show:
 
 ```
 No implementation plans found.
@@ -118,3 +121,11 @@ Create your first plan:
 Or with a git branch:
   /s2s:plan:new "feature name" --branch
 ```
+
+---
+
+## Error Handling
+
+- **Directory doesn't exist**: Show empty state (not an error)
+- **Malformed plan file**: Skip file, warn user about specific file
+- **Invalid status filter**: Show valid options

@@ -1,45 +1,85 @@
 ---
-description: Initialize a new Spec2Ship project or workspace. Use --workspace for parent directory workspace, --workspace-hub for stack repo hub, --component to link to existing workspace.
-allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep"]
+description: Initialize a Spec2Ship project. Use --workspace for parent directory, --workspace-hub for stack repo, --component to link to workspace.
+allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "TodoWrite", "AskUserQuestion"]
 argument-hint: [--workspace | --workspace-hub | --component]
 ---
 
 # Initialize Spec2Ship Project
 
+Initialize s2s in the current directory with the appropriate structure.
+
+## Core Principles
+
+- Use TodoWrite to track progress through phases
+- Ask for user confirmation before creating files
+- Provide clear feedback on what was created
+
 ## Arguments
 
-Parse `$ARGUMENTS` for flags:
-- `--workspace`: Initialize parent directory as workspace (non-git)
-- `--workspace-hub`: Initialize current repo as workspace hub (stack repo pattern)
-- `--component`: Initialize as component linking to existing workspace
-- (no flag): Initialize as standalone project
+Parse `$ARGUMENTS` for initialization mode:
+- (no flags): Standalone project
+- `--workspace`: Parent directory workspace (contains multiple repos)
+- `--workspace-hub`: Stack repo pattern (this repo is the hub)
+- `--component`: Component linking to existing workspace
 
-## Workflow
+---
 
-### Step 1: Detect Current State
+## Phase 1: Detection
+**Goal**: Understand current environment and determine initialization mode
 
-Check what already exists:
+**Actions**:
+1. Parse `$ARGUMENTS` to determine mode (standalone/workspace/workspace-hub/component)
+2. Check if `.s2s/` directory already exists
+   - If exists: warn user and ask if they want to reinitialize
+3. Check if current directory is a git repository
+   - If not a git repo AND mode is not `--workspace`: suggest running `git init` first
+4. Get project name from directory name (or ask user if unclear)
 
-```bash
-# Check for existing s2s initialization
-ls -la .s2s/ 2>/dev/null
-```
+---
 
-If `.s2s/` exists, warn user and ask if they want to reinitialize.
+## Phase 2: Validation
+**Goal**: Ensure prerequisites are met for the chosen mode
 
-### Step 2: Detect Git Repository
+**For Standalone** (no flags):
+- Verify git repo exists (or user confirms to proceed without)
 
-```bash
-git rev-parse --git-dir 2>/dev/null
-```
+**For Workspace** (`--workspace`):
+- Verify running from parent directory containing repos
+- Detect git repositories in subdirectories
 
-- If NOT a git repo and NOT `--workspace`: Warn and ask if user wants to `git init`
-- If `--workspace` flag: Parent directory mode (no git required)
+**For Workspace Hub** (`--workspace-hub`):
+- Verify current directory IS a git repo
+- Will reference sibling repos with `../` paths
 
-### Step 3: For Standalone Project (no flags)
+**For Component** (`--component`):
+- Search for workspace:
+  - Check parent directory for `.s2s/workspace.yaml`
+  - Check sibling directories for workspace-hub type
+- If not found: ask user for workspace path
 
-Create the following structure:
+---
 
+## Phase 3: Confirmation
+**Goal**: Get user approval before creating files
+
+**WAIT FOR USER APPROVAL BEFORE PROCEEDING**
+
+Present to user:
+- Detected mode: {standalone | workspace | workspace-hub | component}
+- Project/workspace name: {name}
+- Files and directories that will be created
+- For component: workspace path that will be linked
+
+Ask: "Proceed with initialization?"
+
+---
+
+## Phase 4: Create Structure
+**Goal**: Generate all required files and directories
+
+### For Standalone Project
+
+Create directory structure:
 ```
 .s2s/
 ├── config.yaml
@@ -66,10 +106,9 @@ docs/
 CLAUDE.md
 ```
 
-#### config.yaml content:
-
+**config.yaml** content:
 ```yaml
-name: "{project-name}"          # From directory name or ask user
+name: "{project-name}"
 type: "standalone"
 version: "0.1.0"
 
@@ -83,61 +122,29 @@ roundtable:
     - software-architect
     - technical-lead
   strategy: "round-robin"
-  human_in_loop:
-    - business_priority
-    - unresolved_tradeoff
 ```
 
-#### state.yaml content:
-
+**state.yaml** content:
 ```yaml
 current_plan: null
 plans: {}
 last_sync: null
 ```
 
-#### CONTEXT.md content:
+**CONTEXT.md**: Load from `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
 
-```markdown
-# {Project Name} - S2S Context
-
-This file is automatically maintained by Spec2Ship.
-
-## Project Structure
-
-- Architecture: `docs/architecture/`
-- Requirements: `docs/specifications/requirements.md`
-- API Specs: `docs/specifications/api/`
-- Decisions: `docs/decisions/`
-- Guides: `docs/guides/`
-
-## Active Plans
-
-@.s2s/plans/
-
-## S2S Commands
-
-Use `/s2s:*` commands for development workflow:
-- `/s2s:plan:new "topic"` - Create implementation plan
-- `/s2s:plan:start "id"` - Start working on plan
-- `/s2s:decision:new "topic"` - Create architecture decision
-- `/s2s:roundtable:start "topic"` - Start discussion session
-```
-
-#### CLAUDE.md content:
-
+**CLAUDE.md** content:
 ```markdown
 # {Project Name}
 
 @.s2s/CONTEXT.md
 ```
 
-### Step 4: For Workspace (--workspace flag)
+**docs/**: Copy templates from `${CLAUDE_PLUGIN_ROOT}/templates/docs/`
 
-Must be run from parent directory containing component repos.
+### For Workspace
 
-Create:
-
+Create directory structure:
 ```
 .s2s/
 ├── workspace.yaml
@@ -148,15 +155,12 @@ Create:
 └── state.yaml
 
 docs/
-├── architecture/
-├── specifications/
-└── decisions/
+└── (same structure as standalone)
 ```
 
-#### workspace.yaml content:
-
+**workspace.yaml** content:
 ```yaml
-name: "{workspace-name}"        # From directory name or ask user
+name: "{workspace-name}"
 type: "workspace"
 
 shared_docs:
@@ -174,86 +178,23 @@ roundtable:
   strategy: "round-robin"
 ```
 
-#### components.yaml content:
-
-Detect subdirectories that are git repos:
-
-```bash
-for dir in */; do
-  if [ -d "$dir/.git" ]; then
-    echo "- name: ${dir%/}"
-    echo "  path: ./${dir%/}"
-    echo "  type: component"
-  fi
-done
-```
-
-Generate:
-
+**components.yaml**: List detected git repos in subdirectories:
 ```yaml
 components: []
-# Add components using /s2s:proj:add-component
-# Or manually edit this file
-
-# Example:
-# components:
-#   - name: "component-a"
-#     path: "./component-a"
-#     type: "service"
-#     implements: []
-#     dependencies: []
+# Detected repos:
+# - {list detected subdirectories that are git repos}
+# Add with: /s2s:proj:add-component
 ```
 
-### Step 5: For Workspace Hub (--workspace-hub flag)
+### For Workspace Hub
 
-Current repo becomes the workspace hub (stack repo pattern).
+Same as workspace but:
+- `type: "workspace-hub"` in workspace.yaml
+- Component paths use `../` prefix (peer repos)
 
-Create same structure as workspace but with:
-
-```yaml
-# workspace.yaml
-type: "workspace-hub"
-
-shared_docs:
-  path: "./docs"
-
-# Components are peer repos (relative paths go up)
-# components:
-#   - name: "component-a"
-#     path: "../component-a"
-```
-
-### Step 6: For Component (--component flag)
-
-Link to existing workspace.
-
-First, detect workspace:
-
-```bash
-# Check parent directory
-if [ -f "../.s2s/workspace.yaml" ]; then
-  echo "Found workspace in parent directory"
-  WORKSPACE_PATH=".."
-  WORKSPACE_TYPE="parent-directory"
-fi
-
-# Check sibling directories for workspace-hub
-for dir in ../*; do
-  if [ -f "$dir/.s2s/workspace.yaml" ]; then
-    TYPE=$(grep "type:" "$dir/.s2s/workspace.yaml" | head -1)
-    if [[ "$TYPE" == *"workspace-hub"* ]]; then
-      echo "Found workspace hub at $dir"
-      WORKSPACE_PATH="$dir"
-      WORKSPACE_TYPE="peer-repo"
-    fi
-  fi
-done
-```
-
-If no workspace found, ask user for path.
+### For Component
 
 Create minimal structure:
-
 ```
 .s2s/
 ├── component.yaml
@@ -262,17 +203,15 @@ Create minimal structure:
 CLAUDE.md
 ```
 
-#### component.yaml content:
-
+**component.yaml** content:
 ```yaml
-name: "{component-name}"        # From directory name
+name: "{component-name}"
 workspace:
-  type: "{workspace-type}"      # parent-directory or peer-repo
-  path: "{workspace-path}"      # Relative path to workspace
+  type: "{parent-directory | peer-repo}"
+  path: "{relative-path-to-workspace}"
 ```
 
-#### CLAUDE.md content:
-
+**CLAUDE.md** content:
 ```markdown
 # {Component Name}
 
@@ -283,24 +222,46 @@ workspace:
 @.s2s/plans/
 ```
 
-### Step 7: Create Documentation Templates
+---
 
-For all project types, create appropriate doc templates from `templates/docs/`.
+## Phase 5: Verification
+**Goal**: Confirm successful initialization
 
-### Step 8: Output Summary
+**Actions**:
+1. Verify all expected files were created
+2. Read back config file to confirm content is valid YAML
 
-Report what was created:
+---
+
+## Output
+
+Present to user:
 
 ```
 Spec2Ship initialized successfully!
 
-Type: {standalone | workspace | workspace-hub | component}
+Type: {type}
 Config: .s2s/{config|workspace|component}.yaml
-Docs: docs/
 Context: .s2s/CONTEXT.md
+Docs: docs/
 
 Next steps:
-- Review and customize .s2s/*.yaml
+{for standalone/workspace}
+- Review configuration in .s2s/*.yaml
 - Define requirements in docs/specifications/requirements.md
-- Start planning with /s2s:plan:new "feature name"
+- Start planning: /s2s:plan:new "feature name"
+
+{for component}
+- Review component.yaml
+- Workspace linked at: {workspace-path}
+- Start planning: /s2s:plan:new "feature name"
 ```
+
+---
+
+## Error Handling
+
+- **Directory not empty**: Warn but allow (s2s files won't overwrite existing docs/)
+- **Git not initialized**: Suggest `git init` but don't block for workspace mode
+- **Workspace not found** (for --component): Ask user to provide path or init workspace first
+- **Permission denied**: Report specific file/directory that failed
