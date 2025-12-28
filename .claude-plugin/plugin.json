@@ -1,5 +1,4 @@
 {
-  "$schema": "https://code.claude.com/schemas/plugin.json",
   "name": "s2s",
   "version": "0.1.0",
   "description": "Spec2Ship: AI-assisted development framework for the full software lifecycle - from specifications to shipping",
@@ -17,10 +16,5 @@
     "adr",
     "roundtable",
     "multi-repo"
-  ],
-  "capabilities": {
-    "commands": true,
-    "skills": true,
-    "agents": true
-  }
+  ]
 }
