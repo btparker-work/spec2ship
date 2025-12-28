@@ -227,15 +227,24 @@ Context commands (prefixed with `!`) gather environment information before Instr
    - Accessing parent directories (`../`) or absolute paths outside the workspace is blocked
    - If you need to reference external paths, ask the user for the path and use the Read tool to validate it
 
-**Rule: Use ONLY single, simple commands within the working directory**
+3. **Commands must NEVER fail**:
+   - Context commands that fail will block execution with an error
+   - `ls path/to/file` fails if file doesn't exist
+   - `cat file` fails if file doesn't exist
+   - Use only commands guaranteed to succeed, then interpret output or use tools in Instructions
 
-| Correct | Incorrect | Reason |
-|---------|-----------|--------|
-| `!`git status`` | `!`git status \| grep something`` | No pipes |
-| `!`ls .s2s/config.yaml`` | `!`test -f .s2s/config.yaml && echo yes`` | No operators |
-| `!`cat .s2s/state.yaml`` | `!`grep "key:" file \| cut -d: -f2`` | No pipes |
-| `!`pwd`` | `!`pwd \| xargs basename`` | No pipes |
-| `!`ls ./subdir/`` | `!`ls ../.s2s/workspace.yaml`` | No parent access |
+**Rule: Use ONLY commands that NEVER fail**
+
+| Always Works | Can Fail | Use Instead |
+|--------------|----------|-------------|
+| `!`pwd`` | | |
+| `!`ls -la`` | `!`ls .s2s/config.yaml`` | Check in ls -la output |
+| `!`git status --porcelain`` | | |
+| `!`git branch --show-current`` | | |
+| `!`git branch --list 'pattern'`` | | Returns empty if no match |
+| `!`date +"%Y%m%d"`` | | |
+| | `!`cat .s2s/state.yaml`` | Use Read tool in Instructions |
+| | `!`ls ../.s2s/workspace.yaml`` | Ask user for path |
 
 **Pattern: Move Logic to Instructions**
 
@@ -273,10 +282,9 @@ Based on the context output above, determine:
 ## Context
 
 - Current directory: !`pwd`
+- Directory contents: !`ls -la`
 - Git status: !`git status --porcelain`
 - Current branch: !`git branch --show-current`
-- Config exists: !`ls .s2s/config.yaml`
-- State file: !`cat .s2s/state.yaml`
 
 ## Interpret Context
 
@@ -284,13 +292,15 @@ Based on the context output above, determine:
 
 - **Directory name**: Extract the last segment from the pwd output
 - **Git status clean**: If Git status output is empty → clean
-- **Project type**: If ls .s2s/config.yaml succeeded → standalone
+- **S2S initialized**: If `.s2s` appears in Directory contents → yes
+
+If S2S is initialized, use Read tool to check project type and state.
 ```
 
 With corresponding `allowed-tools`:
 
 ```yaml
-allowed-tools: Bash(pwd:*), Bash(git:*), Bash(ls:*), Bash(cat:*), Read, Write
+allowed-tools: Bash(pwd:*), Bash(git:*), Bash(ls:*), Read, Write
 ```
 
 ---
@@ -798,6 +808,7 @@ Common mistakes when writing plugin components:
 |--------------|---------|------------------|
 | Using shell operators in context | `\|`, `&&`, `\|\|`, `()` blocked | Single commands only |
 | Accessing parent directories in context | `../` paths blocked by sandbox | Ask user for path, validate with Read tool |
+| Commands that can fail in context | `ls file`, `cat file` fail if missing | Use `ls -la` + interpret, or Read tool |
 | Complex logic in context | Can't conditionally output | Move logic to Interpret Context section |
 | Bash code blocks as pseudo-code | Claude executes them literally | Use prose instructions |
 | Goal/Action in simple commands | Over-engineering, adds noise | Direct step-by-step instructions |
