@@ -8,11 +8,8 @@ argument-hint: "plan-id"
 
 ## Context
 
-- S2S config: !`ls .s2s/config.yaml`
-- S2S workspace: !`ls .s2s/workspace.yaml`
-- S2S component: !`ls .s2s/component.yaml`
-- Plans directory: !`ls .s2s/plans/`
-- State file: !`cat .s2s/state.yaml`
+- Current directory: !`pwd`
+- Directory contents: !`ls -la`
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --porcelain`
 
@@ -20,10 +17,13 @@ argument-hint: "plan-id"
 
 Based on the context output above, determine:
 
-- **Project type**: If config.yaml exists → "standalone", if workspace.yaml exists → "workspace", if component.yaml exists → "component", otherwise → "NOT_S2S"
-- **Available plans**: Extract plan IDs from the Plans directory listing (filenames without .md extension)
-- **Current plan**: Extract the `current_plan:` value from the State file content (or "none" if not set/null)
+- **S2S initialized**: If `.s2s` directory appears in Directory contents → "yes", otherwise → "NOT_S2S"
 - **Git status clean**: If Git status output is empty → "clean", otherwise → "dirty"
+
+If S2S is initialized, use Read tool to:
+- Read `.s2s/state.yaml` to get current_plan value
+- List `.s2s/plans/` to get available plan IDs
+- Check project type from config files
 
 ## Instructions
 

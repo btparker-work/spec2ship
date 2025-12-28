@@ -8,15 +8,20 @@ argument-hint: [--status planning|active|completed|blocked]
 
 ## Context
 
-- Plans directory: !`ls .s2s/plans/`
-- State file: !`cat .s2s/state.yaml`
+- Current directory: !`pwd`
+- Directory contents: !`ls -la`
 
 ## Interpret Context
 
 Based on the context output above, determine:
 
-- **Plans exist**: If Plans directory listing succeeded and shows .md files → plans exist, otherwise → "NO_PLANS"
-- **Current active plan**: Extract the `current_plan:` value from the State file content (or "none" if not set/null)
+- **S2S initialized**: If `.s2s` directory appears in Directory contents → "yes", otherwise → "NOT_S2S"
+
+If S2S is initialized, use Read tool or Glob to:
+- List `.s2s/plans/` contents to find plan files
+- Read `.s2s/state.yaml` to get current_plan value
+
+If no plans found → "NO_PLANS"
 
 ## Instructions
 

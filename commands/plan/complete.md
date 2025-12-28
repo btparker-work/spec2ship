@@ -8,18 +8,22 @@ argument-hint: [--merge] [--no-delete-branch]
 
 ## Context
 
-- State file: !`cat .s2s/state.yaml`
+- Current directory: !`pwd`
+- Directory contents: !`ls -la`
 - Git status: !`git status --porcelain`
 - Current branch: !`git branch --show-current`
-- Remote HEAD: !`git symbolic-ref refs/remotes/origin/HEAD`
 
 ## Interpret Context
 
 Based on the context output above, determine:
 
-- **Current plan**: Extract the `current_plan:` value from the State file content (or "none" if not set/null)
+- **S2S initialized**: If `.s2s` directory appears in Directory contents → "yes", otherwise → "NOT_S2S"
 - **Git status clean**: If Git status output is empty → "clean", otherwise → "dirty"
-- **Default branch**: Extract branch name from Remote HEAD (remove "refs/remotes/origin/" prefix), default to "main" if error
+
+If S2S is initialized, use Read tool to:
+- Read `.s2s/state.yaml` to get current_plan value
+
+To get default branch, use Bash: `git symbolic-ref refs/remotes/origin/HEAD` (default to "main" if fails)
 
 ## Instructions
 

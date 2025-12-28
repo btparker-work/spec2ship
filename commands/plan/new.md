@@ -8,23 +8,24 @@ argument-hint: "topic" [--branch]
 
 ## Context
 
-- S2S config: !`ls .s2s/config.yaml`
-- S2S workspace: !`ls .s2s/workspace.yaml`
-- S2S component: !`ls .s2s/component.yaml`
+- Current directory: !`pwd`
+- Directory contents: !`ls -la`
 - Current timestamp: !`date +"%Y%m%d-%H%M%S"`
 - ISO timestamp: !`date -u +"%Y-%m-%dT%H:%M:%SZ"`
 - Feature branches: !`git branch --list 'feature/F*'`
 - Git status: !`git status --porcelain`
-- Plans directory: !`ls -d .s2s/plans`
 
 ## Interpret Context
 
 Based on the context output above, determine:
 
-- **Project type**: If config.yaml exists → "standalone", if workspace.yaml exists → "workspace", if component.yaml exists → "component", otherwise → "NOT_S2S"
-- **Existing feature branches count**: Count the lines in Feature branches output (0 if empty/error)
+- **S2S initialized**: If `.s2s` directory appears in Directory contents → "yes", otherwise → "NOT_S2S"
+- **Existing feature branches count**: Count the lines in Feature branches output (0 if empty)
 - **Git status clean**: If Git status output is empty → "clean", otherwise → "dirty"
-- **Plans directory exists**: If `ls -d .s2s/plans` succeeded → "yes", otherwise → "no"
+
+If S2S is initialized, use Read tool to:
+- Check `.s2s/` contents to determine project type (config.yaml/workspace.yaml/component.yaml)
+- Check if `.s2s/plans/` directory exists
 
 ## Instructions
 
