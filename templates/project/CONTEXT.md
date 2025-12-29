@@ -1,63 +1,45 @@
-# {Project Name} - S2S Context
+# Project Context
 
 <!--
-This file is automatically maintained by Spec2Ship.
+This file is maintained by Spec2Ship discover phase.
 Import this in CLAUDE.md using @.s2s/CONTEXT.md
+Run /s2s:discover to populate or update this file.
 -->
 
-## Project Structure
+## Overview
 
-| Category | Path |
-|----------|------|
-| Architecture | `docs/architecture/` |
-| Requirements | `docs/specifications/requirements.md` |
-| API Specs | `docs/specifications/api/` |
-| Decisions | `docs/decisions/` |
-| Guides | `docs/guides/` |
-| Plans | `.s2s/plans/` |
+{Project description - run /s2s:discover to populate}
 
-## S2S Commands
+## Business Domain
 
-### Planning
+{Business domain - run /s2s:discover to populate}
 
-| Command | Description |
-|---------|-------------|
-| `/s2s:plan:new "topic"` | Create implementation plan |
-| `/s2s:plan:new "topic" --branch` | Create plan with git branch |
-| `/s2s:plan:start "id"` | Start working on plan |
-| `/s2s:plan:complete` | Mark current plan complete |
-| `/s2s:plan:list` | List all plans |
+## Objectives
 
-### Decisions
+- {Objectives - run /s2s:discover to populate}
 
-| Command | Description |
-|---------|-------------|
-| `/s2s:decision:new "topic"` | Create ADR |
-| `/s2s:decision:new "topic" --roundtable` | Create via discussion |
-| `/s2s:decision:list` | List all decisions |
+## Scope
 
-### Roundtable
+**Type**: {MVP | Full Implementation | Proof of Concept}
 
-| Command | Description |
-|---------|-------------|
-| `/s2s:roundtable:start "topic"` | Start discussion |
-| `/s2s:roundtable:resume` | Resume last session |
-| `/s2s:roundtable:converge` | Force consensus |
+**In scope**:
+- {To be defined}
 
-## Active Plans
+**Out of scope**:
+- {To be defined}
 
-<!--
-This section shows current implementation plans.
-See .s2s/plans/ for details.
--->
+## Constraints
 
-@.s2s/plans/
+{Constraints - run /s2s:discover to populate}
 
-## Recent Decisions
+## Technical Stack
 
-<!--
-Recent architecture decisions.
-See docs/decisions/ for full list.
--->
+{To be determined - run /s2s:tech to define}
 
-@docs/decisions/
+## Open Questions
+
+- {Questions to be resolved}
+
+---
+*Last updated: {date}*
+*Phase: init*

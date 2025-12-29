@@ -259,8 +259,9 @@ The workspace path is obtained from:
 
     What's next?
 
+    For a new project (recommended):
+      /s2s:discover
+      Analyzes your project and gathers context for better planning.
+
     For a quick task or feature:
       /s2s:plan:new "feature name"
-
-    For a new project that needs requirements gathering:
-      (coming soon: /s2s:context to gather project context and requirements)
