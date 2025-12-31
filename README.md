@@ -6,16 +6,18 @@ AI-assisted development framework for the full software lifecycle — from speci
 
 Spec2Ship automates software development workflows using Claude Code:
 
-- **Spec**: Define requirements, architecture, and decisions via roundtable discussions
-- **Ship**: Execute implementation plans with automated git workflows
+- **Discover**: Understand requirements through guided exploration
+- **Spec**: Define requirements and architecture via multi-agent roundtable discussions
+- **Plan**: Create structured implementation plans
+- **Ship**: Execute plans with automated git workflows
 
 ## Features
 
+- **Workflow-Driven Development**: Structured phases from discovery to implementation
+- **Roundtable Discussions**: Multi-agent discussions with 5 facilitation strategies
 - **Implementation Plans**: Single-file plans that reference global specs
-- **Roundtable Discussions**: Multi-agent discussions for architectural decisions
 - **Multi-Repo Support**: Workspace and component coordination across repositories
 - **Standards-Based**: Templates based on arc42, ISO 25010, MADR
-- **Git-Native**: Branch conventions, timestamp naming, no custom locking
 
 ## Installation
 
@@ -27,50 +29,96 @@ Spec2Ship automates software development workflows using Claude Code:
 /plugin install s2s
 ```
 
+## Workflow
+
+```
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ discover│ ─► │  specs  │ ─► │  tech   │ ─► │  impl   │
+│         │    │         │    │         │    │         │
+│ Explore │    │ Define  │    │ Design  │    │ Execute │
+│ problem │    │ what    │    │ how     │    │ plan    │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+```
+
 ## Quick Start
 
 ```bash
-# Initialize a new project
+# 1. Initialize a new project
 /s2s:proj:init
 
-# Create an implementation plan
-/s2s:plan:new "user authentication" --branch
+# 2. Discover requirements (explore the problem space)
+/s2s:discover "user authentication for our web app"
 
-# Start working on the plan
-/s2s:plan:start "20240115-143022-user-authentication"
+# 3. Define specifications (what to build)
+/s2s:specs "user authentication requirements"
 
-# Complete the plan
+# 4. Design technical approach (how to build)
+/s2s:tech "authentication implementation architecture"
+
+# 5. Create implementation plan
+/s2s:plan:new "implement user authentication" --branch
+
+# 6. Start working on the plan
+/s2s:plan:start "20240115-143022-implement-user-authentication"
+
+# 7. Complete the plan
 /s2s:plan:complete
 ```
 
 ## Commands
 
+### Workflow Commands
+
+| Command | Description |
+|---------|-------------|
+| `/s2s:discover "topic"` | Explore problem space, gather requirements |
+| `/s2s:specs "topic"` | Define specifications via roundtable |
+| `/s2s:tech "topic"` | Design technical architecture via roundtable |
+| `/s2s:impl "topic"` | Implementation guidance and execution |
+
 ### Project Management
-- `/s2s:proj:init` - Initialize project
-- `/s2s:proj:init --workspace` - Initialize workspace
-- `/s2s:proj:init --component` - Initialize component
+
+| Command | Description |
+|---------|-------------|
+| `/s2s:proj:init` | Initialize project |
+| `/s2s:proj:init --workspace` | Initialize workspace |
+| `/s2s:proj:init --component` | Initialize component |
 
 ### Implementation Plans
-- `/s2s:plan:new "topic"` - Create plan
-- `/s2s:plan:start "id"` - Start plan
-- `/s2s:plan:complete` - Complete plan
-- `/s2s:plan:list` - List plans
 
-### Decisions (ADRs)
-- `/s2s:decision:new "topic"` - Create ADR
-- `/s2s:decision:new "topic" --roundtable` - Create via discussion
+| Command | Description |
+|---------|-------------|
+| `/s2s:plan:new "topic"` | Create plan |
+| `/s2s:plan:new "topic" --branch` | Create plan with feature branch |
+| `/s2s:plan:start "id"` | Start plan |
+| `/s2s:plan:complete` | Complete plan |
+| `/s2s:plan:list` | List plans |
 
 ### Roundtable
-- `/s2s:roundtable:start "topic"` - Start discussion
-- `/s2s:roundtable:resume` - Resume session
-- `/s2s:roundtable:converge` - Force consensus
+
+| Command | Description |
+|---------|-------------|
+| `/s2s:roundtable:start "topic"` | Start discussion |
+| `/s2s:roundtable:start "topic" --strategy disney` | Start with specific strategy |
+| `/s2s:roundtable:list` | List sessions |
+| `/s2s:roundtable:resume "id"` | Resume session |
+
+### Roundtable Strategies
+
+| Strategy | Phases | Best For |
+|----------|--------|----------|
+| `standard` | 1 | General discussions |
+| `disney` | 3 (dreamer, realist, critic) | Creative solutions |
+| `debate` | 3 (opening, rebuttal, closing) | Option evaluation |
+| `consensus-driven` | 3 | Fast decisions |
+| `six-hats` | 7 | Comprehensive analysis |
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Commands Reference](docs/commands-reference.md)
-- [Multi-Repo Guide](docs/multi-repo-guide.md)
-- [Workflows](docs/workflows.md)
+- [Roundtable Overview](docs/roundtable/README.md)
+- [Configuration Guide](docs/roundtable/configuration.md)
+- [Strategy Reference](docs/roundtable/strategies/overview.md)
+- [Architecture](docs/roundtable/architecture/components.md)
 
 ## License
 

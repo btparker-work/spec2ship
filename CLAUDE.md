@@ -10,9 +10,11 @@ spec2ship/
 ├── commands/                 # Slash commands (/s2s:*)
 │   ├── proj/                 # Project management
 │   ├── plan/                 # Implementation plans
-│   ├── decision/             # ADRs
 │   ├── roundtable/           # Multi-agent discussions
-│   └── git/                  # Git operations
+│   ├── discover.md           # Workflow: explore problem space
+│   ├── specs.md              # Workflow: define specifications
+│   ├── tech.md               # Workflow: design architecture
+│   └── impl.md               # Workflow: implementation guidance
 ├── agents/                   # Specialized sub-agents
 │   ├── roundtable/           # Discussion participants
 │   ├── exploration/          # Codebase analysis
@@ -21,7 +23,8 @@ spec2ship/
 │   ├── arc42-templates/      # Architecture patterns
 │   ├── iso25010-requirements/# Quality standards
 │   ├── madr-decisions/       # ADR format
-│   └── conventional-commits/ # Git conventions
+│   ├── conventional-commits/ # Git conventions
+│   └── roundtable-strategies/# Facilitation methods (disney, debate, etc.)
 ├── templates/                # File templates for user projects
 └── docs/                     # User documentation
 ```
@@ -56,32 +59,44 @@ We follow Anthropic's pattern from `plugin-dev` and `feature-dev`:
         └── madr-decisions (for ADR format)
 ```
 
-### SAD-002: Roundtable Implementation
+### SAD-002: Roundtable Implementation (v2)
 
-Roundtable is our unique multi-agent discussion system. Pattern:
+Roundtable v2 uses the **Executor Pattern**: Command executes, Facilitator decides.
 
-1. **Facilitator agent** orchestrates the discussion
-2. **Domain expert agents** contribute perspectives
-3. **Command** manages flow, consensus, and output
-
+**Architecture**:
 ```
-┌─────────────────────────────────────────────────┐
-│  /s2s:roundtable:start "topic"                  │
-│                                                 │
-│  ┌─────────────┐                                │
-│  │ Facilitator │ ◄── Orchestrates turns         │
-│  └──────┬──────┘                                │
-│         │                                       │
-│    ┌────┴────┬────────┬────────┐                │
-│    ▼         ▼        ▼        ▼                │
-│ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐             │
-│ │Arch  │ │Tech  │ │QA    │ │DevOps│             │
-│ │itect │ │Lead  │ │Lead  │ │Eng   │             │
-│ └──────┘ └──────┘ └──────┘ └──────┘             │
-│                                                 │
-│  Output: Consensus → ADR or Plan                │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  Command (start.md) - EXECUTOR                                  │
+│  • Loads strategy skill                                         │
+│  • Creates session file                                         │
+│  • Executes roundtable loop                                     │
+│  • Batch writes at end of round                                 │
+│                                                                 │
+│    ┌─────────────────────────────────────────────────────────┐  │
+│    │ Facilitator Agent - DECISION MAKER                      │  │
+│    │ • Returns structured YAML (action, question, synthesis) │  │
+│    │ • Decides next action, never executes                   │  │
+│    └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│    ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐          │
+│    │ Arch    │  │ Tech    │  │ QA      │  │ DevOps  │          │
+│    │ itect   │  │ Lead    │  │ Lead    │  │ Eng     │          │
+│    └─────────┘  └─────────┘  └─────────┘  └─────────┘          │
+│    ▲                                                            │
+│    │ Launched in PARALLEL (blind voting)                        │
+│                                                                 │
+│    Strategy Skill (disney.md, debate.md, etc.)                  │
+│    • Defines phases, prompts, consensus policy                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+**Strategies**: standard, disney, debate, consensus-driven, six-hats
+
+**Mitigations for LLM Multi-Agent Issues**:
+- **Blind Voting**: Parallel Task execution prevents sycophancy
+- **Context Isolation**: Agents receive context in prompt, don't read files
+- **Batch Write**: Session file updated only at end of round
+- **Heterogeneous Agents**: Different roles provide different perspectives
 
 ### SAD-003: Agent Tiers
 
@@ -930,19 +945,19 @@ CONFIGURATION (modifiers) → flags
 - Commands: proj/init, plan/new, plan/list, plan/start, plan/complete
 - Templates: project, workspace, docs
 
-### Phase 2: Roundtable + Agents (Current)
-- Agents: roundtable/* (facilitator, architect, tech-lead, qa-lead, devops)
-- Agents: exploration/* (codebase-analyzer, requirements-mapper)
-- Agents: validation/* (plan-validator, spec-validator)
-- Commands: roundtable/start, roundtable/resume, roundtable/converge
-- Commands: decision/new, decision/list
+### Phase 2: Workflow + Roundtable ✓
+- Workflow commands: discover, specs, tech, impl
+- Roundtable v2: executor pattern, strategy skills
+- Agents: roundtable/* (facilitator, architect, tech-lead, qa-lead, devops, product-manager)
+- Skills: roundtable-strategies/ (standard, disney, debate, consensus-driven, six-hats)
+- Commands: roundtable/start, roundtable/resume, roundtable/list
 
-### Phase 3: Skills + Standards
+### Phase 3: Skills + Standards (Current)
 - Skills: arc42-templates, iso25010-requirements, madr-decisions
 - Integration with commands and agents
+- Agents: exploration/*, validation/*
 
 ### Phase 4: Multi-Repo Support
-- Commands: git/branch, git/sync, git/pr
 - Workspace coordination across components
 
 ### Phase 5: Documentation
