@@ -1,7 +1,7 @@
 ---
 description: Define functional requirements through a roundtable discussion. Reads CONTEXT.md and produces structured requirements.md.
 allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion, TodoWrite
-argument-hint: [--skip-roundtable] [--format srs|volere|simple]
+argument-hint: [--skip-roundtable] [--format srs|volere|simple] [--strategy standard|disney|consensus-driven]
 ---
 
 # Define Functional Requirements
@@ -59,6 +59,17 @@ Extract from $ARGUMENTS:
   - `srs` - IEEE SRS-inspired structure (default)
   - `volere` - Volere template style
   - `simple` - Simple bullet-point list
+- **--strategy**: Roundtable facilitation strategy (optional)
+  - Options: standard, disney, consensus-driven, debate, six-hats
+  - Default: from config.yaml `roundtable.strategy` or "consensus-driven"
+
+### Load roundtable configuration
+
+Read `.s2s/config.yaml` and extract:
+- Strategy: --strategy flag → config.roundtable.strategy → "consensus-driven"
+- Participants: config.roundtable.participants.by_workflow_type.specs
+  - Default: [product-manager, software-architect, qa-lead]
+- Escalation triggers from config
 
 ### Display context summary
 
@@ -82,49 +93,43 @@ Show the user what we're working with:
 
 If --skip-roundtable is NOT present:
 
-Launch a roundtable session focused on functional requirements:
+**Launch roundtable session using the executor pattern from start.md:**
 
-```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are facilitating a Requirements Roundtable.
+The specs workflow invokes roundtable with `workflow_type: "specs"`:
 
-Project Context:
-{full CONTEXT.md content}
+1. **Create session** with:
+   - Topic: "Requirements definition for {project name}"
+   - Strategy: from config or --strategy flag
+   - Workflow type: "specs"
+   - Participants: from config.roundtable.participants.by_workflow_type.specs
+   - Expected output: "requirements"
 
-Participants: product-manager, software-architect, qa-lead
+2. **Execute roundtable loop** (as defined in roundtable/start.md):
+   - Facilitator generates questions about functional requirements
+   - Participants (product-manager, software-architect, qa-lead) respond in parallel
+   - Facilitator synthesizes, identifies consensus and conflicts
+   - Loop until requirements are defined or escalation needed
 
-Your task:
-1. Based on the project context, identify the key functional areas
-2. For each functional area, gather perspectives from participants:
-   - Product Manager: user needs, business value, priority
-   - Software Architect: feasibility, dependencies, complexity
-   - QA Lead: testability, acceptance criteria, edge cases
+3. **Focus areas for facilitator**:
+   - Key functional areas based on CONTEXT.md
+   - User needs and business value (Product Manager perspective)
+   - Feasibility and dependencies (Software Architect perspective)
+   - Testability and acceptance criteria (QA Lead perspective)
 
-3. For each requirement, capture:
-   - ID (REQ-001, REQ-002, etc.)
-   - Title
-   - Description (user story format preferred: As a... I want... So that...)
-   - Priority (Must/Should/Could/Won't - MoSCoW)
+4. **Expected output structure**:
+   - REQ-001, REQ-002, etc. with ID, Title, Description (user story)
+   - Priority (MoSCoW: Must/Should/Could/Won't)
    - Acceptance criteria (testable conditions)
-   - Dependencies (other requirements)
-   - Notes from discussion
+   - Dependencies on other requirements
+   - Core requirements (MVP) vs Extended (nice-to-have)
+   - Out of scope items
 
-4. Identify:
-   - Core requirements (must-have for MVP)
-   - Extended requirements (nice-to-have)
-   - Out of scope items (explicitly excluded)
-
-5. Flag any conflicts or ambiguities for user resolution
-
-Return a structured list of requirements with all fields populated."
-)
-```
+5. **Session completion** triggers Phase 2 (User Review)
 
 If --skip-roundtable IS present:
 - Analyze CONTEXT.md directly
 - Infer requirements from objectives and scope
-- Generate basic requirement list
+- Generate basic requirement list without roundtable
 
 ### Phase 2: User Review
 

@@ -13,14 +13,54 @@ git:
 
 # Roundtable configuration
 roundtable:
-  default_participants:
-    - software-architect
-    - technical-lead
-  strategy: "round-robin"           # round-robin | speak-when-relevant | facilitator-led
-  human_in_loop:
-    - business_priority
-    - unresolved_tradeoff
-    - security_decision
+  # === STRATEGY ===
+  # Loads facilitation method from skills/roundtable-strategies/
+  strategy: "standard"  # standard | disney | debate | consensus-driven | six-hats
+
+  # === STRATEGY OVERRIDES (optional) ===
+  # Warning if contradicts strategy, but executed anyway
+  # overrides:
+  #   participation: "sequential"  # Override strategy default
+
+  # === PARTICIPANTS ===
+  participants:
+    default:
+      - software-architect
+      - technical-lead
+
+    # Per WORKFLOW TYPE (discover, specs, tech, brainstorm)
+    by_workflow_type:
+      discover:
+        - product-manager
+      specs:
+        - product-manager
+        - software-architect
+        - qa-lead
+      tech:
+        - software-architect
+        - technical-lead
+        - devops-engineer
+      brainstorm:
+        - product-manager
+        - software-architect
+        - technical-lead
+        - devops-engineer
+
+  # === ESCALATION (global) ===
+  escalation:
+    enabled: true
+    triggers:
+      no_consensus_after_attempts: 3
+      confidence_below: 0.5
+      critical_keywords:
+        - security
+        - must-have
+        - blocking
+        - legal
+    presentation:
+      show_all_positions: true
+      show_rationale: true
+      facilitator_recommendation: true
 
 # Documentation paths
 docs:

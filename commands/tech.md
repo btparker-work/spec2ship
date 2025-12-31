@@ -1,7 +1,7 @@
 ---
 description: Define technical architecture through a roundtable discussion. Reads requirements.md and produces architecture documentation.
 allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion, TodoWrite
-argument-hint: [--skip-roundtable] [--focus components|api|deployment]
+argument-hint: [--skip-roundtable] [--focus components|api|deployment] [--strategy standard|debate|disney]
 ---
 
 # Define Technical Architecture
@@ -67,6 +67,18 @@ Extract from $ARGUMENTS:
   - `components` - System components and structure
   - `api` - API design and contracts
   - `deployment` - Infrastructure and deployment
+- **--strategy**: Roundtable facilitation strategy (optional)
+  - Options: standard, debate, disney, consensus-driven, six-hats
+  - Default: from config.yaml `roundtable.strategy` or "debate"
+  - Note: "debate" is recommended for tech decisions (Pro/Con evaluation)
+
+### Load roundtable configuration
+
+Read `.s2s/config.yaml` and extract:
+- Strategy: --strategy flag → config.roundtable.strategy → "debate"
+- Participants: config.roundtable.participants.by_workflow_type.tech
+  - Default: [software-architect, technical-lead, devops-engineer]
+- Escalation triggers from config
 
 ### Display context summary
 
@@ -88,60 +100,46 @@ Extract from $ARGUMENTS:
 
 If --skip-roundtable is NOT present:
 
-Launch architecture roundtable:
+**Launch roundtable session using the executor pattern from start.md:**
 
-```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are facilitating a Technical Architecture Roundtable.
+The tech workflow invokes roundtable with `workflow_type: "tech"`:
 
-Project Context:
-{CONTEXT.md content}
+1. **Create session** with:
+   - Topic: "Architecture design for {project name}" + focus area if specified
+   - Strategy: from config or --strategy flag (default: "debate" for Pro/Con evaluation)
+   - Workflow type: "tech"
+   - Participants: from config.roundtable.participants.by_workflow_type.tech
+   - Expected output: "architecture"
 
-Requirements:
-{requirements.md content or summary}
+2. **Execute roundtable loop** (as defined in roundtable/start.md):
+   - Facilitator generates questions about architectural concerns
+   - Participants (software-architect, technical-lead, devops-engineer) respond
+   - Debate strategy: Pro/Con evaluation of options
+   - Facilitator synthesizes, identifies consensus and conflicts
+   - Loop until architecture decisions are made or escalation needed
 
-Participants: software-architect, technical-lead, devops-engineer
-
-Focus: {--focus value or 'full architecture'}
-
-Your task:
-1. Analyze requirements and identify architectural concerns:
+3. **Focus areas for facilitator**:
    - System boundaries and components
-   - Data flow and storage
-   - Integration points
-   - Scalability requirements
+   - Data flow and storage patterns
+   - Integration points and APIs
+   - Scalability and performance requirements
    - Security considerations
+   - Deployment topology
 
-2. Gather perspectives from each participant:
+4. **Participant perspectives**:
    - Software Architect: overall structure, patterns, component design
    - Technical Lead: implementation approach, tech stack, code organization
    - DevOps Engineer: deployment, infrastructure, observability
 
-3. For each architectural decision, capture:
-   - Decision ID (ARCH-001, etc.)
-   - Context (why this decision is needed)
-   - Options considered
-   - Decision made
-   - Rationale
-   - Consequences
-
-4. Define:
-   - System components and their responsibilities
-   - Component interfaces/contracts
+5. **Expected output structure**:
+   - ARCH-001, ARCH-002, etc. decision IDs
+   - For each decision: context, options, decision, rationale, consequences
+   - System components with responsibilities
    - Technology stack recommendations
-   - Deployment topology
+   - Deployment view
+   - Risks and open questions
 
-5. Identify risks and open questions
-
-Return structured architecture documentation covering:
-- System overview
-- Component breakdown
-- Key decisions
-- Deployment view
-- Tech stack"
-)
-```
+6. **Session completion** triggers Phase 2 (User Review)
 
 ### Phase 2: User Review
 

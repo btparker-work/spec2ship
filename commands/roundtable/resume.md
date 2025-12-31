@@ -47,7 +47,7 @@ Check $ARGUMENTS for session ID.
     No active session found.
 
     Available sessions:
-    {list of sessions with IDs}
+    {list with status and details}
 
     Resume a specific session:
       /s2s:roundtable:resume <session-id>
@@ -58,13 +58,17 @@ Check $ARGUMENTS for session ID.
 ### Load session state
 
 Read the session file `.s2s/sessions/{session-id}.yaml` and extract:
-- Topic
-- Participants
-- Status
-- Rounds completed
-- Current consensus points
-- Current conflicts
-- Expected output type
+- id
+- topic
+- workflow_type
+- strategy
+- status
+- current_phase
+- phases (with rounds)
+- participants
+- consensus (current)
+- conflicts (current)
+- config_snapshot
 
 ### Validate session can be resumed
 
@@ -72,35 +76,44 @@ If session status is "completed":
 
     Session {session-id} is already completed.
 
+    Topic: {topic}
+    Strategy: {strategy}
     Outcome: {outcome summary}
     Output: {path to generated document}
 
     To start a new discussion on related topic:
       /s2s:roundtable:start "new topic"
 
-    To fork this session (start from its conclusions):
-      /s2s:roundtable:start "topic" --from {session-id}
+    To review the outcome:
+      Read the output document at {path}
+
+If session status is "paused" or "active", proceed with resume.
 
 ### Display session context
 
 Show current state:
 
-    Resuming roundtable session...
+    Resuming Roundtable Session
+    ═══════════════════════════
 
     Session: {session-id}
     Topic: {topic}
+    Strategy: {strategy}
     Status: {status}
-    Participants: {list}
 
     Progress:
-    - Rounds completed: {n}
-    - Consensus points: {count}
-    - Open conflicts: {count}
+    ─────────
+    Current phase: {current_phase}
+    Rounds in phase: {count}
+    Total rounds: {total across phases}
 
-    {If conflicts exist}
-    Current conflicts:
-    1. {conflict 1 summary}
-    2. {conflict 2 summary}
+    Consensus points: {count}
+    {list if any}
+
+    Open conflicts: {count}
+    {list with positions if any}
+
+    Participants: {list}
 
 ### Update session
 
@@ -111,40 +124,102 @@ Update the session file:
 Update `.s2s/state.yaml`:
 - Set `current_session` to this session ID
 
-### Launch facilitator with context
+### Prepare context for facilitator
 
-Launch the facilitator with full session context:
+Load all context needed:
+1. Read `.s2s/CONTEXT.md` for project context
+2. Read strategy skill from `skills/roundtable-strategies/references/{strategy}.md`
+3. Compile full history from session file:
+   - All phases completed
+   - All rounds with responses
+   - Current consensus and conflicts
+
+### Resume discussion
+
+Display resume message:
+
+    Continuing discussion from Phase: {current_phase}, Round {round_number}...
+
+Launch facilitator with full context:
 
 ```
 Task(
   subagent_type="general-purpose",
   prompt="You are the Roundtable Facilitator resuming a session.
 
-Session ID: {session-id}
-Topic: {topic}
+Read agents/roundtable/facilitator.md
 
-Previous Progress:
-- Rounds completed: {n}
-- Consensus reached:
-{list of consensus points}
+Session Input:
+```yaml
+session:
+  id: \"{session-id}\"
+  topic: \"{topic}\"
+  workflow_type: \"{workflow-type}\"
+  resumed: true
 
-- Open conflicts:
-{list of conflicts with positions}
+strategy:
+  name: \"{strategy}\"
+  current_phase: \"{current-phase}\"
+  phases_remaining: [{remaining phases}]
 
-Participants: {list}
-Expected output: {adr|plan|summary}
+participants:
+  {participant list with roles}
 
-Your task:
-1. Briefly summarize where we left off
-2. Continue the discussion from the last round
+history:
+  phases_completed:
+    {list of completed phases with summaries}
+  current_phase_rounds:
+    {list of rounds in current phase}
+  rounds_completed: {total count}
+  consensus:
+    {full list of consensus points}
+  conflicts:
+    {full list of conflicts with positions}
+  previous_synthesis: \"{last round synthesis}\"
+
+context:
+  project: \"{CONTEXT.md content}\"
+```
+
+You are resuming this discussion.
+1. Briefly acknowledge where we left off
+2. Continue from the current phase and round
 3. Focus on resolving open conflicts
 4. Drive toward consensus
-5. Generate the expected output when ready
-
-Use the roundtable agents to continue gathering perspectives as needed."
+5. Respond with structured YAML for next action"
 )
 ```
 
+### Continue with roundtable loop
+
+After facilitator responds, continue with the same loop as in start.md:
+
+1. Parse facilitator decision (generate_question or synthesize)
+2. Execute participant Tasks based on decision
+3. Call facilitator to synthesize
+4. Batch write to session file
+5. Check escalation triggers
+6. Evaluate: continue, next phase, conclude, escalate
+
 ### Handle completion
 
-Same as `/s2s:roundtable:start` - update session file, generate output, display summary.
+Same as start.md - when facilitator returns `action: "conclude"`:
+
+1. Generate appropriate output document
+2. Update session file with outcome
+3. Clear current_session from state.yaml
+4. Display completion summary
+
+    Roundtable Complete!
+    ════════════════════
+
+    Session: {session-id}
+    Topic: {topic}
+    Strategy: {strategy}
+    Phases: {phases completed}
+    Total rounds: {count}
+
+    Consensus Reached:
+    {list}
+
+    Output: {file path}

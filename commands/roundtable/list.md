@@ -1,5 +1,5 @@
 ---
-description: List all roundtable sessions with their status and outcomes.
+description: List all roundtable sessions with their status, strategy, and progress.
 allowed-tools: Bash(ls:*), Read, Glob
 argument-hint: [--status active|completed|all]
 ---
@@ -40,13 +40,13 @@ If no session files found in `.s2s/sessions/`, display:
 
     Examples:
       /s2s:roundtable:start "API versioning strategy"
-      /s2s:roundtable:start "authentication architecture" --participants architect,devops
+      /s2s:roundtable:start "authentication architecture" --strategy debate
 
 ### Parse arguments
 
 Check $ARGUMENTS for:
 - **--status**: Filter by status
-  - `active` - only active sessions
+  - `active` - only active/paused sessions
   - `completed` - only completed sessions
   - `all` - all sessions (default)
 
@@ -55,34 +55,67 @@ Check $ARGUMENTS for:
 For each session file found:
 1. Read the YAML content
 2. Extract:
-   - **ID**: from `id` field
-   - **Topic**: from `topic` field
-   - **Status**: from `status` field
-   - **Started**: from `started` field
-   - **Participants**: from `participants` array
-   - **Rounds**: count of items in `rounds` array
-   - **Outcome**: from `outcome` field (if completed)
+   - **id**: Session identifier
+   - **topic**: Discussion topic
+   - **strategy**: Facilitation strategy used
+   - **workflow_type**: discover/specs/tech/brainstorm
+   - **status**: active/paused/completed
+   - **started**: Start timestamp
+   - **current_phase**: Current phase (for active)
+   - **phases**: List of phases with round counts
+   - **participants**: List of participants
+   - **consensus**: Count of consensus points
+   - **conflicts**: Count of open conflicts
+   - **outcome**: Output file path (for completed)
+
+### Calculate progress
+
+For each session, calculate:
+- Total rounds: sum of rounds across all phases
+- Current phase name
+- Round in current phase
+- Phases completed / total phases
 
 ### Format output
 
 Group sessions by status and display:
 
 **Active sessions** (prefix with *):
+
 ```
-* {session-id}
+* {session-id} (current)
   Topic: {topic}
+  Strategy: {strategy}
   Started: {date}
+
+  Progress:
+  ├─ Phase: {current_phase} ({phase_index}/{total_phases})
+  ├─ Round: {round_in_phase}
+  ├─ Consensus: {count} points
+  └─ Conflicts: {count} open
+
   Participants: {list}
-  Rounds: {count}
+```
+
+**Paused sessions** (prefix with ⏸):
+
+```
+⏸ {session-id}
+  Topic: {topic}
+  Strategy: {strategy}
+  Paused at: Phase {phase}, Round {round}
+  Consensus: {count} | Conflicts: {count}
 ```
 
 **Completed sessions** (prefix with ✓):
+
 ```
 ✓ {session-id}
   Topic: {topic}
+  Strategy: {strategy}
   Completed: {date}
-  Outcome: {brief summary}
-  Output: {path to generated document}
+  Phases: {count} | Rounds: {total}
+  Outcome: {output file path}
 ```
 
 ### Mark current session
@@ -91,11 +124,35 @@ If a session ID matches `current_session` from state.yaml, add "(current)" marke
 
 ### Display summary
 
-End with summary line:
+End with summary and commands:
 
-    Total: {n} sessions ({active} active, {completed} completed)
+    ════════════════════════════════════════
+    Total: {n} sessions
+    ├─ Active: {count}
+    ├─ Paused: {count}
+    └─ Completed: {count}
 
     Commands:
-      /s2s:roundtable:start "topic"    Start new session
-      /s2s:roundtable:resume           Resume current session
-      /s2s:roundtable:resume <id>      Resume specific session
+    ─────────
+    Start new session:
+      /s2s:roundtable:start "topic"
+
+    Resume current session:
+      /s2s:roundtable:resume
+
+    Resume specific session:
+      /s2s:roundtable:resume {session-id}
+
+    Filter by status:
+      /s2s:roundtable:list --status active
+      /s2s:roundtable:list --status completed
+
+### Strategy distribution (if multiple sessions)
+
+If more than 3 sessions exist, show strategy usage:
+
+    Strategy Usage:
+    ├─ standard: {count} sessions
+    ├─ disney: {count} sessions
+    ├─ debate: {count} sessions
+    └─ other: {count} sessions
