@@ -238,6 +238,25 @@ allowed-tools: Bash(ls:*), Bash(git:*), Bash(grep:*), Read, Write
 | `Bash(date:*)` | Only `date` commands | `date +"%Y%m%d"` |
 | `Bash(mkdir:*)` | Only `mkdir` commands | `mkdir -p .s2s/plans` |
 
+**Pattern Syntax for SlashCommand**:
+
+Commands can invoke other commands using the `SlashCommand` tool. Permission patterns:
+
+| Pattern | Allows | Example |
+|---------|--------|---------|
+| `SlashCommand:/cmd` | Only exact command, NO arguments | `/cmd` (exact) |
+| `SlashCommand:/cmd:*` | Command WITH any arguments | `/cmd "arg" --flag` |
+
+**IMPORTANT**: If the target command accepts arguments, you MUST use the `:*` suffix!
+
+```yaml
+# ❌ WRONG - Cannot pass arguments to roundtable:start
+allowed-tools: SlashCommand:/s2s:roundtable:start
+
+# ✅ CORRECT - Can pass --workflow-type, --strategy, etc.
+allowed-tools: SlashCommand:/s2s:roundtable:start:*
+```
+
 **Security Comparison**:
 
 | Scenario | Array Format | Pattern Format |

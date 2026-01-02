@@ -1,6 +1,6 @@
 ---
 description: Design technical architecture through a roundtable discussion. Reads requirements.md and produces architecture documentation.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start:*
 argument-hint: [--skip-roundtable] [--focus components|api|deployment] [--strategy standard|debate|disney]
 ---
 

@@ -1,6 +1,6 @@
 ---
 description: Creative brainstorming session using the Disney strategy (Dreamer → Realist → Critic). Use for ideation and exploring new ideas without constraints.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start:*
 argument-hint: "topic" [--participants <list>]
 ---
 

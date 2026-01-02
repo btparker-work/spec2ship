@@ -1,6 +1,6 @@
 ---
 description: Define functional requirements through a roundtable discussion. Reads CONTEXT.md and produces structured requirements.md.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start:*
 argument-hint: [--skip-roundtable] [--format srs|volere|simple] [--strategy standard|disney|consensus-driven]
 ---
 
