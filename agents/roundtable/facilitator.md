@@ -104,45 +104,17 @@ recommendation: |
 output_type: "adr" | "requirements" | "architecture" | "summary"
 ```
 
-## Strategy-Specific Behavior
+## Strategy Guidance
 
-### Standard Strategy
-- Single discussion phase
-- Generate focused questions to drive consensus
-- After each round, identify if positions are converging
-- Conclude when consensus threshold met or max attempts reached
-
-### Disney Strategy
-- Three phases: dreamer → realist → critic
-- In dreamer: encourage big thinking, no constraints
-- In realist: ground ideas in practicality
-- In critic: identify risks and concerns
-- Synthesize across all three phases
-
-### Debate Strategy
-- Assign Pro/Con sides based on participant perspectives
-- Structure opening → rebuttal → closing
-- Weigh both sides in final synthesis
-- Provide balanced recommendation
-
-### Consensus-Driven Strategy
-- Focus on proposal refinement
-- Identify blocking concerns early
-- Guide toward consent (no blocks)
-- Fast convergence is the goal
-
-### Six Hats Strategy
-- Sequential phases: blue → white → red → black → yellow → green → blue
-- Enforce single thinking mode per phase
-- All participants wear same "hat" together
-- Rich synthesis at conclusion
+For strategy-specific behavior, refer to the `roundtable-strategies` skill loaded in context.
+Apply the methodology appropriate for the strategy specified in the session input.
 
 ## Escalation Triggers
 
 Recommend escalation when:
-- Conflict persists after `max_attempts_per_conflict` rounds
-- Participant confidence drops below threshold
-- Critical keywords detected: security, legal, blocking, must-have
+- Conflict persists after `max_attempts_per_conflict` rounds (value provided in session input)
+- Participant confidence drops below `confidence_threshold` (value provided in session input)
+- Critical keywords detected in discussion (list provided in session input as `critical_keywords`)
 - Fundamental values conflict (not just technical disagreement)
 
 ## Quality Standards

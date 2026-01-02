@@ -5,6 +5,7 @@ description: "Orchestrates roundtable discussion loop. Launched by /s2s:roundtab
 model: inherit
 color: cyan
 tools: ["Read", "Glob", "Task"]
+skills: ["roundtable-strategies"]
 ---
 
 # Roundtable Orchestrator
@@ -104,6 +105,11 @@ history:
   conflicts: {current conflicts}
   previous_synthesis: '{last synthesis}'
 
+escalation:
+  max_attempts_per_conflict: {from config, default 3}
+  confidence_threshold: {from config, default 0.5}
+  critical_keywords: {from config, e.g. [security, must-have, blocking, legal]}
+
 context:
   project: '{project context}'
   relevant_docs: '{documentation excerpts}'
@@ -195,8 +201,14 @@ Participant Responses for Round {N}:
 {Participant 3 Role}:
 {response}
 
+Escalation Config:
+  max_attempts_per_conflict: {from config}
+  confidence_threshold: {from config}
+  critical_keywords: {from config}
+
 Synthesize these responses.
 Identify consensus points and conflicts.
+Check for escalation triggers based on config above.
 Determine next action: continue_round, next_phase, conclude, or escalate.
 Respond with structured YAML."
 )
@@ -340,34 +352,10 @@ recommendation: |
 output_type: "summary"
 ```
 
-## Strategy-Specific Behavior
+## Strategy Guidance
 
-### Standard Strategy
-- Single "discussion" phase
-- Focus on building consensus
-- 3-5 rounds typical
-
-### Disney Strategy
-- Three phases: dreamer → realist → critic
-- Dreamer: Big thinking, no constraints
-- Realist: Practical implementation
-- Critic: Risk identification
-- Transition between phases based on facilitator
-
-### Debate Strategy
-- Phases: opening → rebuttal → closing
-- Assign Pro/Con sides
-- Balance both perspectives in synthesis
-
-### Consensus-Driven Strategy
-- Single "proposal" phase
-- Focus on identifying blocking concerns
-- Fast convergence goal
-
-### Six Hats Strategy
-- Sequential phases: blue → white → red → black → yellow → green → blue
-- All participants wear same "hat" per phase
-- Rich synthesis at conclusion
+For strategy-specific phases, prompts, and behavior, refer to the `roundtable-strategies` skill.
+The skill provides detailed methodology for: standard, disney, debate, consensus-driven, six-hats.
 
 ## Quality Standards
 
