@@ -1,6 +1,6 @@
 # Mitigations for LLM Multi-Agent Limitations
 
-This document describes how Roundtable v2 addresses known issues in LLM multi-agent systems.
+This document describes how Roundtable v3 addresses known issues in LLM multi-agent systems.
 
 ## Known Issues
 

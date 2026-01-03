@@ -1072,6 +1072,143 @@ The `conventional-commits` skill provides guidelines for git commit messages fol
 
 ---
 
+## Skills Field Format (Anthropic Compliant)
+
+The `skills:` field in agent frontmatter uses **comma-separated string format**, not array format:
+
+```yaml
+# ✅ CORRECT - Comma-separated string
+skills: arc42-templates, iso25010-requirements
+
+# ❌ WRONG - Array format (not Anthropic compliant)
+skills: ["arc42-templates", "iso25010-requirements"]
+```
+
+**Single skill:**
+```yaml
+skills: roundtable-strategies
+```
+
+**Multiple skills:**
+```yaml
+skills: iso25010-requirements, arc42-templates, madr-decisions
+```
+
+**Key difference from tools:** The `tools:` field uses array format `["Read", "Glob"]`, but `skills:` uses comma-separated string format.
+
+---
+
+## Pattern Reinforcement
+
+In complex multi-agent systems, LLMs can "forget" instructions from earlier context. We use **reinforcement** to ensure critical behavior is maintained.
+
+### Where Reinforcement is Applied
+
+| Component | Reinforcement | Why |
+|-----------|---------------|-----|
+| Facilitator prompt | Strategy phases from skill | Ensures correct phase behavior |
+| Orchestrator prompt | Escalation config | Ensures triggers are checked |
+| Participant prompts | Contribution format | Ensures consistent output |
+
+### Reinforcement Pattern
+
+1. **Define once** in skill/agent definition
+2. **Inject into prompt** when launching sub-agent
+3. **Keep critical info near end** of prompt (recency bias)
+
+### Example: Facilitator Escalation
+
+The orchestrator passes escalation config to the facilitator, even though it's defined in config:
+
+```yaml
+# In orchestrator prompt to facilitator:
+escalation:
+  max_attempts_per_conflict: 3  # From config
+  confidence_threshold: 0.5      # From config
+  critical_keywords: [security, must-have]  # From config
+```
+
+This ensures facilitator always has access to escalation triggers, even if the skill content is truncated by context limits.
+
+### When to Apply Reinforcement
+
+- Critical decision logic
+- Output format requirements
+- Escalation triggers
+- Phase-specific behavior
+
+---
+
+## Adding New Skills
+
+### Checklist
+
+1. Create directory: `skills/{skill-name}/`
+2. Create `SKILL.md` with frontmatter:
+   ```yaml
+   ---
+   name: Display Name
+   description: "This skill should be used when the user asks to
+     'trigger phrase 1', 'trigger phrase 2'. Purpose."
+   version: 0.1.0
+   ---
+   ```
+3. Keep SKILL.md under 2,000 words
+4. Use third-person description ("This skill should be used...")
+5. Include 3-5 trigger phrases
+6. Create `references/` for detailed patterns
+7. Create `examples/` for working samples
+8. Reference from agents: `skills: skill-name`
+
+### Progressive Disclosure
+
+| Tier | Location | When Loaded |
+|------|----------|-------------|
+| 1 | SKILL.md | Always (on trigger) |
+| 2 | references/*.md | On demand |
+| 3 | examples/*.md | On demand |
+
+---
+
+## Adding New Strategies
+
+### Checklist
+
+1. Create: `skills/roundtable-strategies/references/{strategy}.md`
+2. Define in file:
+   - `defaults.participation`: parallel or sequential
+   - `defaults.phases`: array of phase definitions
+   - `defaults.consensus`: policy and threshold
+   - `validation`: rules and constraints
+3. Add auto-detection keywords to `SKILL.md`:
+   ```markdown
+   | {keywords} | {strategy} | {reason} |
+   ```
+4. Test: `/s2s:roundtable:start "topic" --strategy {strategy}`
+
+### Strategy Configuration Structure
+
+```yaml
+defaults:
+  participation: "parallel" | "sequential"
+  phases:
+    - name: "{phase-name}"
+      prompt_suffix: |
+        {Instructions for this phase}
+      participants: "all" | ["specific", "list"]
+      context:
+        show_previous_phases: true | false
+  consensus:
+    policy: "weighted_majority" | "unanimous" | "facilitator_judgment"
+    threshold: 0.6
+
+validation:
+  requires_sequential_phases: true | false
+  min_participants: 2
+```
+
+---
+
 ## References
 
 ### Patterns We Follow

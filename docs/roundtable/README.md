@@ -1,4 +1,4 @@
-# Roundtable v2
+# Roundtable v3
 
 The Roundtable is Spec2Ship's multi-agent discussion system for collaborative decision-making.
 
@@ -13,6 +13,7 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 - **Escalation Triggers**: Human-in-the-loop when needed
 - **Session Persistence**: Resume interrupted discussions
 - **Parallel Execution**: Blind voting to prevent sycophancy
+- **Layered Orchestration**: Commands delegate to Orchestrator Agent (v3)
 
 ## Quick Start
 
@@ -30,21 +31,32 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 /s2s:roundtable:resume
 ```
 
-## Architecture
+## Architecture (v3)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ COMMAND start.md (Executor)                                     │
-├─────────────────────────────────────────────────────────────────┤
-│ 1. Load config + strategy skill                                 │
-│ 2. Create session file                                          │
-│ 3. Loop:                                                        │
-│    a. Task(facilitator) → generate question                    │
-│    b. Task(participants) → responses (parallel)                │
-│    c. Task(facilitator) → synthesize                           │
-│    d. Batch write session file                                  │
-│    e. Check escalation triggers                                 │
-│ 4. Generate output (ADR, requirements, etc.)                    │
+│ WORKFLOW COMMANDS (specs.md, design.md, brainstorm.md)          │
+│ • Workflow-specific setup and post-processing                   │
+│ • Delegates via SlashCommand:/s2s:roundtable:start              │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │ SlashCommand
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ COMMAND start.md (Session Lifecycle)                            │
+│ • Creates session file .s2s/sessions/{id}.yaml                  │
+│ • Launches Orchestrator Agent                                   │
+│ • Batch writes results from orchestrator                        │
+│ • Generates output document                                     │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │ Task Agent
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ ORCHESTRATOR AGENT (orchestrator.md)                            │
+│ • Executes roundtable discussion loop                           │
+│ • Launches Facilitator for questions/synthesis                  │
+│ • Launches Participants in parallel (blind voting)              │
+│ • Returns structured YAML for batch write                       │
+│ • Has skills: roundtable-strategies                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -97,4 +109,4 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 | `/s2s:roundtable:list` | View all sessions |
 
 ---
-*Part of Spec2Ship - AI-assisted software development*
+*Part of Spec2Ship Roundtable v3 - AI-assisted software development*
