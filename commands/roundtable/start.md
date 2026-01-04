@@ -1,7 +1,7 @@
 ---
 description: Start a roundtable discussion with AI expert participants. Use for technical decisions, architecture reviews, or requirements refinement.
 allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion
-argument-hint: "topic" [--strategy standard|disney|debate|consensus-driven|six-hats] [--participants list] [--workflow-type specs|tech|brainstorm] [--output-type adr|requirements|architecture|summary]
+argument-hint: "topic" [--strategy standard|disney|debate|consensus-driven|six-hats] [--participants list] [--workflow-type specs|design|brainstorm] [--output-type adr|requirements|architecture|summary]
 ---
 
 # Start Roundtable Discussion
@@ -40,7 +40,7 @@ Extract from $ARGUMENTS:
 - **Topic**: Required. First quoted string or unquoted words
 - **--strategy**: Optional. Facilitation strategy
 - **--participants**: Optional. Comma-separated list
-- **--workflow-type**: Optional (specs|tech|brainstorm). Default: "brainstorm"
+- **--workflow-type**: Optional (specs|design|brainstorm). Default: "brainstorm"
 - **--output-type**: Optional (adr|requirements|architecture|summary). Default: based on workflow
 
 If no topic provided, ask using AskUserQuestion.

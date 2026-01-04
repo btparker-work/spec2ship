@@ -84,9 +84,9 @@ This document defines the terminology used in s2s Roundtable discussions.
 
 | Type | Description | When Generated |
 |------|-------------|----------------|
-| `adr` | Architecture Decision Record | Tech decisions |
+| `adr` | Architecture Decision Record | Design decisions |
 | `requirements` | Functional requirements list | Specs workflow |
-| `architecture` | Architecture documentation | Tech workflow |
+| `architecture` | Architecture documentation | Design workflow |
 | `summary` | Discussion summary | Brainstorm, general |
 
 ---

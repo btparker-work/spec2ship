@@ -92,12 +92,12 @@ For detailed architecture patterns:
 
 If --skip-roundtable is NOT present:
 
-**Invoke roundtable:start with tech workflow parameters:**
+**Invoke roundtable:start with design workflow parameters:**
 
 Use the SlashCommand tool:
 
     /s2s:roundtable:start "Architecture design for {project name}"
-      --workflow-type tech
+      --workflow-type design
       --strategy {--strategy or debate}
       --output-type architecture
 
