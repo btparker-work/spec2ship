@@ -110,8 +110,16 @@ Spec2Ship automates software development workflows using Claude Code:
 |---------|-------------|
 | `/s2s:roundtable:start "topic"` | Start generic roundtable |
 | `/s2s:roundtable:start "topic" --strategy disney` | With specific strategy |
+| `/s2s:roundtable:start "topic" --participants arch,qa` | With specific participants |
 | `/s2s:roundtable:list` | List sessions |
+| `/s2s:roundtable:list --status active` | Filter by status |
 | `/s2s:roundtable:resume "id"` | Resume session |
+
+**Available flags for `roundtable:start`**:
+- `--strategy <name>`: Facilitation strategy (standard, disney, debate, consensus-driven, six-hats)
+- `--participants <list>`: Comma-separated participant IDs
+- `--workflow-type <type>`: Workflow type (specs, design, brainstorm)
+- `--output-type <type>`: Output format (adr, requirements, architecture, summary)
 
 ### Roundtable Strategies
 

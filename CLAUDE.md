@@ -632,7 +632,7 @@ Agents are autonomous workers launched by commands or other agents. They receive
 - `red`: Review, validation
 - `blue`: Architecture, design
 - `cyan`: General purpose
-- `magenta`: Documentation
+- `magenta`: Orchestration, facilitation
 
 #### Description Format (Critical for Trigger Detection)
 
@@ -1009,7 +1009,7 @@ CONFIGURATION (modifiers) → flags
 
 ### Phase 2: Workflow + Roundtable ✓
 - Workflow commands: specs, design (renamed from tech)
-- Roundtable v2: executor pattern, strategy skills
+- Roundtable v2: executor pattern (replaced by orchestrator in v3), strategy skills
 - Agents: roundtable/* (facilitator, architect, tech-lead, qa-lead, devops, product-manager)
 - Skills: roundtable-strategies/ (standard, disney, debate, consensus-driven, six-hats)
 - Commands: roundtable/start, roundtable/resume, roundtable/list
