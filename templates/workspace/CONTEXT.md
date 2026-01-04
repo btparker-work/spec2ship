@@ -43,21 +43,6 @@ Component registry from components.yaml
 | `/s2s:plan:start "id"` | Start plan |
 | `/s2s:plan:complete` | Complete plan |
 
-### Git (Multi-Repo)
-
-| Command | Description |
-|---------|-------------|
-| `/s2s:git:branch "name"` | Create branch across all components |
-| `/s2s:git:sync` | Sync branch status |
-| `/s2s:git:pr` | Create linked PRs |
-
-### Decisions
-
-| Command | Description |
-|---------|-------------|
-| `/s2s:decision:new "topic"` | Create system-level ADR |
-| `/s2s:decision:new "topic" --roundtable` | Create via discussion |
-
 ### Roundtable
 
 | Command | Description |

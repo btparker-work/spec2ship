@@ -107,7 +107,7 @@ Roundtable v3 uses **Layered Orchestration**: Commands delegate via SlashCommand
 │  • Launches Facilitator for questions/synthesis                 │
 │  • Launches Participants in parallel (blind voting)             │
 │  • Returns structured YAML for batch write                      │
-│  • Has access to skills: ["roundtable-strategies"]              │
+│  • Has access to skills: roundtable-strategies                  │
 │                                                                 │
 │    ┌─────────────────────────────────────────────────────────┐  │
 │    │ Facilitator Agent - DECISION MAKER                      │  │

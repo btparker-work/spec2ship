@@ -19,17 +19,7 @@ This directory contains Architecture Decision Records (ADRs) using the MADR form
 
 ## Creating New Decisions
 
-Use the s2s command:
-
-```
-/s2s:decision:new "topic"
-```
-
-Or with roundtable discussion:
-
-```
-/s2s:decision:new "topic" --roundtable
-```
+Use the MADR template below to create new decisions manually.
 
 ## MADR Template
 
