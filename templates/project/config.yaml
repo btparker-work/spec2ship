@@ -1,0 +1,73 @@
+# Spec2Ship Project Configuration
+# This file is created by /s2s:init
+
+name: "{project-name}"
+type: "standalone"
+version: "0.1.0"
+
+# Git workflow configuration
+git:
+  branch_convention: "feature/F{id}-{slug}"
+  commit_convention: "conventional"
+  default_branch: "main"
+
+# Roundtable configuration
+roundtable:
+  # === STRATEGY ===
+  # Loads facilitation method from skills/roundtable-strategies/
+  strategy: "standard"  # standard | disney | debate | consensus-driven | six-hats
+
+  # === STRATEGY OVERRIDES (optional) ===
+  # Warning if contradicts strategy, but executed anyway
+  # overrides:
+  #   participation: "sequential"  # Override strategy default
+
+  # === PARTICIPANTS ===
+  participants:
+    default:
+      - software-architect
+      - technical-lead
+
+    # Per WORKFLOW TYPE (specs, design, brainstorm)
+    by_workflow_type:
+      specs:
+        - product-manager
+        - software-architect
+        - qa-lead
+      design:
+        - software-architect
+        - technical-lead
+        - devops-engineer
+      brainstorm:
+        - product-manager
+        - software-architect
+        - technical-lead
+        - devops-engineer
+
+  # === ESCALATION (global) ===
+  escalation:
+    enabled: true
+    triggers:
+      no_consensus_after_attempts: 3
+      confidence_below: 0.5
+      critical_keywords:
+        - security
+        - must-have
+        - blocking
+        - legal
+    presentation:
+      show_all_positions: true
+      show_rationale: true
+      facilitator_recommendation: true
+
+# Documentation paths
+docs:
+  architecture: "docs/architecture"
+  specifications: "docs/specifications"
+  decisions: "docs/decisions"
+  guides: "docs/guides"
+
+# File naming
+naming:
+  timestamp_format: "YYYYMMDD-HHMMSS"
+  slug_max_length: 50

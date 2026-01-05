@@ -1,0 +1,300 @@
+---
+description: Design technical architecture through a roundtable discussion. Reads requirements.md and produces architecture documentation.
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(date:*), Read, Write, Edit, Glob, AskUserQuestion, SlashCommand:/s2s:roundtable:start:*
+argument-hint: [--skip-roundtable] [--focus components|api|deployment] [--strategy standard|debate|disney]
+---
+
+# Design Technical Architecture
+
+## Context
+
+- Current directory: !`pwd`
+- Directory contents: !`ls -la`
+- Current timestamp: !`date -u +"%Y-%m-%dT%H:%M:%SZ"`
+
+## Interpret Context
+
+Based on the context output above, determine:
+
+- **S2S initialized**: If `.s2s` directory appears → "yes", otherwise → "NOT_S2S"
+
+If S2S is initialized:
+- Read `.s2s/CONTEXT.md` for project context
+- Read `docs/specifications/requirements.md` if exists
+- Check `docs/architecture/` for existing docs
+- Read `.s2s/config.yaml` for settings
+
+---
+
+## Instructions
+
+### Validate environment
+
+If S2S initialized is "NOT_S2S":
+
+    Error: Not an s2s project. Run /s2s:init first.
+
+### Check prerequisites
+
+If `docs/specifications/requirements.md` does not exist:
+
+    Warning: No requirements document found.
+
+    Recommended workflow:
+    1. /s2s:init     - Initialize project
+    2. /s2s:specs    - Define requirements
+    3. /s2s:design   - Design architecture (you are here)
+
+    Continue without formal requirements?
+
+Ask using AskUserQuestion:
+- Options: "Continue with CONTEXT.md only" / "Run /s2s:specs first"
+
+### Check for existing architecture
+
+Use Glob to find `docs/architecture/*.md` files.
+
+If architecture docs exist:
+- Display summary
+- Ask: "Architecture docs exist. What would you like to do?"
+  - Options: "Refine existing" / "Start fresh" / "Cancel"
+
+### Parse arguments
+
+Extract from $ARGUMENTS:
+- **--skip-roundtable**: Skip discussion, generate directly
+- **--focus**: Focus area (components|api|deployment)
+- **--strategy**: Override strategy. Default: debate (Pro/Con evaluation)
+
+### Reference Skills
+
+For detailed architecture patterns:
+- `arc42-templates` skill: 12 sections, component templates, interface documentation
+- `madr-decisions` skill: ADR format, status lifecycle, decision examples
+
+### Display context summary
+
+    Starting architecture design...
+
+    Project Context:
+    ────────────────
+    {from CONTEXT.md}
+
+    Key Requirements:
+    ─────────────────
+    {list from requirements.md}
+
+    Constraints:
+    ────────────
+    {from CONTEXT.md}
+
+### Phase 1: Design Roundtable
+
+If --skip-roundtable is NOT present:
+
+**Invoke roundtable:start with design workflow parameters:**
+
+Use the SlashCommand tool:
+
+    /s2s:roundtable:start "Architecture design for {project name}"
+      --workflow-type design
+      --strategy {--strategy or debate}
+      --output-type architecture
+
+The roundtable will:
+- Create session file in `.s2s/sessions/`
+- Run discussion with software-architect, technical-lead, devops-engineer
+- Use debate strategy for Pro/Con evaluation of options
+- Return consensus on architecture decisions
+
+After roundtable completes, read session file to extract:
+- Architecture decisions (ARCH-001, ARCH-002, etc.)
+- Component design consensus
+- Technology stack recommendations
+- Unresolved conflicts for user review
+
+If --skip-roundtable IS present:
+- Analyze requirements directly
+- Generate basic architecture from patterns
+- Ask user for technology preferences
+
+### Phase 2: User Review
+
+Present architecture decisions:
+
+    Architecture Design Summary:
+    ═══════════════════════════
+
+    System Overview:
+    {high-level description}
+
+    Components:
+    ───────────
+    1. {Component 1}: {responsibility}
+    2. {Component 2}: {responsibility}
+
+    Key Decisions:
+    ──────────────
+    ARCH-001: {title}
+    Decision: {chosen option}
+    Rationale: {why}
+
+    ARCH-002: {title}
+    ...
+
+    Tech Stack:
+    ───────────
+    - Backend: {choice}
+    - Frontend: {choice}
+    - Database: {choice}
+    - Infrastructure: {choice}
+
+    Open Questions:
+    ───────────────
+    - {from conflicts}
+
+Ask using AskUserQuestion:
+- "Review architecture. Would you like to:"
+  - Options: "Approve and generate docs" / "Refine decisions" / "Discuss specific area"
+
+### Phase 3: Generate Architecture Documentation
+
+Create/update documents:
+
+**docs/architecture/README.md:**
+```markdown
+# Architecture Overview
+
+**Project**: {name}
+**Version**: 1.0
+**Date**: {date}
+**Phase**: design
+
+## System Context
+
+{high-level description}
+
+## Architecture Principles
+
+1. {principle 1}
+2. {principle 2}
+
+## Component Overview
+
+| Component | Responsibility | Technology |
+|-----------|---------------|------------|
+| {name} | {description} | {tech} |
+
+## Key Decisions
+
+See individual ADRs in `/docs/decisions/`
+
+## Documentation Index
+
+- [Components](./components.md)
+- [API Contracts](./api-contracts.md)
+- [Deployment](./deployment.md)
+
+---
+*Generated by Spec2Ship /s2s:design*
+```
+
+**docs/architecture/components.md:**
+```markdown
+# Component Design
+
+## {Component 1 Name}
+
+### Responsibility
+{what this component does}
+
+### Interfaces
+- Input: {what it receives}
+- Output: {what it produces}
+
+### Dependencies
+- {dependency 1}
+
+### Technology
+{stack for this component}
+```
+
+**docs/architecture/deployment.md:**
+```markdown
+# Deployment Architecture
+
+## Overview
+{deployment approach}
+
+## Environments
+| Environment | Purpose | Infrastructure |
+|-------------|---------|----------------|
+| Development | Local dev | {description} |
+| Staging | Testing | {description} |
+| Production | Live | {description} |
+
+## Deployment Process
+{high-level flow}
+```
+
+### Phase 4: Generate ADRs
+
+For each architecture decision, create `docs/decisions/ARCH-{NNN}-{slug}.md`:
+
+```markdown
+# ARCH-{NNN}: {Title}
+
+**Status**: accepted
+**Date**: {date}
+**Participants**: {roundtable participants}
+
+## Context
+{why decision was needed}
+
+## Decision
+{what was decided}
+
+## Options Considered
+
+### Option 1: {name}
+- Pros: {list}
+- Cons: {list}
+
+### Option 2: {name}
+- Pros: {list}
+- Cons: {list}
+
+## Consequences
+
+### Positive
+- {benefit}
+
+### Negative
+- {trade-off}
+```
+
+### Phase 5: Update CONTEXT.md
+
+Update `.s2s/CONTEXT.md`:
+- Update phase to "design"
+- Add Technical Stack section
+- Update "Last updated" date
+
+### Phase 6: Output Summary
+
+    Architecture design complete!
+
+    Documents created:
+    - docs/architecture/README.md
+    - docs/architecture/components.md
+    - docs/architecture/deployment.md
+    - docs/decisions/ARCH-*.md ({count} decisions)
+
+    Tech Stack:
+    {summary}
+
+    Phase: design (ready for implementation)
+
+    Next steps:
+      /s2s:plan              - Generate implementation plans
+      /s2s:plan:create "x"   - Create specific plan

@@ -6,16 +6,19 @@ AI-assisted development framework for the full software lifecycle — from speci
 
 Spec2Ship automates software development workflows using Claude Code:
 
-- **Spec**: Define requirements, architecture, and decisions via roundtable discussions
-- **Ship**: Execute implementation plans with automated git workflows
+- **Init**: Analyze and configure your project with smart detection
+- **Brainstorm**: Creative ideation with multi-agent roundtables
+- **Spec**: Define requirements through collaborative discussions
+- **Design**: Create architecture with expert perspectives
+- **Plan**: Generate and execute implementation plans
 
 ## Features
 
-- **Implementation Plans**: Single-file plans that reference global specs
-- **Roundtable Discussions**: Multi-agent discussions for architectural decisions
-- **Multi-Repo Support**: Workspace and component coordination across repositories
+- **Smart Initialization**: Detects existing project structure and adapts accordingly
+- **Roundtable Discussions**: Multi-agent discussions with 5 facilitation strategies
+- **Creative Brainstorming**: Disney strategy (Dreamer → Realist → Critic)
+- **Implementation Plans**: Structured plans with task tracking
 - **Standards-Based**: Templates based on arc42, ISO 25010, MADR
-- **Git-Native**: Branch conventions, timestamp naming, no custom locking
 
 ## Installation
 
@@ -27,50 +30,121 @@ Spec2Ship automates software development workflows using Claude Code:
 /plugin install s2s
 ```
 
+## Workflow
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────┐
+│     init     │ ──► │  brainstorm  │ ──► │   specs  │
+│              │     │  (optional)  │     │          │
+│ Analyze &    │     │ Creative     │     │ Define   │
+│ configure    │     │ ideation     │     │ what     │
+└──────────────┘     └──────────────┘     └──────────┘
+                                                │
+              ┌─────────────────────────────────┘
+              ▼
+       ┌──────────────┐     ┌──────────────┐
+       │    design    │ ──► │     plan     │
+       │              │     │              │
+       │ Architect    │     │ Generate &   │
+       │ how          │     │ execute      │
+       └──────────────┘     └──────────────┘
+```
+
 ## Quick Start
 
 ```bash
-# Initialize a new project
-/s2s:proj:init
+# 1. Initialize your project
+/s2s:init
 
-# Create an implementation plan
-/s2s:plan:new "user authentication" --branch
+# 2. (Optional) Brainstorm ideas
+/s2s:brainstorm "new feature ideas"
 
-# Start working on the plan
-/s2s:plan:start "20240115-143022-user-authentication"
+# 3. Define specifications
+/s2s:specs
 
-# Complete the plan
+# 4. Design architecture
+/s2s:design
+
+# 5. Generate implementation plans
+/s2s:plan
+
+# 6. Start working on a plan
+/s2s:plan:start "plan-id"
+
+# 7. Complete the plan
 /s2s:plan:complete
 ```
 
 ## Commands
 
-### Project Management
-- `/s2s:proj:init` - Initialize project
-- `/s2s:proj:init --workspace` - Initialize workspace
-- `/s2s:proj:init --component` - Initialize component
+### Workflow Commands
 
-### Implementation Plans
-- `/s2s:plan:new "topic"` - Create plan
-- `/s2s:plan:start "id"` - Start plan
-- `/s2s:plan:complete` - Complete plan
-- `/s2s:plan:list` - List plans
+| Command | Description |
+|---------|-------------|
+| `/s2s:init` | Initialize or update project (smart: detect → setup → context) |
+| `/s2s:brainstorm "topic"` | Creative ideation with Disney strategy |
+| `/s2s:specs` | Define requirements via roundtable |
+| `/s2s:design` | Design architecture via roundtable |
+| `/s2s:plan` | Generate implementation plans (smart) |
 
-### Decisions (ADRs)
-- `/s2s:decision:new "topic"` - Create ADR
-- `/s2s:decision:new "topic" --roundtable` - Create via discussion
+### Init Sub-commands
 
-### Roundtable
-- `/s2s:roundtable:start "topic"` - Start discussion
-- `/s2s:roundtable:resume` - Resume session
-- `/s2s:roundtable:converge` - Force consensus
+| Command | Description |
+|---------|-------------|
+| `/s2s:init:detect` | Analyze project (read-only) |
+| `/s2s:init:setup` | Create .s2s/ structure |
+| `/s2s:init:context` | Update CONTEXT.md only |
+
+### Plan Sub-commands
+
+| Command | Description |
+|---------|-------------|
+| `/s2s:plan:create "topic"` | Create single plan explicitly |
+| `/s2s:plan:list` | List all plans |
+| `/s2s:plan:start "id"` | Start working on a plan |
+| `/s2s:plan:complete` | Complete current plan |
+
+### Roundtable Sub-commands
+
+| Command | Description |
+|---------|-------------|
+| `/s2s:roundtable:start "topic"` | Start generic roundtable |
+| `/s2s:roundtable:start "topic" --strategy disney` | With specific strategy |
+| `/s2s:roundtable:start "topic" --participants arch,qa` | With specific participants |
+| `/s2s:roundtable:list` | List sessions |
+| `/s2s:roundtable:list --status active` | Filter by status |
+| `/s2s:roundtable:resume "id"` | Resume session |
+
+**Available flags for `roundtable:start`**:
+- `--strategy <name>`: Facilitation strategy (standard, disney, debate, consensus-driven, six-hats)
+- `--participants <list>`: Comma-separated participant IDs
+- `--workflow-type <type>`: Workflow type (specs, design, brainstorm)
+- `--output-type <type>`: Output format (adr, requirements, architecture, summary)
+
+### Roundtable Strategies
+
+| Strategy | Phases | Best For |
+|----------|--------|----------|
+| `standard` | 1 | General discussions |
+| `disney` | 3 (dreamer, realist, critic) | Creative solutions |
+| `debate` | 3 (opening, rebuttal, closing) | Option evaluation |
+| `consensus-driven` | 3 | Fast decisions |
+| `six-hats` | 7 | Comprehensive analysis |
+
+## Re-running Init
+
+The `/s2s:init` command is safe to re-run:
+
+- **No changes detected**: Reports "Project is up to date"
+- **New files detected**: Proposes updating CONTEXT.md
+- **Major changes**: Offers to reinitialize with confirmation
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md)
-- [Commands Reference](docs/commands-reference.md)
-- [Multi-Repo Guide](docs/multi-repo-guide.md)
-- [Workflows](docs/workflows.md)
+- [Roundtable Overview](docs/roundtable/README.md)
+- [Configuration Guide](docs/roundtable/configuration.md)
+- [Strategy Reference](docs/roundtable/strategies/overview.md)
+- [Architecture](docs/roundtable/architecture/components.md)
 
 ## License
 

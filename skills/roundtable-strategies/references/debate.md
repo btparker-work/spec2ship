@@ -1,0 +1,183 @@
+# Debate Strategy
+
+Structured adversarial discussion with Pro and Con positions to thoroughly evaluate proposals.
+
+## Configuration
+
+```yaml
+defaults:
+  participation: "parallel"  # Within each side
+  phases:
+    - name: "opening"
+      prompt_suffix: |
+        Present your strongest arguments for your assigned position.
+        Be persuasive but factual.
+        Reference concrete evidence where possible.
+      participants: "assigned"  # Pro or Con based on assignment
+
+    - name: "rebuttal"
+      prompt_suffix: |
+        Address the opposing side's arguments directly.
+        Point out weaknesses in their reasoning.
+        Defend your position against their attacks.
+      participants: "assigned"
+      context:
+        include_full_history: true
+
+    - name: "closing"
+      prompt_suffix: |
+        Summarize your strongest points.
+        Acknowledge any valid points from the opposition.
+        Make your final case.
+      participants: "assigned"
+      context:
+        include_full_history: true
+
+  consensus:
+    policy: "facilitator_judgment"  # Facilitator synthesizes winner
+    threshold: null  # Not applicable
+    max_attempts_per_conflict: 1  # One debate round
+
+validation:
+  requires_two_sides: true
+  min_participants_per_side: 1
+  side_assignment: "automatic"  # or "facilitator"
+```
+
+## How It Works
+
+### Side Assignment
+
+Before debate begins, participants are assigned sides:
+- **Pro**: Arguments in favor of the proposal
+- **Con**: Arguments against the proposal
+
+Assignment can be:
+- **Automatic**: Based on participant role (e.g., architect = Pro, QA = Con)
+- **Facilitator**: Facilitator assigns based on topic
+
+### Debate Structure
+
+1. **Opening Statements** (parallel within sides)
+   - Pro side presents case for proposal
+   - Con side presents case against
+   - No interaction yet
+
+2. **Rebuttal** (parallel within sides)
+   - Each side addresses opponent's arguments
+   - Points out flaws in reasoning
+   - Provides counter-evidence
+
+3. **Closing Statements** (parallel within sides)
+   - Final summary
+   - Acknowledge valid opposing points
+   - Strongest final argument
+
+4. **Facilitator Synthesis**
+   - Analyzes both sides
+   - Weighs arguments
+   - Produces balanced recommendation
+
+## Prompt Template
+
+### Pro Opening
+```
+You are {participant.role} arguing FOR the proposal.
+
+=== PROPOSAL ===
+{topic}
+
+=== YOUR EXPERTISE ===
+{participant.expertise}
+
+---
+DEBATE MODE - PRO POSITION
+
+Present your strongest arguments FOR this proposal:
+1. Key benefits
+2. Supporting evidence
+3. How it addresses the problem
+4. Why alternatives are inferior
+
+Be persuasive but honest. Reference specifics.
+```
+
+### Con Opening
+```
+You are {participant.role} arguing AGAINST the proposal.
+
+=== PROPOSAL ===
+{topic}
+
+=== YOUR EXPERTISE ===
+{participant.expertise}
+
+---
+DEBATE MODE - CON POSITION
+
+Present your strongest arguments AGAINST this proposal:
+1. Key risks and costs
+2. Evidence of problems
+3. What could go wrong
+4. Why alternatives might be better
+
+Be persuasive but fair. Reference specifics.
+```
+
+### Rebuttal (Pro)
+```
+=== PRO OPENING ===
+{pro_opening}
+
+=== CON OPENING ===
+{con_opening}
+
+---
+REBUTTAL - Respond to the Con arguments.
+- Address their key points directly
+- Provide counter-evidence
+- Defend your position
+```
+
+### Facilitator Synthesis
+```
+=== DEBATE SUMMARY ===
+
+PRO ARGUMENTS:
+{pro_summary}
+
+CON ARGUMENTS:
+{con_summary}
+
+---
+As facilitator, synthesize this debate:
+1. Strongest Pro arguments
+2. Strongest Con arguments
+3. Key trade-offs
+4. Your recommendation with rationale
+```
+
+## When to Use
+
+- Evaluating controversial architectural decisions
+- Comparing two viable approaches
+- Stress-testing a proposed design
+- When stakeholders have strong opposing views
+
+## Strengths
+
+- Forces consideration of opposing viewpoints
+- Surfaces hidden assumptions
+- Produces clear trade-off analysis
+- Prevents echo chamber
+
+## Limitations
+
+- Binary (Pro/Con) - may miss nuanced middle ground
+- Can feel adversarial
+- Requires clear proposal to debate
+- Not suitable for open-ended exploration
+
+## Research Basis
+
+Structured debate is a proven technique for evaluating options. In LLM contexts, adversarial setups help mitigate sycophancy by forcing agents into opposing roles.
