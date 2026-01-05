@@ -27,8 +27,7 @@ spec2ship/
 │       ├── list.md           # List sessions
 │       └── resume.md         # Resume session
 ├── agents/                   # Specialized sub-agents
-│   ├── roundtable/           # Discussion orchestration & participants
-│   │   ├── orchestrator.md   # Loop coordination (v3)
+│   ├── roundtable/           # Facilitator + participants (v4: orchestration is inline in start.md)
 │   │   ├── facilitator.md    # Decision maker
 │   │   ├── software-architect.md
 │   │   ├── technical-lead.md
@@ -1033,13 +1032,25 @@ CONFIGURATION (modifiers) → flags
 - Command renames: proj:init→init, tech→design, plan:new→plan:create
 - Merged discover into init:setup
 
-### Phase 3.5: Roundtable Architecture Refactor (v3) ✓
+### Phase 3.5: Roundtable Architecture Refactor (v3) ✓ [SUPERSEDED BY 3.6]
 - Orchestrator agent: agents/roundtable/orchestrator.md for loop coordination
 - SlashCommand delegation: specs/design/brainstorm → roundtable:start
 - Strategy auto-detection: topic keywords → recommended strategy
 - Session validation: resume.md validates integrity before continuing
 - Facilitator fallback: handles malformed YAML with retry + deterministic fallback
 - Single source of truth: session files created only by start.md
+
+### Phase 3.6: Roundtable v4 (Inline Orchestration) ✓
+> **Critical discovery**: Claude Code subagents cannot spawn other subagents.
+> v3 pattern `Task(orchestrator) → Task(facilitator)` doesn't work.
+
+- Inline orchestration: loop logic moved from orchestrator.md to start.md
+- orchestrator.md archived (was documentation-only, not executable)
+- Facilitator simplified: 2 action types (question, synthesis)
+- Session structure: flat rounds[] array, max 3 levels nesting
+- --verbose flag: binary (no responses vs full responses)
+- --pro/--con flags: debate side assignment
+- Documentation: updated all docs from v3 to v4
 
 ### Phase 4: Skills + Standards (Current)
 - Skills: arc42-templates, iso25010-requirements, madr-decisions
@@ -1119,7 +1130,7 @@ In complex multi-agent systems, LLMs can "forget" instructions from earlier cont
 | Component | Reinforcement | Why |
 |-----------|---------------|-----|
 | Facilitator prompt | Strategy phases from skill | Ensures correct phase behavior |
-| Orchestrator prompt | Escalation config | Ensures triggers are checked |
+| Facilitator prompt | Escalation config | Ensures triggers are checked |
 | Participant prompts | Contribution format | Ensures consistent output |
 
 ### Reinforcement Pattern
@@ -1130,12 +1141,12 @@ In complex multi-agent systems, LLMs can "forget" instructions from earlier cont
 
 ### Example: Facilitator Escalation
 
-The orchestrator passes escalation config to the facilitator, even though it's defined in config:
+The command (start.md) passes escalation config to the facilitator, even though it's defined in config:
 
 ```yaml
-# In orchestrator prompt to facilitator:
+# In start.md prompt to facilitator:
 escalation:
-  max_attempts_per_conflict: 3  # From config
+  max_rounds_per_conflict: 3    # From config
   confidence_threshold: 0.5      # From config
   critical_keywords: [security, must-have]  # From config
 ```
