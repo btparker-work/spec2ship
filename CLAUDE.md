@@ -77,9 +77,13 @@ We follow Anthropic's pattern from `plugin-dev` and `feature-dev`:
         └── madr-decisions (for ADR format)
 ```
 
-### SAD-002: Roundtable Implementation (v3)
+### SAD-002: Roundtable Implementation (v4)
 
-Roundtable v3 uses **Layered Orchestration**: Commands delegate via SlashCommand, Orchestrator manages loop.
+Roundtable v4 uses **Inline Orchestration**: The command itself contains the loop logic.
+
+> **Critical Constraint**: Claude Code subagents cannot spawn other subagents.
+> This means orchestrator.md (as an agent) cannot call Task() for facilitator/participants.
+> Solution: Inline the loop logic in start.md.
 
 **Architecture**:
 ```
@@ -87,53 +91,61 @@ Roundtable v3 uses **Layered Orchestration**: Commands delegate via SlashCommand
 │  /s2s:specs, /s2s:design, /s2s:brainstorm                       │
 │  • Workflow-specific setup                                      │
 │  • Delegates via SlashCommand:/s2s:roundtable:start             │
-│  • Post-processing of results                                   │
 └──────────────────────────────┬──────────────────────────────────┘
                                │ SlashCommand
                                ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  Command (start.md) - SESSION LIFECYCLE                         │
-│  • Auto-detects strategy from topic keywords                    │
-│  • Creates session file .s2s/sessions/{id}.yaml                 │
-│  • Launches Orchestrator Agent                                  │
-│  • Batch writes results from orchestrator                       │
-│  • Generates output documents                                   │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │ Task Agent
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Agent (orchestrator.md) - LOOP COORDINATION                    │
-│  • Executes roundtable loop                                     │
-│  • Launches Facilitator for questions/synthesis                 │
-│  • Launches Participants in parallel (blind voting)             │
-│  • Returns structured YAML for batch write                      │
-│  • Has access to skills: roundtable-strategies                  │
+│  Command (start.md) - ORCHESTRATOR INLINE                       │
 │                                                                 │
-│    ┌─────────────────────────────────────────────────────────┐  │
-│    │ Facilitator Agent - DECISION MAKER                      │  │
-│    │ • Returns structured YAML (action, question, synthesis) │  │
-│    │ • Decides next action, never executes                   │  │
-│    │ • Has fallback logic for malformed responses            │  │
-│    └─────────────────────────────────────────────────────────┘  │
+│  PHASE 1: Setup                                                 │
+│  • Parse arguments, validate environment                        │
+│  • Create session file with flat rounds[] structure             │
+│  • Load strategy config from skill                              │
 │                                                                 │
-│    ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐          │
-│    │ Arch    │  │ Tech    │  │ QA      │  │ DevOps  │          │
-│    │ itect   │  │ Lead    │  │ Lead    │  │ Eng     │          │
-│    └─────────┘  └─────────┘  └─────────┘  └─────────┘          │
-│    ▲                                                            │
-│    │ Launched in PARALLEL (blind voting)                        │
+│  PHASE 2: Discussion Loop (INLINE)                              │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ For each round until conclusion:                            ││
+│  │                                                             ││
+│  │ 1. Task(facilitator) → generate question                    ││
+│  │ 2. Task(p1), Task(p2), Task(p3)... → PARALLEL responses     ││
+│  │ 3. Task(facilitator) → synthesize                           ││
+│  │ 4. Batch write round to session file                        ││
+│  │ 5. Evaluate next_action                                     ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+│  PHASE 3: Completion                                            │
+│  • Generate output (adr/requirements/architecture/summary)      │
+│  • Update state.yaml                                            │
 └─────────────────────────────────────────────────────────────────┘
+
+Agents (stateless, called per-round):
+┌─────────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐
+│ Facilitator │  │ Arch    │  │ Tech    │  │ QA      │  │ DevOps  │
+│ (opus)      │  │ itect   │  │ Lead    │  │ Lead    │  │ Eng     │
+└─────────────┘  └─────────┘  └─────────┘  └─────────┘  └─────────┘
 ```
 
-**Key Features (v3)**:
-- **SlashCommand Delegation**: specs/design/brainstorm delegate to roundtable:start
-- **Single Source of Truth**: Session file management only in start.md
-- **Strategy Auto-Detection**: Topic keywords → recommended strategy
-- **Orchestrator Agent**: Loop logic extracted to reusable agent
-- **Facilitator Fallback**: Handles malformed YAML with retry + deterministic fallback
-- **Session Validation**: resume.md validates integrity before continuing
+**Key Features (v4)**:
+- **Inline Orchestration**: Loop logic in start.md, not a separate agent
+- **Flat Rounds**: Session file uses flat `rounds[]` array (max 3 levels nesting)
+- **Single Source of Truth**: Consensus/conflicts tracked only in rounds, derived on demand
+- **2 Facilitator Actions**: question and synthesis (conclude = synthesis + next_action)
+- **Stateless Agents**: Each Task() creates new agent, no persistent state
 
 **Strategies**: standard, disney, debate, consensus-driven, six-hats
+
+**Session Structure (v4)**:
+```yaml
+rounds:
+  - number: 1
+    phase: "dreamer"
+    question: "..."
+    responses: [...]
+    synthesis: "..."
+    consensus: [...]
+    conflicts: [...]
+    resolved: [...]
+```
 
 **Mitigations for LLM Multi-Agent Issues**:
 - **Blind Voting**: Parallel Task execution prevents sycophancy

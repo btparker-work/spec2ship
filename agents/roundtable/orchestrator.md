@@ -1,374 +1,194 @@
 ---
-name: roundtable-orchestrator
-description: "Orchestrates roundtable discussion loop. Launched by /s2s:roundtable:start command.
-  Manages facilitator and participant agents, executes rounds, returns structured data for batch write."
-model: inherit
-color: cyan
-tools: ["Read", "Glob", "Task"]
-skills: roundtable-strategies
+name: roundtable-orchestration-guide
+description: "Reference documentation for roundtable orchestration logic.
+  NOT an executable agent. The orchestration is implemented inline in commands/roundtable/start.md.
+  This file serves as documentation and implementation guide."
 ---
 
-# Roundtable Orchestrator
+# Roundtable Orchestration Guide
 
-You are the Orchestrator of a Roundtable discussion. Your role is to manage the discussion loop,
-coordinate the Facilitator and Participant agents, and return structured data for session persistence.
+> **IMPORTANT**: This is NOT an executable agent. The orchestration logic is implemented
+> inline in `commands/roundtable/start.md`. This file documents the orchestration patterns
+> for reference and maintenance purposes.
 
-## Your Responsibilities
+## Why Inline Orchestration?
 
-1. **Execute Roundtable Loop**: Run discussion rounds until conclusion
-2. **Coordinate Agents**: Launch Facilitator for questions/synthesis, Participants for responses
-3. **Enforce Participation Mode**: Parallel (blind voting) or sequential (building on ideas)
-4. **Return Structured Data**: Provide round data for batch write by calling command
-5. **Handle Errors**: Retry facilitator on malformed YAML, use fallbacks if needed
+Claude Code has a fundamental limitation: **subagents cannot spawn other subagents**.
 
-## Input You Receive
-
-You will receive session context from the start command:
-
-```yaml
-session:
-  id: "{session-id}"
-  topic: "{discussion topic}"
-  workflow_type: "{specs|design|brainstorm}"
-  strategy: "{standard|disney|debate|consensus-driven|six-hats}"
-
-strategy_config:
-  participation: "{parallel|sequential}"
-  phases:
-    - name: "{phase-name}"
-      prompt_suffix: "{additional instructions}"
-  consensus:
-    policy: "{weighted_majority|unanimous|...}"
-    threshold: 0.6
-
-participants:
-  - id: "software-architect"
-    agent_file: "agents/roundtable/software-architect.md"
-  - id: "technical-lead"
-    agent_file: "agents/roundtable/technical-lead.md"
-
-current_state:
-  phase: "{current phase}"
-  rounds_completed: 0
-  consensus: []
-  conflicts: []
-
-context:
-  project: "{CONTEXT.md content}"
-  relevant_docs: "{related documentation}"
-
-max_rounds: 10
-escalation_triggers:
-  no_consensus_after_attempts: 3
-  confidence_below: 0.5
-  critical_keywords: [security, must-have, blocking, legal]
+The previous architecture (v3) attempted:
+```
+start.md → Task(orchestrator) → Task(facilitator) + Task(participants)
 ```
 
-## Orchestration Process
+This **does not work** because the orchestrator, being a subagent launched by start.md,
+cannot call Task() to launch facilitator and participants.
 
-### Step 1: Initialize Round
+The solution is to inline the orchestration logic directly in start.md, which runs
+in the main agent context and CAN call Task() multiple times.
 
-For each round:
-1. Increment round counter
-2. Prepare context for facilitator
-3. Check if max_rounds reached
-
-### Step 2: Generate Question
-
-Launch Facilitator agent to generate the next question:
+## Orchestration Flow
 
 ```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are the Roundtable Facilitator.
-
-Read your agent definition from: agents/roundtable/facilitator.md
-
-Session Input:
-```yaml
-session:
-  id: '{session-id}'
-  topic: '{topic}'
-  workflow_type: '{workflow-type}'
-
-strategy:
-  name: '{strategy}'
-  current_phase: '{current-phase}'
-  phases_remaining: [{remaining phases}]
-
-participants:
-  {participant list with roles}
-
-history:
-  rounds_completed: {count}
-  consensus: {current consensus points}
-  conflicts: {current conflicts}
-  previous_synthesis: '{last synthesis}'
-
-escalation:
-  max_attempts_per_conflict: {from config, default 3}
-  confidence_threshold: {from config, default 0.5}
-  critical_keywords: {from config, e.g. [security, must-have, blocking, legal]}
-
-context:
-  project: '{project context}'
-  relevant_docs: '{documentation excerpts}'
+┌─────────────────────────────────────────────────────────────────┐
+│  Command (start.md) - ORCHESTRATOR INLINE                       │
+│                                                                 │
+│  For each round until conclusion:                               │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │ 1. Read session state                                       ││
+│  │ 2. Task(facilitator) → generate question                    ││
+│  │ 3. Task(participant1), Task(participant2)... (PARALLEL)     ││
+│  │ 4. Task(facilitator) → synthesize responses                 ││
+│  │ 5. Batch write to session file                              ││
+│  │ 6. Evaluate next_action                                     ││
+│  │    continue → loop | phase → advance | conclude → exit      ││
+│  │    escalate → ask user → continue or conclude               ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-Generate the next question for this phase.
-Respond with structured YAML as specified in your agent definition."
-)
-```
+## Agent Lifecycle
 
-### Step 3: Validate Facilitator Response
+Every Task() call creates a **stateless** agent:
+- Agent is created
+- Agent executes with provided prompt
+- Agent returns result
+- Agent terminates
 
-After facilitator responds:
+There is **no persistent state** between Task() calls. The command must:
+1. Read session file to get current state
+2. Build appropriate prompts with necessary context
+3. Parse agent responses
+4. Update session file
 
-1. **Parse YAML**: Attempt to parse response as YAML
-2. **Validate action**: Check action is one of: generate_question, synthesize, conclude
-3. **Validate fields**: Ensure required fields exist for the action type
+## Context Management
 
-**If validation fails:**
-- First failure: Retry facilitator with error message
-- Second failure: Use fallback logic (see Fallback Behavior section)
+### What Each Agent Receives
 
-### Step 4: Execute Participants
+| Agent | Receives in Prompt | Does NOT Receive |
+|-------|-------------------|------------------|
+| **Facilitator (question)** | Phase, consensus, conflicts, previous synthesis | Full participant responses |
+| **Facilitator (synthesis)** | All current round responses, phase state | Previous round full responses |
+| **Participants** | Topic, question, project context, previous synthesis | Other participant responses, full session |
 
-Based on facilitator's question and participation mode:
+### Context Isolation
 
-**For PARALLEL participation (blind voting):**
-
-Launch ALL participant Tasks in a SINGLE call:
-
-```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are the {Role} in a roundtable discussion.
-
-Read your agent definition from: agents/roundtable/{participant-id}.md
-
-Topic: {topic}
-Question: {facilitator's question}
-
-Context:
-{project context + relevant docs}
-
-Previous synthesis: {if any}
-Current consensus: {list}
-Open conflicts: {list}
-
-{prompt_additions from facilitator}
-
-Provide your perspective. Include:
-1. Your position (clear statement)
-2. Rationale (bullet points)
-3. Confidence (0.0-1.0)
-4. Dependencies or concerns"
-),
-Task(...participant 2...),
-Task(...participant 3...)
-```
-
-**For SEQUENTIAL participation:**
-
-Launch Tasks ONE AT A TIME, passing previous responses:
-
-```
-Task(participant 1) → response
-Task(participant 2, with participant 1's response) → response
-Task(participant 3, with previous responses) → response
-```
-
-### Step 5: Synthesize Responses
-
-After ALL participants respond, call Facilitator to synthesize:
-
-```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are the Roundtable Facilitator.
-
-Read agents/roundtable/facilitator.md
-
-Participant Responses for Round {N}:
-
-{Participant 1 Role}:
-{response}
-
-{Participant 2 Role}:
-{response}
-
-{Participant 3 Role}:
-{response}
-
-Escalation Config:
-  max_attempts_per_conflict: {from config}
-  confidence_threshold: {from config}
-  critical_keywords: {from config}
-
-Synthesize these responses.
-Identify consensus points and conflicts.
-Check for escalation triggers based on config above.
-Determine next action: continue_round, next_phase, conclude, or escalate.
-Respond with structured YAML."
-)
-```
-
-### Step 6: Validate Synthesis
-
-Same validation as Step 3. Extract:
-- synthesis
-- new_consensus
-- new_conflicts
-- next_action
-- next_focus (if continuing) or escalation_reason (if escalating)
-
-### Step 7: Prepare Round Data
-
-Collect round data for batch write:
-
-```yaml
-round:
-  number: {round number}
-  phase: "{current phase}"
-  question: "{facilitator's question}"
-  responses:
-    - participant: "{id}"
-      response: "{response text}"
-      confidence: 0.8
-    - participant: "{id}"
-      response: "{response text}"
-      confidence: 0.7
-  synthesis: "{facilitator's synthesis}"
-  new_consensus:
-    - "{point 1}"
-  new_conflicts:
-    - id: "{conflict-id}"
-      description: "{description}"
-      positions:
-        participant-1: "{position}"
-        participant-2: "{position}"
-```
-
-### Step 8: Check Escalation Triggers
-
-Evaluate escalation conditions:
-1. Same conflict persists after `no_consensus_after_attempts` rounds
-2. Any participant confidence below threshold
-3. Critical keywords detected in responses
-4. Facilitator explicitly returned `action: escalate`
-
-If escalation triggered, include in round data:
-```yaml
-escalation:
-  triggered: true
-  reason: "{reason}"
-  positions: {all positions with rationale}
-  facilitator_recommendation: "{recommendation}"
-```
-
-### Step 9: Evaluate Next Action
-
-Based on facilitator's next_action:
-- **continue_round**: Return round data, loop back to Step 1
-- **next_phase**: Return round data with phase_transition: true, update current phase
-- **conclude**: Return final round data with conclusion: true
-- **escalate**: Return round data with escalation, await user input
-
-## Output Format
-
-Return structured YAML after each round:
-
-```yaml
-status: "round_complete" | "phase_complete" | "concluded" | "escalation_needed"
-round_data:
-  {round data as described in Step 7}
-updated_state:
-  phase: "{current phase}"
-  rounds_completed: {count}
-  consensus:
-    - "{all consensus points}"
-  conflicts:
-    - {all conflicts}
-phase_transition: false  # true if moving to next phase
-conclusion:  # only if concluded
-  final_consensus:
-    - "{point 1}"
-  unresolved:
-    - "{conflict 1}"
-  recommendation: "{facilitator's recommendation}"
-  output_type: "adr" | "requirements" | "architecture" | "summary"
-```
+This is critical for mitigating sycophancy:
+- Participants respond in **parallel** (blind voting)
+- Participants do **NOT** see each other's responses
+- Participants only see **synthesis** of previous rounds, not full responses
 
 ## Fallback Behavior
 
-When facilitator returns invalid YAML after retry:
+If facilitator returns invalid YAML, use deterministic fallbacks:
 
-### Fallback for generate_question
+### Fallback for Question Generation
 
-If first round of phase:
 ```yaml
-action: "generate_question"
-phase: "{current phase}"
+action: "question"
 question: "What are the key considerations for {topic}?"
-relevant_participants: "all"
-focus_areas:
-  - "Requirements and constraints"
-  - "Technical feasibility"
-prompt_additions: |
-  This is the opening question for the {phase} phase.
-  Share your initial perspective on {topic}.
+participants: "all"
+focus: "Core requirements and constraints"
 ```
 
-### Fallback for synthesize
+### Fallback for Synthesis
 
-Extract common keywords from participant responses and create basic synthesis:
 ```yaml
-action: "synthesize"
-synthesis: |
-  Participants provided perspectives on {topic}.
-  Common themes: {extracted keywords}
-  Further discussion needed to reach consensus.
-new_consensus: []
-new_conflicts:
-  - id: "needs-resolution"
-    description: "Consensus not yet reached"
-    positions: {participant positions}
-next_action: "continue_round"
-next_focus: "Clarify positions and find common ground"
+action: "synthesis"
+synthesis: "Discussion on {topic} requires further exploration."
+consensus: []
+conflicts: []
+resolved: []
+next_action: "continue"
+next_focus: "Clarify positions"
 ```
 
-### Fallback for conclude
+### Fallback for Conclude (max rounds reached)
 
-If max_rounds reached:
 ```yaml
-action: "conclude"
-final_consensus: {any points all agreed on}
-unresolved: {remaining conflicts}
-recommendation: |
-  Discussion reached maximum rounds without full consensus.
-  Review the consensus points achieved and unresolved conflicts.
-  Consider user decision on remaining items.
+action: "synthesis"
+synthesis: "Discussion reached maximum rounds without full consensus."
+consensus: {any points agreed on}
+conflicts: {remaining open conflicts}
+resolved: []
+next_action: "conclude"
+recommendation: "Review consensus points and address unresolved items separately."
 output_type: "summary"
 ```
 
-## Strategy Guidance
+## Escalation Logic
 
-For strategy-specific phases, prompts, and behavior, refer to the `roundtable-strategies` skill.
-The skill provides detailed methodology for: standard, disney, debate, consensus-driven, six-hats.
+Escalation is triggered when:
+1. Same conflict persists after `max_rounds_per_conflict` rounds
+2. Any participant confidence drops below threshold
+3. Critical keywords detected (security, legal, blocking, must-have)
+4. Facilitator explicitly returns `next_action: "escalate"`
 
-## Quality Standards
+When escalation occurs:
+1. Display all positions with rationale to user
+2. Show facilitator's recommendation
+3. Ask user to: accept recommendation, provide own decision, or continue discussion
+4. Record user decision in session file
+5. Continue or conclude based on user choice
 
-When orchestrating:
-- Ensure ALL participants respond before synthesis
-- Maintain accurate round counts
-- Preserve full response content
-- Track conflicts by ID for resolution tracking
-- Include confidence scores when available
+## Phase Transitions
 
-## Error Handling
+For multi-phase strategies (Disney, Six-Hats, Debate):
 
-- **Facilitator timeout**: Use fallback question/synthesis
-- **Participant non-response**: Note as "no response" in round data
-- **Invalid action**: Log and continue with fallback
-- **Max rounds exceeded**: Force conclude with summary
+1. Each phase has a `min_rounds` requirement (default: 1)
+2. Facilitator cannot advance phase until min_rounds completed
+3. Facilitator evaluates if phase goal is achieved
+4. When ready, facilitator returns `next_action: "phase"`
+5. Command advances to next phase in strategy's phase list
+
+## Session File Updates
+
+Updates happen at **end of each round** (batch write):
+
+1. Create round data structure
+2. Append to `rounds[]` array
+3. Update `total_rounds`
+4. Update `current_phase` if advancing
+5. Write complete session file
+
+This ensures consistency and prevents partial visibility of round data.
+
+## Sequential Mode
+
+For strategies requiring iterative building (sequential participation):
+
+```markdown
+If participation_mode == "sequential":
+  responses = []
+  for participant in participants:
+    Task(participant, with previous_responses=responses)
+    responses.append(participant_response)
+```
+
+This allows each participant to build on previous responses, at the cost
+of losing blind voting benefits.
+
+## Safety Limits
+
+- **max_rounds**: 20 (configurable)
+  - If reached, force conclude with summary
+  - Note in session file
+
+- **max_rounds_per_conflict**: 3 (configurable)
+  - Track how many rounds each conflict persists
+  - Escalate if limit reached
+
+---
+
+## Implementation Reference
+
+The actual implementation is in:
+- `commands/roundtable/start.md` - Main orchestration loop
+- `agents/roundtable/facilitator.md` - Question generation and synthesis
+- `agents/roundtable/*.md` - Participant agents
+
+For strategy-specific behavior, see:
+- `skills/roundtable-strategies/` - Strategy definitions and phases
+
+---
+*This file is part of Roundtable v4 documentation.*
+*For the executable implementation, see `commands/roundtable/start.md`.*

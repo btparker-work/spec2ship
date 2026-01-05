@@ -1,7 +1,7 @@
 ---
 description: Start a roundtable discussion with AI expert participants. Use for technical decisions, architecture reviews, or requirements refinement.
 allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion
-argument-hint: "topic" [--strategy standard|disney|debate|consensus-driven|six-hats] [--participants list] [--workflow-type specs|design|brainstorm] [--output-type adr|requirements|architecture|summary]
+argument-hint: "topic" [--strategy standard|disney|debate|consensus-driven|six-hats] [--participants list] [--workflow-type specs|design|brainstorm] [--output-type adr|requirements|architecture|summary] [--verbose] [--interactive]
 ---
 
 # Start Roundtable Discussion
@@ -26,15 +26,15 @@ If S2S is initialized:
 
 ---
 
-## Instructions
+# PHASE 1: SETUP
 
-### Validate environment
+## Validate environment
 
 If S2S initialized is "NOT_S2S":
 
     Error: Not an s2s project. Run /s2s:init first.
 
-### Parse arguments
+## Parse arguments
 
 Extract from $ARGUMENTS:
 - **Topic**: Required. First quoted string or unquoted words
@@ -42,17 +42,20 @@ Extract from $ARGUMENTS:
 - **--participants**: Optional. Comma-separated list
 - **--workflow-type**: Optional (specs|design|brainstorm). Default: "brainstorm"
 - **--output-type**: Optional (adr|requirements|architecture|summary). Default: based on workflow
+- **--verbose**: Optional. Include full participant responses in session file
+- **--interactive**: Optional. Ask user after each round
 
 If no topic provided, ask using AskUserQuestion.
 
-### Load configuration
+## Load configuration
 
 Read `.s2s/config.yaml` and extract:
 - Default strategy: `roundtable.strategy`
 - Default participants: `roundtable.participants.by_workflow_type[workflow_type]`
 - Escalation settings: `roundtable.escalation`
+- Max rounds per conflict: `roundtable.escalation.max_rounds_per_conflict` (default: 3)
 
-### Auto-detect strategy (if not specified)
+## Auto-detect strategy (if not specified)
 
 If --strategy not provided:
 
@@ -76,7 +79,50 @@ If --strategy not provided:
 
 3. If "Choose manually", present all 5 strategies with descriptions
 
-### Check for active session
+## Get strategy configuration
+
+Load strategy phases from `skills/roundtable-strategies/references/{strategy}.md`:
+- **standard**: phases: ["discussion"]
+- **disney**: phases: ["dreamer", "realist", "critic"]
+- **debate**: phases: ["opening", "rebuttal", "closing"]
+- **consensus-driven**: phases: ["proposal", "discussion", "resolution"]
+- **six-hats**: phases: ["blue-opening", "white", "red", "black", "yellow", "green", "blue-closing"]
+
+Each phase has:
+- `name`: phase identifier
+- `min_rounds`: minimum rounds before advancing (default: 1)
+- `goal`: what the phase should achieve
+
+## Handle debate strategy
+
+If strategy is "debate":
+
+1. Check if --pro and --con flags provided
+2. If NOT provided, ask facilitator to assign sides:
+
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="You are the Facilitator for a Debate roundtable.
+
+Assign participants to Pro and Con sides based on:
+- Proposal: {topic}
+- Participants: {participant list with roles}
+
+Consider typical perspectives of each role.
+Assign roughly equal numbers to each side.
+
+Return YAML:
+```yaml
+pro: [list of participant ids]
+con: [list of participant ids]
+```"
+)
+```
+
+3. Store debate_sides in session file
+
+## Check for active session
 
 Read `.s2s/state.yaml` and check `current_session`.
 
@@ -85,55 +131,61 @@ If active session exists:
 - Ask: "Start new (archive current) / Resume existing"
 - If resume, redirect to `/s2s:roundtable:resume`
 
-### Create session
+## Create session
 
 1. Create sessions directory: `mkdir -p .s2s/sessions`
 
 2. Generate session ID: `{timestamp}-{topic-slug}`
    - Slug: lowercase, spaces to hyphens, max 30 chars
 
-3. Determine initial phase from strategy:
-   - standard: "discussion"
-   - disney: "dreamer"
-   - debate: "opening"
-   - consensus-driven: "proposal"
-   - six-hats: "blue-hat-opening"
+3. Determine initial phase from strategy phases[0]
 
 4. Write `.s2s/sessions/{session-id}.yaml`:
 
 ```yaml
+# === IDENTIFICATION ===
 id: "{session-id}"
 topic: "{topic}"
 workflow_type: "{workflow-type}"
 strategy: "{strategy}"
 status: "active"
+
+# === TIMESTAMPS ===
 started: "{ISO timestamp}"
+paused_at: null
+completed_at: null
 
-config_snapshot:
-  participation: "parallel"
-  consensus:
-    policy: "weighted_majority"
-    threshold: 0.6
-  escalation: {from config}
-
+# === PARTICIPANTS ===
 participants:
-  - id: {participant-1}
-    agent_file: "agents/roundtable/{participant-1}.md"
+  - id: "{participant-1}"
+    name: "{Participant 1 Display Name}"
+  - id: "{participant-2}"
+    name: "{Participant 2 Display Name}"
 
-phases:
-  - name: "{initial phase}"
-    status: "active"
-    rounds: []
+# === DEBATE ONLY ===
+# (Only include if strategy = debate)
+debate_sides:
+  pro: ["{participant-ids}"]
+  con: ["{participant-ids}"]
+  proposal: "{topic}"
 
+# === EXECUTION STATE ===
 current_phase: "{initial phase}"
-consensus: []
-conflicts: []
+total_rounds: 0
+
+# === ROUNDS (Single Source of Truth) ===
+rounds: []
+
+# === ESCALATIONS ===
+escalations: []
+
+# === OUTPUT ===
 outcome: null
 ```
 
 5. Update `.s2s/state.yaml`: Set `current_session: "{session-id}"`
 
-### Display session start
+## Display session start
 
     Roundtable Session Started
     ═══════════════════════════
@@ -146,109 +198,343 @@ outcome: null
 
     Starting discussion...
 
-### Launch orchestrator
+---
 
-Launch the roundtable-orchestrator agent to manage the discussion loop:
+# PHASE 2: DISCUSSION LOOP
+
+Execute rounds until conclusion. This loop runs INLINE in the command.
+
+## Initialize loop state
+
+- current_phase = first phase from strategy
+- rounds_in_phase = 0
+- round_number = 0
+- max_rounds = 20 (safety limit)
+
+## Round execution
+
+For each round until conclusion or max_rounds:
+
+### Step 1: Read current session state
+
+Read `.s2s/sessions/{session-id}.yaml` and extract:
+- current_phase
+- total_rounds
+- All previous rounds (for history)
+
+Calculate from rounds:
+- current_consensus: all consensus items from all rounds (deduplicated)
+- open_conflicts: conflicts introduced but not resolved
+- previous_synthesis: last round's synthesis
+
+### Step 2: Generate question (Facilitator Task)
 
 ```
 Task(
   subagent_type="general-purpose",
-  prompt="You are the Roundtable Orchestrator.
+  prompt="You are the Roundtable Facilitator.
 
-Read your agent definition from: agents/roundtable/orchestrator.md
+Read your agent definition from: agents/roundtable/facilitator.md
 
-Session context:
+=== SESSION STATE ===
+Topic: {topic}
+Strategy: {strategy}
+Current Phase: {current_phase}
+Round: {round_number + 1}
+Rounds in this phase: {rounds_in_phase}
+Min rounds for phase: {phase.min_rounds}
+Phase goal: {phase.goal}
+
+=== HISTORY ===
+Previous synthesis: {previous_synthesis or 'First round'}
+Current consensus: {current_consensus or 'None yet'}
+Open conflicts: {open_conflicts or 'None'}
+
+=== ESCALATION CONFIG ===
+max_rounds_per_conflict: {from config}
+confidence_threshold: {from config}
+critical_keywords: {from config}
+
+=== TASK ===
+Generate the next question for this phase.
+
+Return YAML:
 ```yaml
-session:
-  id: '{session-id}'
-  topic: '{topic}'
-  workflow_type: '{workflow-type}'
-  strategy: '{strategy}'
-
-strategy_config:
-  participation: 'parallel'
-  phases: {phases from strategy}
-  consensus:
-    policy: 'weighted_majority'
-    threshold: 0.6
-
-participants:
-  {participant list}
-
-current_state:
-  phase: '{initial phase}'
-  rounds_completed: 0
-  consensus: []
-  conflicts: []
-
-context:
-  project: '{CONTEXT.md content}'
-
-max_rounds: 10
-escalation_triggers:
-  no_consensus_after_attempts: 3
-  confidence_below: 0.5
-  critical_keywords: [security, must-have, blocking, legal]
-```
-
-Execute the roundtable discussion.
-Return structured YAML with round data after each round.
-Continue until conclusion or escalation."
+action: 'question'
+question: '{the question to ask}'
+participants: 'all'  # or specific list
+focus: '{focus area}'
+```"
 )
 ```
 
-### Process orchestrator results
+Parse facilitator response. If YAML invalid, use fallback:
+```yaml
+action: "question"
+question: "What are the key considerations for {topic}?"
+participants: "all"
+focus: "Core requirements"
+```
 
-After each round returned by orchestrator:
+### Step 3: Collect participant responses (PARALLEL)
 
-1. **Batch write** to session file:
-   - Add round to current phase's rounds array
-   - Update consensus list
-   - Update conflicts list
-   - Update phase status if transitioning
+Launch ALL participant Tasks in a SINGLE message (blind voting):
 
-2. **Check status**:
-   - `round_complete`: Continue, wait for next round
-   - `phase_complete`: Update session file, continue
-   - `escalation_needed`: Display positions, ask user, continue or conclude
-   - `concluded`: Proceed to completion
+For EACH participant in participant_list:
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="You are the {Participant Role} in a roundtable discussion.
 
-### Handle escalation
+Read your agent definition from: agents/roundtable/{participant-id}.md
 
-If orchestrator returns escalation_needed:
+=== DISCUSSION ===
+Topic: {topic}
+Question: {facilitator's question}
+Focus: {facilitator's focus}
 
-1. Display all positions with rationale
-2. Display facilitator recommendation
-3. Ask user using AskUserQuestion:
-   "Escalation: {reason}
+=== CONTEXT ===
+Project: {CONTEXT.md content}
+Strategy: {strategy}
+Phase: {current_phase}
 
-   Options:
-   - Accept recommendation
-   - Override with specific decision
-   - Continue discussion"
+=== PREVIOUS ROUND ===
+Synthesis: {previous_synthesis or 'First round'}
+Consensus so far: {current_consensus or 'None yet'}
 
-4. Based on user choice, either conclude or continue
+=== YOUR TASK ===
+Provide your perspective on the question.
 
-### Complete session
+Return YAML:
+```yaml
+position: '{your position statement}'
+rationale:
+  - '{reason 1}'
+  - '{reason 2}'
+confidence: 0.8  # 0.0 to 1.0
+concerns:
+  - '{any concerns}'
+```"
+)
+```
 
-When orchestrator returns concluded:
+Note: Participants do NOT see each other's responses (blind voting).
+Note: Participants do NOT have access to session file.
 
-1. Update session file:
-   - Set `status: "completed"`
-   - Set `completed: "{ISO timestamp}"`
-   - Add final consensus and unresolved conflicts
+Collect all responses.
 
-2. Generate output based on output_type:
-   - **adr**: Write `docs/decisions/{timestamp}-{slug}.md`
-   - **requirements**: Append to `docs/specifications/requirements.md`
-   - **architecture**: Update `docs/architecture/` files
-   - **summary**: Write `.s2s/sessions/{session-id}-summary.md`
+### Step 4: Synthesize responses (Facilitator Task)
 
-3. Update session file: Set `outcome: "{output file path}"`
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="You are the Roundtable Facilitator.
 
-4. Clear state: Set `current_session: null` in state.yaml
+Read agents/roundtable/facilitator.md
 
-5. Display completion:
+=== ROUND {round_number + 1} RESPONSES ===
+
+{For each participant}
+**{Participant Role}** (confidence: {confidence}):
+Position: {position}
+Rationale: {rationale}
+Concerns: {concerns}
+
+{End for each}
+
+=== SESSION STATE ===
+Topic: {topic}
+Strategy: {strategy}
+Phase: {current_phase}
+Rounds in phase: {rounds_in_phase}
+Min rounds for phase: {phase.min_rounds}
+Phase goal: {phase.goal}
+
+=== ESCALATION CONFIG ===
+max_rounds_per_conflict: {from config}
+confidence_threshold: {from config}
+critical_keywords: {from config}
+
+=== CURRENT STATE ===
+Consensus so far: {current_consensus}
+Open conflicts: {open_conflicts with round counts}
+
+=== TASK ===
+Synthesize these responses.
+Identify new consensus points and conflicts.
+Determine next action.
+
+Return YAML:
+```yaml
+action: 'synthesis'
+synthesis: '{summary of this round}'
+consensus:
+  - '{new agreed point}'
+conflicts:
+  - id: '{slug-id}'
+    description: '{what the conflict is about}'
+    positions:
+      {participant-id}: '{their position}'
+resolved:
+  - conflict_id: '{previously open conflict now resolved}'
+    resolution: '{how it was resolved}'
+    resolution_type: 'consensus'  # consensus|facilitator|user
+next_action: 'continue'  # continue|phase|conclude|escalate
+next_focus: '{if continue, what to focus on}'
+escalation_reason: null  # if escalate
+recommendation: null  # if conclude
+output_type: null  # if conclude: adr|requirements|architecture|summary
+```"
+)
+```
+
+Parse facilitator response. If YAML invalid, use fallback:
+```yaml
+action: "synthesis"
+synthesis: "Discussion continues on {topic}."
+consensus: []
+conflicts: []
+resolved: []
+next_action: "continue"
+```
+
+### Step 5: Update session file (Batch Write)
+
+Create round data:
+```yaml
+- number: {round_number + 1}
+  phase: "{current_phase}"
+  timestamp: "{ISO timestamp}"
+  question: "{facilitator's question}"
+  responses:
+    - participant: "{id}"
+      position: "{if --verbose: full position, else: summary}"
+      confidence: 0.8
+  synthesis: "{facilitator's synthesis}"
+  consensus: {new consensus from this round}
+  conflicts: {new conflicts from this round}
+  resolved: {conflicts resolved this round}
+```
+
+Update session file:
+- Append round to `rounds[]`
+- Update `total_rounds`
+- Update `current_phase` if advancing
+
+### Step 6: Handle --interactive mode
+
+If --interactive flag was provided:
+- Display round summary to user
+- Ask using AskUserQuestion:
+  "Round {round_number + 1} complete.
+
+  Synthesis: {facilitator's synthesis}
+
+  How would you like to proceed?
+
+  Options:
+  - Continue discussion
+  - Skip to conclusion
+  - Pause session"
+
+- If "Pause session":
+  - Set `status: "paused"` and `paused_at: {timestamp}`
+  - Exit loop
+- If "Skip to conclusion":
+  - Force `next_action: "conclude"`
+
+### Step 7: Handle next action
+
+Based on facilitator's `next_action`:
+
+**If "continue"**:
+- Increment rounds_in_phase
+- Loop back to Step 1
+
+**If "phase"**:
+- Advance to next phase in strategy phases list
+- Reset rounds_in_phase = 0
+- Loop back to Step 1
+
+**If "conclude"**:
+- Break loop
+- Proceed to PHASE 3
+
+**If "escalate"**:
+- Record escalation in session file
+- Display positions to user:
+
+      ⚠️ Escalation Required
+      ════════════════════════
+
+      Reason: {escalation_reason}
+
+      Positions:
+      {for each position}
+      - {Participant}: {position}
+
+      Facilitator Recommendation: {recommendation}
+
+- Ask user using AskUserQuestion:
+  "How would you like to proceed?
+
+  Options:
+  - Accept facilitator recommendation
+  - Provide your own decision
+  - Continue discussion for {N} more rounds"
+
+- Record user decision in escalations[]
+- If user provides decision, treat as resolved conflict
+- Continue loop or conclude based on user choice
+
+### Step 7: Check safety limits
+
+If round_number >= max_rounds:
+- Force conclude with summary
+- Note in session: "Reached maximum rounds limit"
+
+---
+
+# PHASE 3: COMPLETION
+
+When discussion concludes:
+
+## Update session file
+
+Set:
+- `status: "completed"`
+- `completed_at: "{ISO timestamp}"`
+
+## Generate output
+
+Based on output_type from facilitator (or --output-type flag):
+
+**adr**:
+- Write `docs/decisions/{timestamp}-{slug}.md` with ADR format
+- Include: context, decision, options considered, consequences
+
+**requirements**:
+- Append to `docs/specifications/requirements.md`
+- Include: functional requirements, non-functional requirements, constraints
+
+**architecture**:
+- Update `docs/architecture/` files
+- Include: component decisions, technology stack, integration points
+
+**summary**:
+- Write `.s2s/sessions/{session-id}-summary.md`
+- Include: key decisions, consensus points, unresolved items
+
+Update session file: Set `outcome.file: "{output file path}"`
+
+## Clear state
+
+Set `current_session: null` in `.s2s/state.yaml`
+
+## Display completion
+
+Calculate final consensus from all rounds.
+Calculate unresolved conflicts.
 
     Roundtable Complete!
     ════════════════════
@@ -256,13 +542,19 @@ When orchestrator returns concluded:
     Session: {session-id}
     Topic: {topic}
     Strategy: {strategy}
-    Rounds: {total}
+    Total Rounds: {total_rounds}
 
     Consensus Reached:
-    {list}
+    {for each consensus item}
+    ✓ {item}
 
-    {If unresolved}
+    {if unresolved conflicts}
     Unresolved (noted for follow-up):
-    {list}
+    {for each conflict}
+    ⚠ {description}
 
-    Output: {file path}
+    Output: {output file path}
+
+    Next steps:
+      /s2s:roundtable:list   - View all sessions
+      /s2s:plan              - Generate implementation plans
