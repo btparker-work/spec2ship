@@ -85,69 +85,14 @@ Based on `workflow_type`, load required topics from:
 
 ## Workflow Agendas
 
-Different workflow types have different required topics to cover.
+See `references/workflow-agendas.md` for detailed agenda definitions per workflow type.
 
-### Specs Workflow Agenda
+**Quick summary**:
+- `specs`: Core functional + NFR (critical), acceptance criteria + out-of-scope (optional)
+- `design`: Architecture + components (critical), data flow + tech choices + integration (optional)
+- `brainstorm`: No agenda (free-form)
 
-For `workflow_type = "specs"`:
-```yaml
-REQUIRED_TOPICS:
-  - id: "core-functional"
-    name: "Core functional requirements"
-    critical: true
-  - id: "nfr"
-    name: "Non-functional requirements (performance, security, scalability)"
-    critical: true
-  - id: "acceptance-criteria"
-    name: "Acceptance criteria format and examples"
-    critical: false
-  - id: "out-of-scope"
-    name: "Out of scope / Won't have"
-    critical: false
-```
-
-### Design Workflow Agenda
-
-For `workflow_type = "design"`:
-```yaml
-REQUIRED_TOPICS:
-  - id: "high-level-arch"
-    name: "High-level architecture and patterns"
-    critical: true
-  - id: "components"
-    name: "Component boundaries and responsibilities"
-    critical: true
-  - id: "data-flow"
-    name: "Data flow and storage"
-    critical: false
-  - id: "tech-choices"
-    name: "Technology choices and rationale"
-    critical: false
-  - id: "integration"
-    name: "Integration points and APIs"
-    critical: false
-```
-
-### Brainstorm Workflow Agenda
-
-For `workflow_type = "brainstorm"`:
-```yaml
-REQUIRED_TOPICS: null  # No agenda - free-form creativity
-```
-
-### Passing Agenda to Facilitator
-
-In Step 3.1 and 3.3 prompts, include:
-```
-=== AGENDA ===
-Required topics: {REQUIRED_TOPICS list or "None"}
-Current coverage: {from previous synthesis or "Not started"}
-```
-
-The facilitator will use this to:
-1. Generate questions targeting uncovered topics
-2. Track coverage in synthesis output
-3. Block conclusion until critical topics covered
+Pass agenda to facilitator in prompts using `=== AGENDA ===` section.
 
 ---
 
@@ -155,45 +100,13 @@ The facilitator will use this to:
 
 ### Step 2.1: Generate Session ID
 
-Create session ID: `{YYYYMMDD-HHMMSS}-{topic-slug}`
-- Slug: lowercase, spaces to hyphens, max 30 chars
+Create session ID: `{YYYYMMDD-HHMMSS}-{topic-slug}` (slug: lowercase, hyphens, max 30 chars)
 
 ### Step 2.2: Create Session File
 
-**YOU MUST** create `.s2s/sessions/{session-id}.yaml` with this structure:
+**YOU MUST** create `.s2s/sessions/{session-id}.yaml` following schema in `references/session-schema.md`.
 
-```yaml
-# === IDENTIFICATION ===
-id: "{session-id}"
-topic: "{topic}"
-workflow_type: "{workflow-type}"
-strategy: "{strategy}"
-status: "active"
-
-# === TIMESTAMPS ===
-started: "{ISO timestamp}"
-paused_at: null
-completed_at: null
-
-# === PARTICIPANTS ===
-participants:
-  - id: "{participant-1}"
-    name: "{Display Name}"
-  # ... more participants
-
-# === EXECUTION STATE ===
-current_phase: "{first phase from strategy}"
-total_rounds: 0
-
-# === ROUNDS (Single Source of Truth) ===
-rounds: []
-
-# === ESCALATIONS ===
-escalations: []
-
-# === OUTPUT ===
-outcome: null
-```
+Include: id, topic, workflow_type, strategy, status="active", timestamps, participants, current_phase, rounds=[], escalations=[], outcome=null.
 
 ### Step 2.3: Update State File
 
@@ -212,36 +125,13 @@ Initialize:
 - `current_phase = first phase from strategy`
 - `rounds_in_phase = 0`
 
-### Step 3.0.5: Display Agenda Status (Start of Each Round)
+### Step 3.0.5: Display Agenda Status
 
-**At the START of each round**, display agenda status to terminal:
+**At the START of each round**, display agenda status to terminal.
 
-```
-═══════════════════════════════════════════════════════
-Round {round_number + 1} Starting
-═══════════════════════════════════════════════════════
-
-Agenda Topics:
-  [{status}] user-workflows - {status description}
-  [{status}] functional-requirements - {status description}
-  [{status}] business-rules - {status description}
-  [{status}] nfr-measurable - {status description}
-  [{status}] acceptance-criteria - {status description}
-  [{status}] out-of-scope - {status description}
-
-Legend: ✓ covered | ◐ partial | ○ pending
-═══════════════════════════════════════════════════════
-```
-
-**Status icons:**
-- `✓` = covered (topic adequately discussed)
-- `◐` = partial (topic mentioned, needs more depth)
-- `○` = pending (topic not yet discussed)
-
+Show: Round number, agenda topics with status icons (✓ covered, ◐ partial, ○ pending).
 Update status based on `agenda_coverage` from previous synthesis.
-If first round, all topics are `○ pending`.
-
-**NOTE**: For brainstorm workflow, agenda is not enforced - display "Free-form discussion".
+For brainstorm workflow, display "Free-form discussion" instead.
 
 ### Step 3.1: Facilitator Question
 
@@ -466,101 +356,23 @@ output_type: null  # if conclude: adr|requirements|architecture|summary
 **CRITICAL: This step MUST execute IMMEDIATELY after Step 3.3 synthesis.**
 **DO NOT defer to end of session. DO NOT batch multiple rounds.**
 
-**YOU MUST** use the Write or Edit tool NOW to append round data:
+**YOU MUST** use the Write or Edit tool NOW:
 
 1. Read current session file
-2. Append new round to `rounds:` array
-3. Write updated file IMMEDIATELY
+2. Append new round to `rounds:` array (see `references/session-schema.md` for structure)
+3. If verbose=true, include `participant_responses` from Step 3.2
+4. Update `total_rounds`
+5. Write file IMMEDIATELY
 
-Round data structure:
-```yaml
-rounds:
-  - number: {round_number + 1}
-    phase: "{current_phase}"
-    timestamp: "{ISO timestamp}"
-    question: "{facilitator's question}"
-    focus: "{facilitator's focus}"
-    synthesis: "{facilitator's synthesis}"
-    consensus:
-      - "{new agreed point}"
-    conflicts:
-      - id: "{slug-id}"
-        description: "{what the conflict is about}"
-        positions:
-          participant-id: "{their position}"
-    resolved:
-      - conflict_id: "{previously open conflict now resolved}"
-        resolution: "{how it was resolved}"
-```
-
-**If verbose_flag == true**, ALSO include responses from Step 3.2:
-```yaml
-    responses:
-      - participant: "{participant-id}"
-        role: "{Display Name}"
-        position: "{full position statement}"
-        rationale:
-          - "{reason 1}"
-          - "{reason 2}"
-        concerns:
-          - "{concern 1}"
-        confidence: 0.8
-        context_challenge: "{if any, else null}"
-```
-
-**IMPORTANT**: To include responses when verbose=true:
-1. Use the `participant_responses` array stored in Step 3.2
-2. Include ALL fields for EACH participant
-3. Write to session file
-
-Update `total_rounds` in session file.
-
-**Verification**: After writing, the session file MUST contain
-the new round in `rounds[]` array. If write fails, STOP and report error.
+**If write fails, STOP and report error.**
 
 ### Step 3.4.5: Display Round Recap (ALWAYS)
 
-**YOU MUST** display round summary to terminal after EVERY round.
-This is NOT conditional on --interactive. Always show for user visibility.
+**YOU MUST** display round summary to terminal after EVERY round (not conditional on --interactive).
 
-```
-────────────────────────────────────────────────────
-Round {round_number} Complete
-────────────────────────────────────────────────────
+Display: Phase, Focus, Synthesis, Consensus items (✓), Open conflicts (⚠), Resolved items, Agenda coverage, Next focus.
 
-Phase: {current_phase}
-Focus: {facilitator's focus from question}
-
-Synthesis:
-{facilitator's synthesis - 2-4 sentences}
-
-Consensus Reached This Round:
-{for each consensus item}
-  ✓ {item}
-
-{if conflicts}
-Open Conflicts:
-{for each conflict}
-  ⚠ {conflict description}
-    Positions: {participant}: {position}
-
-{if resolved}
-Resolved This Round:
-{for each resolved}
-  ✓ {conflict_id}: {resolution}
-
-Agenda Coverage:
-{for each topic}
-  [{status icon}] {topic name}
-  Status icons: ✓ covered, ◐ partial, ○ pending
-
-Next: {next_focus or "Conclusion pending"}
-────────────────────────────────────────────────────
-```
-
-This recap serves TWO purposes:
-1. User visibility into discussion progress
-2. Same content used for session file synthesis field
+This provides user visibility into discussion progress.
 
 ### Step 3.5: Handle --interactive Mode (EVERY ROUND)
 
@@ -721,44 +533,17 @@ Next steps:
 
 ## Error Handling
 
-### If Task(facilitator) fails or times out:
-1. Log error to session file
-2. Use fallback question
-3. Continue with participants
+See `references/error-handling.md` for detailed error handling patterns.
 
-### If ANY participant Task fails:
-1. Continue with remaining participants
-2. Note missing response in synthesis
-
-### If session file write fails:
-1. STOP immediately
-2. Report error to user
-3. Do NOT continue without persistence
+**Critical rule**: If session file write fails, STOP immediately and report error.
 
 ---
 
-## Quick Reference: Task Parameters
+## Quick Reference
 
-### Facilitator (Question)
-```
-subagent_type: "general-purpose"
-description: "Facilitator generates question"
-prompt: "You are the Roundtable Facilitator. Read agents/roundtable/facilitator.md..."
-```
+See `references/task-parameters.md` for full Task() parameter templates.
 
-### Participant
-```
-subagent_type: "general-purpose"
-description: "{Role} provides perspective"
-prompt: "You are the {Role}. Read agents/roundtable/{id}.md..."
-```
-
-### Facilitator (Synthesis)
-```
-subagent_type: "general-purpose"
-description: "Facilitator synthesizes round"
-prompt: "You are the Roundtable Facilitator. Read agents/roundtable/facilitator.md..."
-```
+All roundtable tasks use `subagent_type: "general-purpose"`.
 
 ---
 
