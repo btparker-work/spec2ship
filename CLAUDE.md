@@ -76,16 +76,16 @@ We follow Anthropic's pattern from `plugin-dev` and `feature-dev`:
         └── madr-decisions (for ADR format)
 ```
 
-### SAD-002: Roundtable Implementation (v4.4.1)
+### SAD-002: Roundtable Implementation
 
-Roundtable v4.4.1 uses **Skill as Shared Library**: All commands share the same execution logic.
+Roundtable uses **Skill as Shared Library**: All commands share the same execution logic.
 
 > **Critical Constraints**:
 > 1. Claude Code subagents cannot spawn other subagents.
 > 2. SlashCommand is ASYNCHRONOUS - cannot wait for results.
 > Solution: Skill `roundtable-execution` contains shared logic, commands execute inline.
 
-> **v4.4.1 Enhancements**:
+> **Key Features**:
 > - Session file written after EACH round (not just at end)
 > - `--verbose` includes full participant responses
 > - `--interactive` asks EVERY round (not just on conflicts)
@@ -116,7 +116,7 @@ Each command executes INLINE following skill instructions:
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │ For each round until conclusion:                            ││
 │  │                                                             ││
-│  │ 0. Display agenda status (v4.4.1)                           ││
+│  │ 0. Display agenda status                                     ││
 │  │ 1. Task(facilitator) → generate question                    ││
 │  │ 2. Task(p1), Task(p2), Task(p3)... → PARALLEL responses     ││
 │  │    → Store responses for verbose mode                       ││
@@ -135,21 +135,21 @@ Agents (stateless, called per-round):
 └─────────────┘  └─────────┘  └─────────┘  └─────────┘  └─────────┘
 ```
 
-**Key Features (v4.4.1)**:
+**Key Features**:
 - **Skill as Library**: `roundtable-execution` skill contains shared orchestration logic
 - **No SlashCommand**: Commands execute roundtable inline via Task() calls
 - **Flat Rounds**: Session file uses flat `rounds[]` array (max 3 levels nesting)
 - **Single Source of Truth**: Consensus/conflicts tracked only in rounds, derived on demand
 - **2 Facilitator Actions**: question and synthesis (conclude = synthesis + next_action)
 - **Stateless Agents**: Each Task() creates new agent, no persistent state
-- **Agenda Tracking** (v4.2): Required topics for specs/design workflows
-- **Per-Round Persistence** (v4.4.1): Session file written after each round
-- **Verbose Mode** (v4.4.1): `--verbose` includes full participant responses
-- **Interactive Mode** (v4.4.1): `--interactive` asks every round
+- **Agenda Tracking**: Required topics for specs/design workflows
+- **Per-Round Persistence**: Session file written after each round
+- **Verbose Mode**: `--verbose` includes full participant responses
+- **Interactive Mode**: `--interactive` asks every round
 
 **Strategies**: standard, disney, debate, consensus-driven, six-hats
 
-**Session Structure (v4)**:
+**Session Structure**:
 ```yaml
 rounds:
   - number: 1

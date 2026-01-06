@@ -762,6 +762,5 @@ prompt: "You are the Roundtable Facilitator. Read agents/roundtable/facilitator.
 
 ---
 
-*This skill is part of Roundtable v4.4.1.*
 *Referenced by: specs.md, design.md, brainstorm.md, roundtable:start.md*
 *For strategy details, see: skills/roundtable-strategies/*

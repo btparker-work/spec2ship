@@ -422,5 +422,4 @@ output_type: null
 ```
 
 ---
-*This agent is part of Roundtable v4.4.1.*
 *Called by: commands/roundtable/start.md*

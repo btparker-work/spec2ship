@@ -329,4 +329,4 @@ This isolation ensures:
 
 ---
 *See [components.md](./components.md) for detailed component documentation*
-*Part of Spec2Ship Roundtable v4 documentation*
+*Part of Spec2Ship Roundtable documentation*
