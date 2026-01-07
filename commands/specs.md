@@ -61,13 +61,6 @@ Extract from $ARGUMENTS:
 
 **Boolean flags**: `--verbose` and `--interactive` → parse as `true` if present, `false` if absent.
 
-### Reference Skills
-
-For detailed requirement patterns, the `iso25010-requirements` skill provides:
-- Quality characteristics (8 main categories, 31 sub-characteristics)
-- NFR templates with measurable criteria
-- Requirement ID conventions (FR-*, NFR-*)
-
 ### Display context summary
 
     Starting requirements definition...
@@ -84,125 +77,316 @@ For detailed requirement patterns, the `iso25010-requirements` skill provides:
     Constraints:
     {list from CONTEXT.md}
 
-### Phase 1: Gather Requirements via Roundtable
+---
+
+## Phase 1: Session Setup
 
 If --skip-roundtable is NOT present:
 
-**IMPORTANT: Follow the `roundtable-execution` skill instructions EXACTLY.**
-**DO NOT use SlashCommand. Execute the roundtable inline using Task().**
+### Step 1.1: Generate Session ID
 
-#### Roundtable Configuration
+```
+{YYYYMMDD}-specs-{project-slug}
+Example: 20260107-specs-elfgiftrush
+```
 
-Configure the roundtable with these parameters:
-- **topic**: "Requirements definition for {project name}"
-- **workflow_type**: "specs"
-- **strategy**: {--strategy argument or "consensus-driven"}
-- **output_type**: "requirements"
-- **participants**: product-manager, business-analyst, qa-lead (from config)
-- **verbose**: {verbose_flag}
-- **interactive**: {interactive_flag}
+### Step 1.2: Create Session Folder Structure
 
-#### Load Agenda
+**YOU MUST use Bash tool NOW**:
+```bash
+mkdir -p .s2s/sessions/{session-id}
+```
 
-Read `skills/roundtable-execution/references/agenda-specs.md` and extract REQUIRED_TOPICS (6 topics: user-workflows, functional-requirements, business-rules, nfr-measurable, acceptance-criteria, out-of-scope).
+If verbose_flag is true:
+```bash
+mkdir -p .s2s/sessions/{session-id}/rounds
+```
 
-#### Execute Roundtable
+### Step 1.3: Create Snapshot Files
 
-**YOU MUST** execute these steps from `roundtable-execution` skill with workflow-specific values:
+**YOU MUST use Write tool NOW** to create `context-snapshot.yaml`:
 
-| Parameter | Value |
-|-----------|-------|
-| session_id | `{timestamp}-requirements-{project-slug}` |
-| workflow_type | `specs` |
-| participants | `[product-manager, business-analyst, qa-lead]` |
-| agenda | `REQUIRED_TOPICS` from agenda-specs.md |
-| critical_topics | `user-workflows`, `functional-requirements` |
+Read `.s2s/CONTEXT.md` and extract content, then write:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/CONTEXT.md"
 
-**PHASE 2 - Session Setup:**
+project_name: "{extracted}"
+description: "{extracted}"
+objectives:
+  - "{extracted}"
+constraints:
+  - "{extracted}"
+scope:
+  in:
+    - "{extracted}"
+  out:
+    - "{extracted}"
+```
 
-1. Create sessions directory: `mkdir -p .s2s/sessions`
-2. Generate session ID: `{timestamp}-requirements-{project-slug}`
-3. **NOW use Write tool** to create `.s2s/sessions/{session-id}.yaml`:
+**YOU MUST use Write tool NOW** to create `config-snapshot.yaml`:
+
+Read `.s2s/config.yaml` and extract roundtable config, then write:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/config.yaml"
+
+verbose: {verbose_flag}
+interactive: {interactive_flag}
+strategy: "{strategy or consensus-driven}"
+limits:
+  min_rounds: 3
+  max_rounds: 20
+escalation:
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  critical_keywords: ["security", "must-have", "blocking", "legal"]
+participants:
+  - "product-manager"
+  - "business-analyst"
+  - "qa-lead"
+```
+
+**YOU MUST use Write tool NOW** to create `agenda.yaml`:
+
+Read `skills/roundtable-execution/references/agenda-specs.md` and extract topics YAML, then write:
+```yaml
+# Captured: {ISO timestamp}
+source: "skills/roundtable-execution/references/agenda-specs.md"
+workflow: "specs"
+
+topics:
+  - id: "user-workflows"
+    name: "User workflows"
+    critical: true
+    done_when:
+      criteria:
+        - "Primary user personas identified"
+        - "Entry/exit conditions defined"
+        - "Happy path documented"
+      min_requirements: 2
+    exploration: "Are there other workflows we should consider?"
+  # ... (copy all topics from agenda-specs.md)
+```
+
+### Step 1.4: Create Session Index File
+
+**YOU MUST use Write tool NOW** to create `.s2s/sessions/{session-id}.yaml`:
+
 ```yaml
 id: "{session-id}"
 topic: "Requirements definition for {project name}"
 workflow_type: "specs"
 strategy: "{strategy}"
 status: "active"
-started: "{ISO timestamp}"
-participants:
-  - id: product-manager
-  - id: business-analyst
-  - id: qa-lead
-config:
-  min_rounds: 3
-  max_rounds: 20
-  verbose: {verbose_flag}
-  interactive: {interactive_flag}
-  escalation:
-    max_rounds_per_conflict: 3
-    confidence_below: 0.5
-    critical_keywords: ["security", "must-have", "blocking", "legal"]
+
+timing:
+  started: "{ISO timestamp}"
+  completed: null
+  duration_ms: null
+
+artifacts:
+  requirements: []
+  business_rules: []
+  conflicts: []
+  open_questions: []
+  exclusions: []
+
+agenda:
+  - topic_id: "user-workflows"
+    status: "open"
+    coverage: []
+  - topic_id: "functional-requirements"
+    status: "open"
+    coverage: []
+  - topic_id: "business-rules"
+    status: "open"
+    coverage: []
+  - topic_id: "nfr-measurable"
+    status: "open"
+    coverage: []
+  - topic_id: "acceptance-criteria"
+    status: "open"
+    coverage: []
+  - topic_id: "out-of-scope"
+    status: "open"
+    coverage: []
+
 rounds: []
+
+metrics:
+  rounds: 0
+  tasks: 0
+  tokens: 0
 ```
-4. **NOW use Edit tool** to update `.s2s/state.yaml` with `current_session: "{session-id}"`
 
-**PHASE 3 - Round Execution Loop** (repeat until conclusion):
+### Step 1.5: Update State File
 
-1. **Step 3.0.5**: Display agenda status to terminal
-2. **Step 3.1**: **YOU MUST use Task tool NOW** to call facilitator for question
-   - Include REQUIRED_TOPICS and agenda_coverage in prompt
-   - Include escalation config section in prompt:
-   ```
-   === ESCALATION CONFIG ===
-   max_rounds_per_conflict: 3
-   confidence_below: 0.5
-   min_rounds: 3
-   critical_keywords: [security, must-have, blocking, legal]
-   ```
-3. **Step 3.2**: **YOU MUST launch ALL participant Tasks in SINGLE message**
-   - This ensures blind voting (parallel execution)
-   - **Store responses in `participant_responses` array:**
-   ```
-   participant_responses = [
-     { id, role, position, rationale, concerns, confidence }
-   ]
-   ```
-4. **Step 3.3**: **YOU MUST use Task tool** for facilitator synthesis
-5. **Step 3.4**: **NOW use Edit tool** to append round to session file:
-   - Append to `rounds:` array with: number, question, synthesis, consensus, conflicts
-   - **IF verbose_flag == true**: Include `responses:` with full participant_responses array
-6. **Step 3.5**: Display round recap to terminal
-7. **Step 3.6**: Evaluate next_action:
-   - **min_rounds CHECK**: If round < 3 AND "conclude" → OVERRIDE to "continue"
-   - **Agenda CHECK**: If critical topics pending → OVERRIDE to "continue"
-   - **Interactive mode**: Only ask user if `interactive_flag == true`
+**YOU MUST use Edit tool NOW** to update `.s2s/state.yaml`:
+```yaml
+current_session: "{session-id}"
+```
 
-**PHASE 4 - Completion:**
+---
 
-1. **Update session status**: Edit session file, set `status: "completed"` and `completed_at: "{ISO timestamp}"`
+## Phase 2: Round Execution Loop
 
-2. **CRITICAL - Read session file for summary**:
-   - **YOU MUST use Read tool** to read the completed session file
-   - Extract ALL consensus points from ALL rounds
-   - Extract unresolved conflicts (those without resolution in any round)
-   - This ensures summary matches persisted data (Single Source of Truth)
+**Follow the `roundtable-execution` skill instructions EXACTLY.**
 
-3. **Generate output**: Based on output_type ("requirements"), create requirements document
+Initialize:
+- `round_number = 0`
+- `session_folder = ".s2s/sessions/{session-id}/"`
 
-**Summary MUST be derived from session file, NOT from facilitator memory.**
+### Round Loop (repeat until conclusion)
 
-After reading session file, extract:
-- Consensus points from all rounds (these become requirements)
-- Unresolved conflicts (flag for user review)
-- Participant recommendations (from verbose responses if available)
+#### Step 2.1: Display Round Start
 
-**If --skip-roundtable IS present:**
-- Analyze CONTEXT.md directly
-- Infer requirements from objectives and scope
-- Generate basic requirement list
+Display agenda status and artifact counts.
 
-### Phase 2: User Review
+#### Step 2.2: Facilitator Question
+
+**YOU MUST use Task tool NOW** to call facilitator:
+
+```yaml
+subagent_type: "general-purpose"
+prompt: |
+  You are the Roundtable Facilitator.
+  Read your agent definition from: agents/roundtable/facilitator.md
+
+  === SESSION STATE ===
+  Round: {round_number + 1}
+  Session folder: {session_folder}
+
+  === ARTIFACT SUMMARY ===
+  Requirements: {list IDs - "none yet" if empty}
+  Conflicts: {list IDs}
+  Open questions: {list IDs}
+
+  === AGENDA STATUS ===
+  {for each topic in agenda}
+  [{status}] {topic_id} (CRITICAL if critical)
+  {/for}
+
+  === PREVIOUS ROUND ===
+  {synthesis from last round or "First round"}
+
+  === ESCALATION CONFIG ===
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  min_rounds: 3
+
+  === YOUR TASK ===
+  1. DECIDE focus for this round
+  2. SELECT context files for participants
+  3. GENERATE question + exploration prompt
+```
+
+**IF verbose_flag == true**: Write dump to `rounds/{NNN}-01-facilitator-question.yaml`
+
+#### Step 2.3: Participant Responses
+
+**YOU MUST launch ALL participant Tasks in SINGLE message** (parallel execution):
+
+For each of: product-manager, business-analyst, qa-lead
+
+```yaml
+subagent_type: "general-purpose"
+prompt: |
+  You are the {Role} in a roundtable discussion.
+  Read your agent definition from: agents/roundtable/{participant-id}.md
+
+  === CONTEXT FILES ===
+  Read these files (DO NOT read other session files):
+  {for each file in facilitator's context_files}
+  - {session_folder}/{file}
+  {/for}
+
+  === QUESTION ===
+  {facilitator's question}
+
+  === EXPLORATION ===
+  {facilitator's exploration prompt}
+
+  === YOUR RESPONSE FORMAT ===
+  Return YAML with position, rationale, confidence, concerns, suggestions.
+```
+
+**Store responses** for synthesis and verbose dump.
+
+**IF verbose_flag == true**: Write dump for each participant.
+
+#### Step 2.4: Facilitator Synthesis
+
+**YOU MUST use Task tool NOW** for synthesis:
+
+Include all participant responses and ask facilitator to:
+1. SYNTHESIZE responses
+2. PROPOSE new artifacts (without IDs - you assign them)
+3. UPDATE agenda status
+4. DECIDE next action
+
+**IF verbose_flag == true**: Write dump to `rounds/{NNN}-03-facilitator-synthesis.yaml`
+
+#### Step 2.5: Process Artifacts
+
+For each `proposed_artifact` from facilitator:
+
+1. **Count existing**: Read session file registry
+2. **Assign ID**: Next available (REQ-001, REQ-002, etc.)
+3. **Write artifact file**: `{session_folder}/{ID}.yaml`
+4. **Update registry**: Add ID to appropriate list in session file
+
+For each `resolved_conflict`:
+1. **Read conflict file**: `{session_folder}/{conflict_id}.yaml`
+2. **Update with resolution**: Add resolved_round, resolution fields
+3. **Write updated file**
+
+#### Step 2.6: Update Session File
+
+**YOU MUST use Edit tool NOW** to append round and update metrics.
+
+#### Step 2.7: Display Round Recap
+
+Show synthesis, new artifacts, resolved conflicts, agenda status.
+
+#### Step 2.8: Handle Interactive Mode
+
+**IF interactive_flag == true**: Ask user to continue, skip, or pause.
+**IF interactive_flag == false**: Proceed automatically.
+
+#### Step 2.9: Evaluate Next Action
+
+- If `round_number < 3` AND `next == "conclude"`: Override to "continue"
+- Based on `next`: continue loop, conclude, or handle escalation
+
+---
+
+## Phase 3: Completion
+
+### Step 3.1: Update Session Status
+
+**YOU MUST use Edit tool NOW** to update session file:
+```yaml
+status: "completed"
+timing:
+  completed: "{ISO timestamp}"
+  duration_ms: {calculated}
+```
+
+### Step 3.2: Clear State
+
+**YOU MUST use Edit tool NOW** to set `current_session: null` in `.s2s/state.yaml`.
+
+### Step 3.3: Read Session for Summary
+
+**YOU MUST use Read tool** to read the completed session file.
+
+Extract from session file (Single Source of Truth):
+- All artifact IDs from registry
+- Read each artifact file for content
+- Aggregate by status (consensus, conflict, draft)
+
+### Step 3.4: User Review
 
 Present gathered requirements:
 
@@ -210,98 +394,91 @@ Present gathered requirements:
 
     Core Requirements (Must Have):
     ─────────────────────────────
-    REQ-001: {title}
+    {for each REQ where priority=must}
+    {ID}: {title}
     {description}
     Priority: Must | Acceptance: {criteria}
-
-    REQ-002: {title}
-    ...
+    {/for}
 
     Extended Requirements (Should/Could):
-    ─────────────────────────────────────
-    REQ-003: {title}
+    {for each REQ where priority != must}
     ...
+    {/for}
 
-    Questions/Ambiguities:
-    ──────────────────────
-    - {from unresolved conflicts}
+    Open Questions:
+    {list OQ-* artifacts}
 
 Ask using AskUserQuestion:
 - "Review requirements. Would you like to:"
   - Options: "Approve and generate document" / "Refine" / "Add more"
 
-If refine or add, gather input and update.
+### Step 3.5: Generate Requirements Document
 
-### Phase 3: Generate Requirements Document
-
-Create `docs/specifications/requirements.md`:
+Create `docs/specifications/requirements.md` reading from artifact files:
 
 **For SRS format (default):**
 
 ```markdown
 # Software Requirements Specification
 
-**Project**: {name}
+**Project**: {from context-snapshot.yaml}
 **Version**: 1.0
 **Date**: {date}
-**Phase**: specs
 
 ## 1. Introduction
 
 ### 1.1 Purpose
-{from CONTEXT.md}
+{from context-snapshot.yaml}
 
 ### 1.2 Scope
-{from CONTEXT.md}
+{from context-snapshot.yaml}
 
-### 1.3 Definitions
-{domain terms}
+## 2. Functional Requirements
 
-## 2. Overall Description
-
-### 2.1 Product Perspective
-{from business domain}
-
-### 2.2 Product Functions
-{high-level summary}
-
-### 2.3 Constraints
-{from CONTEXT.md}
-
-## 3. Functional Requirements
-
-### 3.1 {Area 1}
-
-#### REQ-001: {Title}
-- **Description**: {user story}
-- **Priority**: {Must/Should/Could/Won't}
-- **Rationale**: {why needed}
+{for each REQ-* artifact file}
+### {ID}: {title}
+- **Description**: {description}
+- **Priority**: {priority}
 - **Acceptance Criteria**:
-  - [ ] {criterion 1}
-  - [ ] {criterion 2}
-- **Dependencies**: {REQ-xxx or None}
+  {for each criterion}
+  - [ ] {criterion}
+  {/for}
+{/for}
+
+## 3. Business Rules
+
+{for each BR-* artifact file}
+### {ID}: {title}
+{description}
+{/for}
 
 ## 4. Non-Functional Requirements
 
-{if mentioned in constraints}
+{for each NFR-* artifact file}
+### {ID}: {title}
+- **Target**: {target}
+- **Minimum**: {minimum}
+{/for}
 
 ## 5. Out of Scope
 
-{explicit exclusions}
+{for each EX-* artifact file}
+- **{ID}**: {title} - {rationale}
+{/for}
 
 ---
 *Generated by Spec2Ship /s2s:specs*
-*Roundtable participants: {list}*
+*Session: {session-id}*
 ```
 
-### Phase 4: Update CONTEXT.md
+### Step 3.6: Update CONTEXT.md
 
 Update `.s2s/CONTEXT.md`:
 - Update phase to "specs"
 - Add reference to requirements document
 - Update "Last updated" date
 
-### Phase 5: Output Summary
+### Step 3.7: Output Summary
 
     Requirements defined successfully!
 
@@ -311,10 +488,23 @@ Update `.s2s/CONTEXT.md`:
     Summary:
     - Core requirements: {count}
     - Extended requirements: {count}
+    - Business rules: {count}
     - Out of scope: {count}
 
-    Phase: specs
+    Session folder: .s2s/sessions/{session-id}/
 
     Next steps:
       /s2s:design    - Design architecture
       /s2s:plan      - Generate implementation plans
+
+---
+
+## Skip Roundtable Mode
+
+**If --skip-roundtable IS present:**
+
+1. Read CONTEXT.md directly
+2. Infer requirements from objectives and scope
+3. Generate basic requirement list without discussion
+4. Skip session folder creation
+5. Proceed to document generation

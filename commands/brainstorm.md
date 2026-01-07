@@ -47,7 +47,7 @@ If topic is missing, ask using AskUserQuestion:
 ### Validate Environment
 
 If S2S initialized is "no":
-- Display: "Warning: Not an s2s project. Results displayed but not saved."
+- Display: "Warning: Not an s2s project. Results displayed but not saved to project structure."
 - Continue anyway (brainstorm can work without full s2s setup)
 
 ### Determine Participants
@@ -75,129 +75,334 @@ If --participants specified, use that list instead.
 
     Starting discussion...
 
-### Launch Roundtable
+---
 
-**IMPORTANT: Follow the `roundtable-execution` skill instructions EXACTLY.**
-**DO NOT use SlashCommand. Execute the roundtable inline using Task().**
+## Phase 1: Session Setup
 
-#### Roundtable Configuration
+### Step 1.1: Generate Session ID
 
-Configure the roundtable with these parameters:
-- **topic**: {parsed topic}
-- **workflow_type**: "brainstorm"
-- **strategy**: "disney"
-- **output_type**: "summary"
-- **participants**: {--participants or defaults: product-manager, software-architect, technical-lead, devops-engineer}
-- **verbose**: {verbose_flag}
-- **interactive**: {interactive_flag}
+```
+{YYYYMMDD}-brainstorm-{topic-slug}
+Example: 20260107-brainstorm-mobile-app-idea
+```
 
-#### Execute Roundtable
+### Step 1.2: Create Session Folder Structure
 
-**YOU MUST** execute these steps from `roundtable-execution` skill with workflow-specific values:
+**YOU MUST use Bash tool NOW**:
+```bash
+mkdir -p .s2s/sessions/{session-id}
+```
 
-| Parameter | Value |
-|-----------|-------|
-| session_id | `{timestamp}-brainstorm-{topic-slug}` |
-| workflow_type | `brainstorm` |
-| strategy | `disney` |
-| participants | `[product-manager, software-architect, technical-lead, devops-engineer]` |
-| agenda | **None** (free-form creativity) |
+If verbose_flag is true:
+```bash
+mkdir -p .s2s/sessions/{session-id}/rounds
+```
 
-**PHASE 2 - Session Setup:**
+### Step 1.3: Create Snapshot Files
 
-1. Create sessions directory: `mkdir -p .s2s/sessions`
-2. Generate session ID: `{timestamp}-brainstorm-{topic-slug}`
-3. **NOW use Write tool** to create `.s2s/sessions/{session-id}.yaml`:
+**YOU MUST use Write tool NOW** to create `context-snapshot.yaml`:
+
+If S2S initialized, read `.s2s/CONTEXT.md`. Otherwise, create minimal context:
+```yaml
+# Captured: {ISO timestamp}
+source: "{.s2s/CONTEXT.md or 'user-provided'}"
+
+project_name: "{from CONTEXT.md or directory name}"
+description: "{from CONTEXT.md or topic}"
+brainstorm_topic: "{topic}"
+```
+
+**YOU MUST use Write tool NOW** to create `config-snapshot.yaml`:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/config.yaml"
+
+verbose: {verbose_flag}
+interactive: {interactive_flag}
+strategy: "disney"
+limits:
+  min_rounds: 3
+  max_rounds: 20
+escalation:
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  critical_keywords: ["security", "must-have", "blocking", "legal"]
+participants:
+  - "product-manager"
+  - "software-architect"
+  - "technical-lead"
+  - "devops-engineer"
+```
+
+**Note**: Brainstorm uses Disney strategy with phases, no formal agenda.
+
+### Step 1.4: Create Session Index File
+
+**YOU MUST use Write tool NOW** to create `.s2s/sessions/{session-id}.yaml`:
+
 ```yaml
 id: "{session-id}"
 topic: "{topic}"
 workflow_type: "brainstorm"
 strategy: "disney"
 status: "active"
-started: "{ISO timestamp}"
-participants:
-  - id: product-manager
-  - id: software-architect
-  - id: technical-lead
-  - id: devops-engineer
-config:
-  min_rounds: 3
-  max_rounds: 20
-  verbose: {verbose_flag}
-  interactive: {interactive_flag}
-  escalation:
-    max_rounds_per_conflict: 3
-    confidence_below: 0.5
-    critical_keywords: ["security", "must-have", "blocking", "legal"]
+
+timing:
+  started: "{ISO timestamp}"
+  completed: null
+  duration_ms: null
+
+artifacts:
+  ideas: []
+  risks: []
+  mitigations: []
+  conflicts: []
+  open_questions: []
+
+# Disney phases (no formal agenda)
 current_phase: "dreamer"
+phases:
+  - name: "dreamer"
+    status: "active"
+    rounds: []
+  - name: "realist"
+    status: "pending"
+    rounds: []
+  - name: "critic"
+    status: "pending"
+    rounds: []
+
 rounds: []
+
+metrics:
+  rounds: 0
+  tasks: 0
+  tokens: 0
 ```
-4. **NOW use Edit tool** to update `.s2s/state.yaml` with `current_session: "{session-id}"`
 
-**PHASE 3 - Round Execution Loop** (cycle through Disney phases: dreamer → realist → critic):
+### Step 1.5: Update State File
 
-1. **Step 3.0.5**: Display current phase to terminal (Dreamer/Realist/Critic)
-2. **Step 3.1**: **YOU MUST use Task tool NOW** to call facilitator for question
-   - Include current Disney phase in prompt
-   - Include escalation config section in prompt:
-   ```
-   === ESCALATION CONFIG ===
-   max_rounds_per_conflict: 3
-   confidence_below: 0.5
-   min_rounds: 3
-   critical_keywords: [security, must-have, blocking, legal]
-   ```
-3. **Step 3.2**: **YOU MUST launch ALL participant Tasks in SINGLE message**
-   - This ensures blind voting (parallel execution)
-   - **Store responses in `participant_responses` array:**
-   ```
-   participant_responses = [
-     { id, role, position, rationale, concerns, confidence }
-   ]
-   ```
-4. **Step 3.3**: **YOU MUST use Task tool** for facilitator synthesis
-5. **Step 3.4**: **NOW use Edit tool** to append round to session file:
-   - Append to `rounds:` array with: number, phase, question, synthesis, consensus, conflicts
-   - **IF verbose_flag == true**: Include `responses:` with full participant_responses array
-6. **Step 3.5**: Display round recap to terminal
-7. **Step 3.6**: Evaluate next_action:
-   - **min_rounds CHECK**: If round < 3 AND "conclude" → OVERRIDE to "continue"
-   - **Phase progression**: dreamer (1+ rounds) → realist (1+ rounds) → critic (1+ rounds)
-   - **Interactive mode**: Only ask user if `interactive_flag == true`
+If S2S initialized:
+**YOU MUST use Edit tool NOW** to update `.s2s/state.yaml`:
+```yaml
+current_session: "{session-id}"
+```
 
-**PHASE 4 - Completion:**
+---
 
-1. **Update session status**: Edit session file, set `status: "completed"` and `completed_at: "{ISO timestamp}"`
+## Phase 2: Round Execution Loop (Disney Strategy)
 
-2. **CRITICAL - Read session file for summary**:
-   - **YOU MUST use Read tool** to read the completed session file
-   - Extract consensus from each Disney phase (dreamer, realist, critic)
-   - Extract unresolved conflicts (those without resolution)
-   - This ensures summary matches persisted data (Single Source of Truth)
+**Follow the `roundtable-execution` skill instructions with Disney strategy phases.**
 
-3. **Generate output**: Based on output_type ("summary"), create brainstorm summary
+Initialize:
+- `round_number = 0`
+- `current_phase = "dreamer"`
+- `session_folder = ".s2s/sessions/{session-id}/"`
 
-**Summary MUST be derived from session file, NOT from facilitator memory.**
+### Round Loop (cycle through Disney phases)
 
-### Process Results
+#### Step 2.1: Display Phase Status
 
-After reading session file, extract from each phase:
+```
+═══════════════════════════════════════════════════════════════
+BRAINSTORM: {topic}
+Strategy: Disney | Phase: {current_phase} | Round: {round_number + 1}
+═══════════════════════════════════════════════════════════════
 
-1. **Dreamer phase ideas**: Big thinking, no constraints
-2. **Realist assessment**: Feasibility evaluation
-   - Immediately feasible
-   - Requires more work
-   - Long-term/aspirational
-3. **Critic risks**: Identified risks with mitigations
-4. **Consensus recommendations**: Agreed next steps
+{if current_phase == "dreamer"}
+DREAMER PHASE: Think BIG! No constraints, wild ideas welcome.
+{/if}
+{if current_phase == "realist"}
+REALIST PHASE: Evaluate feasibility. How would we implement?
+{/if}
+{if current_phase == "critic"}
+CRITIC PHASE: Identify risks. What could go wrong?
+{/if}
 
-### Save Results (if S2S initialized)
+ARTIFACTS: {count} ideas, {count} risks, {count} mitigations
+```
 
-If S2S is initialized:
+#### Step 2.2: Facilitator Question
 
-1. Session YAML already created by roundtable:start
+**YOU MUST use Task tool NOW** to call facilitator:
 
-2. Generate summary markdown `.s2s/sessions/{session-id}-summary.md`:
+```yaml
+subagent_type: "general-purpose"
+prompt: |
+  You are the Roundtable Facilitator.
+  Read your agent definition from: agents/roundtable/facilitator.md
+
+  === SESSION STATE ===
+  Round: {round_number + 1}
+  Strategy: disney
+  Current Phase: {current_phase}
+  Session folder: {session_folder}
+
+  === DISNEY PHASE GOAL ===
+  {if current_phase == "dreamer"}
+  Generate creative ideas without constraints.
+  NO criticism allowed in this phase.
+  Encourage wild, ambitious thinking.
+  {/if}
+  {if current_phase == "realist"}
+  Evaluate feasibility of ideas from Dreamer phase.
+  Focus on "how to" thinking.
+  Convert ideas to actionable items.
+  {/if}
+  {if current_phase == "critic"}
+  Identify risks and potential issues.
+  What could go wrong?
+  Propose mitigations.
+  {/if}
+
+  === ARTIFACT SUMMARY ===
+  Ideas: {list IDs from dreamer phase}
+  Risks: {list IDs from critic phase}
+  Mitigations: {list IDs}
+  Conflicts: {list IDs}
+
+  === PREVIOUS ROUND ===
+  {synthesis from last round or "First round"}
+
+  === YOUR TASK ===
+  1. Generate question appropriate for {current_phase} phase
+  2. SELECT context files for participants
+  3. Include exploration prompt
+
+  NOTE: For brainstorm, focus on creativity over consensus.
+```
+
+**IF verbose_flag == true**: Write dump file.
+
+#### Step 2.3: Participant Responses
+
+**YOU MUST launch ALL participant Tasks in SINGLE message**:
+
+```yaml
+subagent_type: "general-purpose"
+prompt: |
+  You are the {Role} in a brainstorming session.
+  Read your agent definition from: agents/roundtable/{participant-id}.md
+
+  === DISNEY PHASE: {current_phase} ===
+  {if current_phase == "dreamer"}
+  Think BIG! No constraints. What would be IDEAL?
+  NO criticism of ideas in this phase.
+  {/if}
+  {if current_phase == "realist"}
+  Evaluate feasibility. How would we BUILD this?
+  Be practical but constructive.
+  {/if}
+  {if current_phase == "critic"}
+  Identify risks. What could go WRONG?
+  Propose mitigations for each risk.
+  {/if}
+
+  === CONTEXT FILES ===
+  Read these files (DO NOT read other session files):
+  {for each file in facilitator's context_files}
+  - {session_folder}/{file}
+  {/for}
+
+  === QUESTION ===
+  {facilitator's question}
+
+  === EXPLORATION ===
+  {facilitator's exploration prompt}
+
+  === YOUR RESPONSE FORMAT ===
+  Return YAML:
+  position: "{your contribution}"
+  rationale:
+    - "{reason 1}"
+  confidence: 0.85
+  {if current_phase == "dreamer"}
+  ideas:
+    - "{new idea}"
+  {/if}
+  {if current_phase == "critic"}
+  risks:
+    - "{identified risk}"
+  mitigations:
+    - risk: "{risk}"
+      mitigation: "{how to address}"
+  {/if}
+```
+
+**IF verbose_flag == true**: Write dump for each participant.
+
+#### Step 2.4: Facilitator Synthesis
+
+**YOU MUST use Task tool NOW** for synthesis.
+
+Include phase-specific artifact extraction:
+- **Dreamer**: Extract ideas as IDEA-* artifacts
+- **Realist**: Assess feasibility, categorize ideas
+- **Critic**: Extract risks as RISK-*, mitigations as MIT-*
+
+**IF verbose_flag == true**: Write dump file.
+
+#### Step 2.5: Process Artifacts
+
+For each `proposed_artifact`:
+- Ideas: `IDEA-{NNN}.yaml`
+- Risks: `RISK-{NNN}.yaml`
+- Mitigations: `MIT-{NNN}.yaml`
+- Conflicts: `CONF-{NNN}.yaml`
+- Open questions: `OQ-{NNN}.yaml`
+
+#### Step 2.6: Phase Transition
+
+Disney strategy phase progression:
+- **dreamer**: 1+ rounds until facilitator recommends phase transition
+- **realist**: 1+ rounds
+- **critic**: 1+ rounds, then conclude
+
+When facilitator returns `next: "phase"`:
+- Advance `current_phase` (dreamer → realist → critic)
+- Update phase status in session file
+
+When in `critic` phase and facilitator returns `next: "conclude"`:
+- Exit loop, proceed to completion
+
+#### Step 2.7-2.9: Standard roundtable steps
+
+Follow roundtable-execution skill for recap, interactive, and next action.
+
+---
+
+## Phase 3: Completion
+
+### Step 3.1: Update Session Status
+
+**YOU MUST use Edit tool NOW** to update session file.
+
+### Step 3.2: Clear State
+
+If S2S initialized:
+**YOU MUST use Edit tool NOW** to clear current_session.
+
+### Step 3.3: Read Session for Summary
+
+**YOU MUST use Read tool** to read session file and artifact files.
+
+Extract from each Disney phase:
+- **Dreamer phase**: All IDEA-* artifacts
+- **Realist phase**: Feasibility assessments
+- **Critic phase**: All RISK-* and MIT-* artifacts
+
+### Step 3.4: Process Results
+
+Categorize ideas by feasibility:
+- **Immediately feasible**: Ready to implement
+- **Requires more work**: Needs further analysis
+- **Long-term/aspirational**: Future consideration
+
+Pair risks with mitigations.
+
+### Step 3.5: Save Summary
+
+**YOU MUST use Write tool NOW** to create `.s2s/sessions/{session-id}-summary.md`:
 
 ```markdown
 # Brainstorm: {Topic}
@@ -209,41 +414,48 @@ If S2S is initialized:
 
 ## Dreamer Phase Ideas
 
-{Ideas from phase 1}
+{for each IDEA-* artifact}
+### {ID}: {title}
+{description}
+{/for}
 
 ## Realist Assessment
 
 ### Immediately Feasible
-{list}
+{list ideas marked feasible}
 
 ### Requires More Work
-{list}
+{list ideas needing analysis}
 
 ### Long-term Vision
-{list}
+{list aspirational ideas}
 
 ## Critic Risks
 
 | Risk | Mitigation |
 |------|------------|
-| {risk} | {mitigation} |
+{for each RISK-* artifact}
+| {title} | {matching MIT-* or "TBD"} |
+{/for}
 
 ## Recommended Next Steps
 
-1. {step}
+1. {step based on top feasible ideas}
 2. {step}
+3. {step}
 
 ## Unresolved Questions
 
+{for each OQ-* artifact}
 - {question}
+{/for}
 
 ---
 *Generated by Spec2Ship /s2s:brainstorm*
+*Session: {session-id}*
 ```
 
-### Output Summary
-
-Display brainstorm results:
+### Step 3.6: Output Summary
 
     Brainstorm Complete!
     ════════════════════
@@ -251,6 +463,7 @@ Display brainstorm results:
     Topic: {topic}
     Strategy: Disney (Dreamer → Realist → Critic)
     Participants: {count}
+    Rounds: {count per phase}
 
     Top Ideas:
     ──────────
@@ -269,10 +482,8 @@ Display brainstorm results:
     - {risk 1}
     - {risk 2}
 
-    {If S2S initialized}
-    Session saved: .s2s/sessions/{session-id}.yaml
+    Session folder: .s2s/sessions/{session-id}/
     Summary: .s2s/sessions/{session-id}-summary.md
-    {/If}
 
     Next steps:
     ───────────

@@ -2,602 +2,529 @@
 name: Roundtable Execution
 description: "This skill provides instructions for executing multi-agent roundtable discussions.
   Use when a command needs to run discussion rounds with facilitator and participants.
-  Referenced by: specs.md, design.md, brainstorm.md, roundtable:start.md.
+  Referenced by: specs.md, design.md, brainstorm.md.
   Trigger: 'execute roundtable', 'run discussion rounds', 'multi-agent discussion'."
-version: 1.0.0
+version: 2.0.0
 ---
 
 # Roundtable Execution Instructions
 
-This skill provides step-by-step instructions for executing a multi-agent roundtable discussion. Commands that need to run discussions (specs, design, brainstorm, roundtable:start) reference this skill to avoid duplicating orchestration logic.
+This skill provides step-by-step instructions for executing a multi-agent roundtable discussion with file-based artifact management.
 
 ## When to Use This Skill
 
-- Executing `/s2s:roundtable:start` command
-- Running roundtable phase in `/s2s:specs`
-- Running roundtable phase in `/s2s:design`
-- Running roundtable phase in `/s2s:brainstorm`
+- Executing `/s2s:specs` requirements gathering
+- Executing `/s2s:design` architecture design
+- Executing `/s2s:brainstorm` ideation sessions
 
-## Prerequisites
+## Key Architecture
 
-Before executing these instructions, ensure:
-- `.s2s` directory exists (project initialized)
-- `.s2s/config.yaml` exists with roundtable settings
-- Topic and workflow_type are defined
+- **Session file**: `.s2s/sessions/{session-id}.yaml` - Slim index
+- **Session folder**: `.s2s/sessions/{session-id}/` - Artifacts and dumps
+- **Artifacts**: Individual YAML files per requirement/conflict/etc.
+- **Verbose dumps**: `rounds/` subfolder with per-actor dump files
 
 ---
 
-## PHASE 1: Configuration Loading
+## PHASE 1: Session Setup
 
-### Step 1.1: Read Config Defaults
+### Step 1.1: Generate Session ID
 
-Read `.s2s/config.yaml` and extract `roundtable.*` section:
-
-```yaml
-roundtable:
-  verbose: false
-  interactive: false
-  strategy: "standard"
-  limits:
-    min_rounds: 3     # Minimum rounds before conclusion allowed
-    max_rounds: 20    # Force conclude after this many rounds
-  escalation:
-    max_rounds_per_conflict: 3
-    confidence_below: 0.5
-    critical_keywords: ["security", "must-have", "blocking", "legal"]
-  participants:
-    specs: ["product-manager", "software-architect", "qa-lead"]
-    design: ["software-architect", "technical-lead", "devops-engineer"]
-    brainstorm: ["product-manager", "software-architect", "technical-lead"]
+```
+{YYYYMMDD}-{workflow_type}-{project-slug}
+Example: 20260107-requirements-elfgiftrush
 ```
 
-### Step 1.2: Apply Argument Overrides
+### Step 1.2: Create Session Folder Structure
 
-Parse command arguments and override config defaults:
+```bash
+mkdir -p .s2s/sessions/{session-id}
+mkdir -p .s2s/sessions/{session-id}/rounds  # Only if --verbose
+```
 
-| Argument | Overrides | Example |
-|----------|-----------|---------|
-| `--verbose` | roundtable.verbose | `--verbose` → true |
-| `--interactive` | roundtable.interactive | `--interactive` → true |
-| `--strategy X` | roundtable.strategy | `--strategy debate` |
-| `--participants X,Y,Z` | roundtable.participants.{workflow_type} | Custom list |
+### Step 1.3: Create Snapshot Files
 
-**Priority**: arguments > config.yaml > hardcoded defaults
+**context-snapshot.yaml**: Read `.s2s/CONTEXT.md` and write YAML snapshot:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/CONTEXT.md"
 
-### Step 1.3: Load Strategy Configuration
+project_name: "{from CONTEXT.md}"
+description: "{from CONTEXT.md}"
+objectives: [...]
+constraints: [...]
+scope:
+  in: [...]
+  out: [...]
+```
 
-Read strategy details from `skills/roundtable-strategies/references/{strategy}.md`.
+**config-snapshot.yaml**: Read `.s2s/config.yaml` and write relevant config:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/config.yaml"
 
-Extract:
-- **phases**: Array of phase definitions (e.g., disney: dreamer→realist→critic)
-- **participation**: "parallel" or "sequential"
-- **consensus**: Policy and threshold
+verbose: {verbose_flag}
+interactive: {interactive_flag}
+strategy: "{strategy}"
+limits:
+  min_rounds: 3
+  max_rounds: 20
+escalation:
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  critical_keywords: ["security", "must-have", "blocking", "legal"]
+participants: [...]
+```
 
-### Step 1.4: Load Workflow Agenda
+**agenda.yaml**: Copy workflow agenda from `references/agenda-{workflow_type}.md`:
+```yaml
+# Captured: {ISO timestamp}
+source: "skills/roundtable-execution/references/agenda-{workflow_type}.md"
+workflow: "{workflow_type}"
+topics: [...]  # Full topic definitions with done_when criteria
+```
 
-Based on `workflow_type`, load required topics from:
-- `skills/roundtable-execution/references/agenda-{workflow_type}.md`
+### Step 1.4: Create Session Index File
 
-**If file exists**: Parse REQUIRED_TOPICS list
-**If file doesn't exist**: No agenda enforcement (e.g., brainstorm)
+Write `.s2s/sessions/{session-id}.yaml`:
+```yaml
+id: "{session-id}"
+topic: "{topic}"
+workflow_type: "{workflow_type}"
+strategy: "{strategy}"
+status: "active"
+
+timing:
+  started: "{ISO timestamp}"
+  completed: null
+  duration_ms: null
+
+artifacts:
+  requirements: []
+  business_rules: []
+  conflicts: []
+  open_questions: []
+  exclusions: []
+
+agenda: []  # Will be populated from agenda.yaml
+
+rounds: []
+
+metrics:
+  rounds: 0
+  tasks: 0
+  tokens: 0
+```
+
+### Step 1.5: Update State File
+
+Edit `.s2s/state.yaml`:
+```yaml
+current_session: "{session-id}"
+```
 
 ---
 
-## Workflow Agendas
-
-See workflow-specific agenda files for detailed topic definitions:
-- `references/agenda-specs.md` - Requirements topics for specs workflow
-- `references/agenda-design.md` - Architecture topics for design workflow
-- Brainstorm: No agenda (free-form creativity)
-
-Pass agenda to facilitator in prompts using `=== AGENDA ===` section.
-
----
-
-## PHASE 2: Session Setup
-
-### Step 2.1: Generate Session ID
-
-Create session ID: `{YYYYMMDD-HHMMSS}-{topic-slug}` (slug: lowercase, hyphens, max 30 chars)
-
-### Step 2.2: Create Session File
-
-**YOU MUST** create `.s2s/sessions/{session-id}.yaml` following schema in `references/session-schema.md`.
-
-Include: id, topic, workflow_type, strategy, status="active", timestamps, participants, current_phase, rounds=[], escalations=[], outcome=null.
-
-### Step 2.3: Update State File
-
-Set `current_session: "{session-id}"` in `.s2s/state.yaml`.
-
----
-
-## PHASE 3: Round Execution Loop
-
-**CRITICAL**: Execute rounds EXACTLY as specified. DO NOT improvise.
+## PHASE 2: Round Execution Loop
 
 ### Loop Variables
 
-Initialize:
-- `round_number = 0`
-- `current_phase = first phase from strategy`
-- `rounds_in_phase = 0`
+```
+round_number = 0
+session_folder = ".s2s/sessions/{session-id}/"
+```
 
-### Step 3.0.5: Display Agenda Status
-
-**At the START of each round**, display agenda status to terminal using this template:
+### Step 2.1: Display Round Start
 
 ```
-Roundtable Session: {workflow_type title}
-───────────────────────────────────────────
-Session ID: {session-id}
-Strategy: {strategy}
-Participants: {list of participant names}
+═══════════════════════════════════════════════════════════════
+ROUNDTABLE: {topic}
+Strategy: {strategy} | Round: {round_number + 1}
+═══════════════════════════════════════════════════════════════
 
-Agenda:
-{for each topic in REQUIRED_TOPICS}
-{status_icon} {topic_name}
+AGENDA STATUS:
+{for each topic in agenda}
+[{status}] {topic_name} {(CRITICAL) if critical}
 {/for}
 
-Starting Round {round_number}...
+ARTIFACTS: {count} requirements, {count} conflicts, {count} open questions
 ```
 
-**Status icons:**
-- `☐` = pending (not yet discussed)
-- `◐` = partial (needs more depth)
-- `✓` = covered (adequately discussed)
+### Step 2.2: Facilitator Question
 
-Update status based on `agenda_coverage` from previous synthesis.
-For brainstorm workflow (no agenda), display "Free-form discussion (Disney Strategy)" instead.
+**YOU MUST use Task tool** to call facilitator:
 
-### Step 3.1: Facilitator Question
-
-**YOU MUST use the Task tool NOW** with these parameters:
-
-- **subagent_type**: "general-purpose"
-- **prompt**: Include ALL of the following:
-
-```
-You are the Roundtable Facilitator.
-
-Read your agent definition from: agents/roundtable/facilitator.md
-
-=== SESSION STATE ===
-Topic: {topic}
-Strategy: {strategy}
-Current Phase: {current_phase}
-Round: {round_number + 1}
-Rounds in this phase: {rounds_in_phase}
-
-=== HISTORY ===
-Previous synthesis: {last round's synthesis or 'First round'}
-Current consensus: {accumulated consensus or 'None yet'}
-Open conflicts: {unresolved conflicts or 'None'}
-
-=== ESCALATION CONFIG ===
-max_rounds_per_conflict: {from config}
-confidence_below: {from config}
-min_rounds: {from config, usually 3}
-
-=== PROJECT CONTEXT (from CONTEXT.md) ===
-Project: {project name}
-Objectives: {key objectives from CONTEXT.md}
-Scope: {in-scope / out-of-scope from CONTEXT.md}
-Constraints: {constraints from CONTEXT.md}
-
-=== AGENDA ===
-Required topics: {REQUIRED_TOPICS list or "None"}
-Current coverage: {from previous synthesis or "Not started"}
-
-=== TASK ===
-Generate the next question for participants.
-If agenda has pending critical topics, prioritize those.
-Include a context_summary for participants to review and potentially challenge.
-
-Return YAML:
 ```yaml
-action: "question"
-question: "{specific question to ask}"
-context_summary: |
-  Project: {name}
-  Objectives: {list}
-  Scope: {in/out}
-  Constraints: {list}
-participants: "all"
-focus: "{focus area}"
-```
+subagent_type: "general-purpose"
+prompt: |
+  You are the Roundtable Facilitator.
+  Read your agent definition from: agents/roundtable/facilitator.md
+
+  === SESSION STATE ===
+  Round: {round_number + 1}
+  Session folder: {session_folder}
+
+  === ARTIFACT SUMMARY ===
+  Requirements: {list IDs with title, status}
+  Conflicts: {list IDs with title, status}
+  Open questions: {list IDs with title, status}
+
+  (Read artifact files only if you need full details)
+
+  === AGENDA STATUS ===
+  {for each topic}
+  [{status}] {topic_id} - DoD: {criteria summary}
+  {/for}
+
+  === PREVIOUS ROUND ===
+  {synthesis from last round or "First round"}
+
+  === ESCALATION CONFIG ===
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  min_rounds: 3
+
+  === YOUR TASK ===
+  1. DECIDE focus for this round (agenda/conflict/open_question)
+  2. SELECT context files for participants
+  3. GENERATE question + exploration prompt
 ```
 
-**IMPORTANT: Do NOT proceed to Step 3.2 until you have the facilitator's response.**
+**Parse response**: Extract `decision`, `context_files`, `question`, `exploration`, `participants`
 
-**If facilitator returns invalid YAML**, use fallback:
+**IF --verbose**: Write dump file `rounds/{NNN}-01-facilitator-question.yaml`
+
+### Step 2.3: Participant Responses (PARALLEL)
+
+**YOU MUST launch ALL participant Tasks in SINGLE message** for blind voting.
+
+For EACH participant:
+
 ```yaml
-action: "question"
-question: "What are the key considerations for {topic}?"
-participants: "all"
-focus: "Core requirements"
+subagent_type: "general-purpose"
+prompt: |
+  You are the {Participant Role} in a roundtable discussion.
+  Read your agent definition from: agents/roundtable/{participant-id}.md
+
+  === CONTEXT FILES ===
+  Read these files (DO NOT read other session files):
+  {for each file in context_files}
+  - {session_folder}/{file}
+  {/for}
+
+  === QUESTION ===
+  {facilitator's question}
+
+  === EXPLORATION ===
+  {facilitator's exploration prompt}
+
+  === YOUR RESPONSE FORMAT ===
+  Return YAML:
+  position: "{your position}"
+  rationale:
+    - "{reason 1}"
+    - "{reason 2}"
+  confidence: 0.85
+  concerns:
+    - "{concern}"
+  suggestions:
+    - "{new idea or question}"
 ```
 
-### Step 3.2: Participant Responses (PARALLEL)
+**Store responses** in `participant_responses[]`
 
-**YOU MUST launch ALL participant Tasks in a SINGLE message.**
+**IF --verbose**: Write dump files `rounds/{NNN}-02-{participant-id}.yaml` for each
 
-This ensures blind voting - participants do NOT see each other's responses.
+### Step 2.4: Facilitator Synthesis
 
-For EACH participant in participant_list, use Task tool:
+**YOU MUST use Task tool** for synthesis:
 
-- **subagent_type**: "general-purpose"
-- **prompt**:
-
-```
-You are the {Participant Role} in a roundtable discussion.
-
-Read your agent definition from: agents/roundtable/{participant-id}.md
-
-=== DISCUSSION ===
-Topic: {topic}
-Question: {facilitator's question}
-Focus: {facilitator's focus}
-
-=== PROJECT CONTEXT (from facilitator) ===
-{context_summary from facilitator's question output}
-
-=== DISCUSSION CONTEXT ===
-Strategy: {strategy}
-Phase: {current_phase}
-Previous synthesis: {last synthesis or 'First round'}
-
-=== YOUR TASK ===
-Provide your perspective on the question.
-
-**CRITICAL**: If you identify issues with the PROJECT CONTEXT:
-- Missing information
-- Questionable assumptions
-- Better alternatives
-
-FLAG them explicitly using the `context_challenge` field.
-
-Return YAML:
 ```yaml
-position: "{your position statement}"
-rationale:
-  - "{reason 1}"
-  - "{reason 2}"
-confidence: 0.8  # 0.0 to 1.0
-concerns:
-  - "{any concerns}"
-context_challenge: "{optional: your concern about the stated context}"
+subagent_type: "general-purpose"
+prompt: |
+  You are the Roundtable Facilitator.
+  Read your agent definition from: agents/roundtable/facilitator.md
+
+  === ROUND {round_number + 1} RESPONSES ===
+  {for each participant}
+  **{Participant Role}** (confidence: {confidence}):
+  Position: {position}
+  Rationale: {rationale}
+  Concerns: {concerns}
+  Suggestions: {suggestions}
+  {/for}
+
+  === ARTIFACT SUMMARY ===
+  {same as in question phase}
+
+  === AGENDA STATUS ===
+  {same as in question phase}
+
+  === ESCALATION CONFIG ===
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  min_rounds: 3
+
+  === YOUR TASK ===
+  1. SYNTHESIZE responses
+  2. PROPOSE new artifacts (without IDs)
+  3. UPDATE agenda status
+  4. DECIDE next action
 ```
-```
 
-**IMPORTANT: WAIT for ALL participant responses before proceeding to Step 3.3.**
+**Parse response**: Extract `synthesis`, `proposed_artifacts`, `resolved_conflicts`, `agenda_update`, `next`, `next_focus`
 
-**Store responses for later use (CRITICAL for verbose mode):**
+**IF --verbose**: Write dump file `rounds/{NNN}-03-facilitator-synthesis.yaml`
 
-After ALL participant Tasks complete, you MUST create a `participant_responses` array:
+### Step 2.5: Process Artifacts
 
-```
-participant_responses = []
-for each participant_task_result:
-    parsed = parse_yaml(result)
-    participant_responses.append({
-        "id": participant_id,
-        "role": participant_display_name,
-        "position": parsed.position,
-        "rationale": parsed.rationale,
-        "concerns": parsed.concerns,
-        "confidence": parsed.confidence,
-        "context_challenge": parsed.context_challenge or null
-    })
-```
+For each `proposed_artifact`:
 
-This array is used in:
-- Step 3.3: Pass to facilitator for synthesis
-- Step 3.4: Include in session file (if verbose=true)
+1. **Determine ID**: Read current registry, assign next available ID
+   - Requirements: `REQ-{NNN}`
+   - Conflicts: `CONF-{NNN}`
+   - Open questions: `OQ-{NNN}`
+   - Etc.
 
-**DO NOT discard responses after synthesis. Keep them for session file writing.**
+2. **Write artifact file**: `{session_folder}/{ID}.yaml`
 
-### Step 3.3: Facilitator Synthesis
+3. **Update registry** in session file
 
-**YOU MUST use the Task tool NOW** for synthesis:
+For each `resolved_conflict`:
 
-- **subagent_type**: "general-purpose"
-- **prompt**:
+1. **Update conflict file**: Add `resolved_round` and `resolution`
+2. **Update registry** if needed
 
-```
-You are the Roundtable Facilitator.
+### Step 2.6: Update Session File
 
-Read agents/roundtable/facilitator.md
-
-=== ROUND {round_number + 1} RESPONSES ===
-
-{For each participant}
-**{Participant Role}** (confidence: {confidence}):
-Position: {position}
-Rationale: {rationale}
-Concerns: {concerns}
-{End for each}
-
-=== SESSION STATE ===
-Topic: {topic}
-Strategy: {strategy}
-Phase: {current_phase}
-Phase goal: {from strategy}
-
-=== CURRENT STATE ===
-Consensus so far: {accumulated consensus}
-Open conflicts: {with round counts}
-
-=== ESCALATION CONFIG ===
-max_rounds_per_conflict: {from config}
-confidence_below: {from config}
-min_rounds: {from config, usually 3}
-
-=== AGENDA ===
-Required topics: {REQUIRED_TOPICS list or "None"}
-Current coverage: {from previous synthesis or "Not started"}
-
-=== TASK ===
-Synthesize responses. Identify consensus and conflicts.
-Update agenda_coverage for each topic.
-Check min_rounds and agenda before allowing conclusion.
-Determine next action.
-
-Return YAML:
+Append round to `rounds[]`:
 ```yaml
-action: "synthesis"
-synthesis: "{summary of this round - 2-4 sentences}"
-consensus:
-  - "{new agreed point}"
-conflicts:
-  - id: "{slug-id}"
-    description: "{what the conflict is about}"
-    positions:
-      participant-id: "{their position}"
-resolved:
-  - conflict_id: "{previously open conflict now resolved}"
-    resolution: "{how it was resolved}"
-    resolution_type: "consensus"
-next_action: "continue"  # continue|phase|conclude|escalate
-next_focus: "{if continue, what to focus on}"
-escalation_reason: null  # if escalate
-recommendation: null  # if conclude
-output_type: null  # if conclude: adr|requirements|architecture|summary
-```
+- number: {round_number + 1}
+  focus:
+    type: "{focus_type}"
+    topic_id: "{topic_id}"
+  created: ["{new artifact IDs}"]
+  resolved: ["{resolved conflict IDs}"]
+  next: "{next action}"
 ```
 
-**IMPORTANT: Do NOT proceed until you have the synthesis response.**
+Update `agenda[]` status based on `agenda_update`.
 
-### Step 3.4: Update Session File (IMMEDIATE WRITE)
+Update `metrics`.
 
-**CRITICAL: This step MUST execute IMMEDIATELY after Step 3.3 synthesis.**
-**DO NOT defer to end of session. DO NOT batch multiple rounds.**
-
-**YOU MUST** use the Write or Edit tool NOW:
-
-1. Read current session file
-2. Append new round to `rounds:` array (see `references/session-schema.md` for structure)
-3. If verbose=true, include `participant_responses` from Step 3.2
-4. Update `total_rounds`
-5. Write file IMMEDIATELY
-
-**If write fails, STOP and report error.**
-
-### Step 3.4.5: Display Round Recap (ALWAYS)
-
-**YOU MUST** display round summary to terminal after EVERY round using this template:
+### Step 2.7: Display Round Recap
 
 ```
-────────────────────────────────────────────────────
-Round {round_number} Complete
-────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────
+ROUND {round_number + 1} COMPLETE
+───────────────────────────────────────────────────────────────
 
-Phase: {current_phase}
-Focus: {facilitator's focus from question}
+Focus: {focus_type} - {topic_id}
 
 Synthesis:
-{facilitator's synthesis - 2-4 sentences}
+{facilitator's synthesis}
 
-Consensus Reached This Round:
-{for each consensus item}
-  ✓ {item}
+New Artifacts:
+{for each created}
+  + {ID}: {title}
 {/for}
 
-{if conflicts}
-Open Conflicts:
-{for each conflict}
-  ⚠ {conflict_id}: {description}
-{/for}
-
-{if resolved}
-Resolved This Round:
+{if resolved_conflicts}
+Resolved:
 {for each resolved}
   ✓ {conflict_id}: {resolution}
 {/for}
 
-Agenda Coverage:
+Agenda:
 {for each topic}
-  {status_icon} {topic_name}
+  [{status}] {topic_name}
 {/for}
 
 Next: {next_focus or "Conclusion pending"}
-────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────
 ```
 
-This is NOT conditional on --interactive. Always display for user visibility.
+### Step 2.8: Handle Interactive Mode
 
-### Step 3.5: Handle --interactive Mode (EVERY ROUND)
+**IF interactive_flag == true**:
+- Use AskUserQuestion:
+  - "Continue to next round"
+  - "Skip to conclusion"
+  - "Pause session"
 
-**This step executes AFTER Step 3.4.5 (recap display).**
+**IF interactive_flag == false**:
+- Proceed automatically
 
-Check `interactive_flag`:
+### Step 2.9: Evaluate Next Action
 
-**IF interactive_flag == true:**
-1. Use AskUserQuestion tool with options:
-   - "Continue to next round"
-   - "Skip to conclusion"
-   - "Pause session"
+**Check min_rounds override**:
+- If `round_number < min_rounds` AND `next == "conclude"`:
+- Override to `next = "continue"`
 
-2. Handle user response:
-   - "Continue": proceed to Step 3.6
-   - "Skip": set `force_conclude = true`, proceed to Step 3.6
-   - "Pause": set `status: "paused"` and `paused_at: {timestamp}`, EXIT loop
-
-**IF interactive_flag == false:**
-- Skip directly to Step 3.6
-
-**NOTE**: This is NOT conditional on conflicts. Ask EVERY round when interactive=true.
-
-### Step 3.6: Evaluate Next Action
-
-**IMPORTANT: min_rounds Override**
-
-Before accepting `next_action: "conclude"`:
-1. Check: `round_number >= min_rounds` (from config, usually 3)
-2. If NOT met: override `next_action` to `"continue"`
-3. Log: "Minimum rounds not reached ({round_number}/{min_rounds}), continuing"
-
-Based on facilitator's `next_action` (after override check):
+**Based on `next`**:
 
 | Action | Behavior |
 |--------|----------|
-| **continue** | Increment round_number, rounds_in_phase. REPEAT from Step 3.1 |
-| **phase** | Advance to next phase, reset rounds_in_phase. REPEAT from Step 3.1 |
-| **conclude** | EXIT loop. Proceed to PHASE 4 |
-| **escalate** | Handle escalation (see below) |
+| continue | Increment round_number, REPEAT from Step 2.1 |
+| conclude | EXIT loop, proceed to PHASE 3 |
+| escalate | Handle escalation (see below) |
 
-### Step 3.7: Handle Escalation
+### Step 2.10: Handle Escalation
 
-If `next_action == "escalate"`:
+If `next == "escalate"`:
 
-1. Record escalation in session file
-2. Display to user:
-   ```
-   Escalation Required
-   Reason: {escalation_reason}
-   Positions: {summary of positions}
-   Recommendation: {facilitator's recommendation}
-   ```
-3. Use AskUserQuestion:
+1. Display escalation reason
+2. Use AskUserQuestion:
    - "Accept facilitator recommendation"
    - "Provide your own decision"
-   - "Continue discussion for N more rounds"
+   - "Continue discussion"
+3. Record user decision
+4. Continue or conclude based on choice
 
-4. Record user decision in escalations[]
-5. If user provides decision, treat as resolved conflict
-6. Continue loop or conclude based on user choice
-
-### Step 3.8: Safety Limits
+### Step 2.11: Safety Limits
 
 **HARD LIMIT**: If `round_number >= max_rounds`:
-- Force `next_action: "conclude"`
+- Force conclude
 - Note in session: "Reached maximum rounds limit"
-- EXIT loop
 
 ---
 
-## PHASE 4: Completion
+## PHASE 3: Completion
 
-### Step 4.1: Update Session Status
+### Step 3.1: Update Session Status
 
-Set in session file:
-- `status: "completed"`
-- `completed_at: "{ISO timestamp}"`
+```yaml
+status: "completed"
+timing:
+  completed: "{ISO timestamp}"
+  duration_ms: {calculated}
+```
 
-### Step 4.2: Generate Output
-
-Based on `output_type` from facilitator (or --output-type argument):
-
-| Type | Path | Content |
-|------|------|---------|
-| **adr** | `docs/decisions/{timestamp}-{slug}.md` | ADR format (see madr-decisions skill) |
-| **requirements** | `docs/specifications/requirements.md` | SRS format (append or create) |
-| **architecture** | `docs/architecture/{slug}.md` | arc42 format |
-| **summary** | `.s2s/sessions/{session-id}-summary.md` | Summary only |
-
-### Step 4.3: Clear State
+### Step 3.2: Clear State
 
 Set `current_session: null` in `.s2s/state.yaml`.
 
-### Step 4.4: Display Completion
+### Step 3.3: Read Session for Summary
+
+**YOU MUST Read session file** to generate summary from Single Source of Truth.
+
+Extract:
+- All consensus artifacts
+- Unresolved conflicts
+- Agenda final status
+
+### Step 3.4: Generate Output
+
+Based on workflow_type, generate appropriate output document:
+- **specs**: `docs/specifications/requirements.md`
+- **design**: `docs/architecture/` files + ADRs
+- **brainstorm**: `.s2s/sessions/{session-id}-summary.md`
+
+### Step 3.5: Display Completion
 
 ```
-Roundtable Complete!
+═══════════════════════════════════════════════════════════════
+ROUNDTABLE COMPLETE
+═══════════════════════════════════════════════════════════════
 
 Session: {session-id}
-Topic: {topic}
-Strategy: {strategy}
-Total Rounds: {total_rounds}
+Rounds: {total_rounds}
+Duration: {duration}
 
-Consensus Reached:
-{for each consensus item}
-  {item}
-
-{if unresolved conflicts}
-Unresolved (noted for follow-up):
-{for each conflict}
-  {description}
+Artifacts Created:
+  Requirements: {count}
+  Business Rules: {count}
+  Conflicts Resolved: {count}
+  Open Questions: {count}
 
 Output: {output file path}
 
 Next steps:
-  /s2s:roundtable:list   - View all sessions
-  /s2s:plan              - Generate implementation plans
+  /s2s:design   - Design architecture (if specs)
+  /s2s:plan     - Generate implementation plans
+═══════════════════════════════════════════════════════════════
+```
+
+---
+
+## Verbose Dump File Format
+
+When `--verbose` flag is set, write dump files to `rounds/` subfolder.
+
+### Naming Convention
+
+```
+{NNN}-{PP}-{actor}.yaml
+
+NNN = 3-digit round number (001, 002, ...)
+PP = 2-digit phase (01=question, 02=responses, 03=synthesis)
+actor = facilitator, product-manager, etc.
+```
+
+### Dump File Content
+
+```yaml
+round: {N}
+phase: {P}
+actor: "{actor-id}"
+
+timing:
+  started: "{ISO timestamp}"
+  completed: "{ISO timestamp}"
+  duration_ms: {calculated}
+
+tokens:
+  input: {estimated}
+  output: {estimated}
+
+prompt: |
+  {exact prompt sent}
+
+response: |
+  {exact response received}
+
+result:
+  valid: true
+  warnings: []
+  artifacts_created: [...]  # Only in synthesis
 ```
 
 ---
 
 ## Definition of Done Checklist
 
-**Before proceeding to each step, verify ALL previous checkboxes:**
-
-### After Step 3.1 (Facilitator Question):
-- [ ] Task tool was used (not simulated)
+### After Step 2.2 (Facilitator Question):
+- [ ] Task tool was used
 - [ ] Facilitator returned valid YAML with `action: "question"`
-- [ ] Question is specific (not "What do you think?")
+- [ ] Decision includes focus_type and topic_id
+- [ ] Context files list is present
+- [ ] Dump file written (if verbose)
 
-### After Step 3.2 (Participant Responses):
-- [ ] ALL participants were launched in SINGLE message
+### After Step 2.3 (Participant Responses):
+- [ ] ALL participants launched in SINGLE message
 - [ ] ALL participants returned valid YAML
 - [ ] Each response has position, rationale, confidence
+- [ ] Dump files written (if verbose)
 
-### After Step 3.3 (Facilitator Synthesis):
-- [ ] Task tool was used for synthesis
-- [ ] Synthesis identifies consensus AND conflicts
-- [ ] next_action is one of: continue, phase, conclude, escalate
+### After Step 2.4 (Facilitator Synthesis):
+- [ ] Task tool was used
+- [ ] Synthesis identifies proposed_artifacts
+- [ ] next is one of: continue, conclude, escalate
+- [ ] Dump file written (if verbose)
 
-### After Step 3.4 (Update Session):
-- [ ] Session file was written (not just planned)
-- [ ] Round data includes question, synthesis, consensus, conflicts
-
----
-
-## STOP Conditions
-
-**YOU MUST check these conditions and STOP if any applies:**
-
-1. **Max rounds reached**: rounds >= max_rounds → force conclude
-2. **User requested pause**: status → "paused", EXIT
-3. **Escalation unresolved**: user must decide
-4. **Invalid session file**: STOP, report error
+### After Step 2.5 (Process Artifacts):
+- [ ] New artifact files written
+- [ ] Session file updated with new IDs
+- [ ] Resolved conflicts updated
 
 ---
 
-## Error Handling
+## Reference Files
 
-See `references/error-handling.md` for detailed error handling patterns.
-
-**Critical rule**: If session file write fails, STOP immediately and report error.
-
----
-
-## Quick Reference
-
-See `references/task-parameters.md` for full Task() parameter templates.
-
-All roundtable tasks use `subagent_type: "general-purpose"`.
+- `references/session-schema.md` - Full YAML schema
+- `references/agenda-specs.md` - Specs workflow agenda with DoD
+- `references/agenda-design.md` - Design workflow agenda with DoD
 
 ---
 
-*Referenced by: specs.md, design.md, brainstorm.md, roundtable:start.md*
-*For strategy details, see: skills/roundtable-strategies/*
+*Referenced by: specs.md, design.md, brainstorm.md*

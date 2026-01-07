@@ -69,12 +69,6 @@ Extract from $ARGUMENTS:
 
 **Boolean flags**: `--verbose` and `--interactive` → parse as `true` if present, `false` if absent.
 
-### Reference Skills
-
-For detailed architecture patterns:
-- `arc42-templates` skill: 12 sections, component templates, interface documentation
-- `madr-decisions` skill: ADR format, status lifecycle, decision examples
-
 ### Display context summary
 
     Starting architecture design...
@@ -91,126 +85,248 @@ For detailed architecture patterns:
     ────────────
     {from CONTEXT.md}
 
-### Phase 1: Design Roundtable
+---
+
+## Phase 1: Session Setup
 
 If --skip-roundtable is NOT present:
 
-**IMPORTANT: Follow the `roundtable-execution` skill instructions EXACTLY.**
-**DO NOT use SlashCommand. Execute the roundtable inline using Task().**
+### Step 1.1: Generate Session ID
 
-#### Roundtable Configuration
+```
+{YYYYMMDD}-design-{project-slug}
+Example: 20260107-design-elfgiftrush
+```
 
-Configure the roundtable with these parameters:
-- **topic**: "Architecture design for {project name}"
-- **workflow_type**: "design"
-- **strategy**: {--strategy argument or "debate"}
-- **output_type**: "architecture"
-- **participants**: software-architect, technical-lead, devops-engineer (from config)
-- **verbose**: {verbose_flag}
-- **interactive**: {interactive_flag}
+### Step 1.2: Create Session Folder Structure
 
-#### Load Agenda
+**YOU MUST use Bash tool NOW**:
+```bash
+mkdir -p .s2s/sessions/{session-id}
+```
 
-Read `skills/roundtable-execution/references/agenda-design.md` and extract REQUIRED_TOPICS (5 topics: high-level-arch, components, data-flow, tech-choices, integration).
+If verbose_flag is true:
+```bash
+mkdir -p .s2s/sessions/{session-id}/rounds
+```
 
-#### Execute Roundtable
+### Step 1.3: Create Snapshot Files
 
-**YOU MUST** execute these steps from `roundtable-execution` skill with workflow-specific values:
+**YOU MUST use Write tool NOW** to create `context-snapshot.yaml`:
 
-| Parameter | Value |
-|-----------|-------|
-| session_id | `{timestamp}-design-{project-slug}` |
-| workflow_type | `design` |
-| participants | `[software-architect, technical-lead, devops-engineer]` |
-| agenda | `REQUIRED_TOPICS` from agenda-design.md |
-| critical_topics | `high-level-arch`, `components` |
+Read `.s2s/CONTEXT.md` and `docs/specifications/requirements.md`, then write:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/CONTEXT.md"
 
-**PHASE 2 - Session Setup:**
+project_name: "{extracted}"
+description: "{extracted}"
+objectives: [...]
+constraints: [...]
 
-1. Create sessions directory: `mkdir -p .s2s/sessions`
-2. Generate session ID: `{timestamp}-design-{project-slug}`
-3. **NOW use Write tool** to create `.s2s/sessions/{session-id}.yaml`:
+# Key requirements summary (from requirements.md)
+requirements_summary:
+  core: ["{REQ-001}: {title}", ...]
+  nfr: ["{NFR-001}: {title}", ...]
+```
+
+**YOU MUST use Write tool NOW** to create `config-snapshot.yaml`:
+```yaml
+# Captured: {ISO timestamp}
+source: ".s2s/config.yaml"
+
+verbose: {verbose_flag}
+interactive: {interactive_flag}
+strategy: "{strategy or debate}"
+limits:
+  min_rounds: 3
+  max_rounds: 20
+escalation:
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  critical_keywords: ["security", "must-have", "blocking", "legal"]
+participants:
+  - "software-architect"
+  - "technical-lead"
+  - "devops-engineer"
+```
+
+**YOU MUST use Write tool NOW** to create `agenda.yaml`:
+
+Read `skills/roundtable-execution/references/agenda-design.md` and extract topics YAML.
+
+### Step 1.4: Create Session Index File
+
+**YOU MUST use Write tool NOW** to create `.s2s/sessions/{session-id}.yaml`:
+
 ```yaml
 id: "{session-id}"
 topic: "Architecture design for {project name}"
 workflow_type: "design"
 strategy: "{strategy}"
 status: "active"
-started: "{ISO timestamp}"
-participants:
-  - id: software-architect
-  - id: technical-lead
-  - id: devops-engineer
-config:
-  min_rounds: 3
-  max_rounds: 20
-  verbose: {verbose_flag}
-  interactive: {interactive_flag}
-  escalation:
-    max_rounds_per_conflict: 3
-    confidence_below: 0.5
-    critical_keywords: ["security", "must-have", "blocking", "legal"]
+
+timing:
+  started: "{ISO timestamp}"
+  completed: null
+  duration_ms: null
+
+artifacts:
+  decisions: []
+  components: []
+  conflicts: []
+  open_questions: []
+
+agenda:
+  - topic_id: "high-level-arch"
+    status: "open"
+    coverage: []
+  - topic_id: "components"
+    status: "open"
+    coverage: []
+  - topic_id: "data-flow"
+    status: "open"
+    coverage: []
+  - topic_id: "tech-choices"
+    status: "open"
+    coverage: []
+  - topic_id: "integration"
+    status: "open"
+    coverage: []
+
 rounds: []
+
+metrics:
+  rounds: 0
+  tasks: 0
+  tokens: 0
 ```
-4. **NOW use Edit tool** to update `.s2s/state.yaml` with `current_session: "{session-id}"`
 
-**PHASE 3 - Round Execution Loop** (repeat until conclusion):
+### Step 1.5: Update State File
 
-1. **Step 3.0.5**: Display agenda status to terminal
-2. **Step 3.1**: **YOU MUST use Task tool NOW** to call facilitator for question
-   - Include REQUIRED_TOPICS and agenda_coverage in prompt
-   - Include escalation config section in prompt:
-   ```
-   === ESCALATION CONFIG ===
-   max_rounds_per_conflict: 3
-   confidence_below: 0.5
-   min_rounds: 3
-   critical_keywords: [security, must-have, blocking, legal]
-   ```
-3. **Step 3.2**: **YOU MUST launch ALL participant Tasks in SINGLE message**
-   - This ensures blind voting (parallel execution)
-   - **Store responses in `participant_responses` array:**
-   ```
-   participant_responses = [
-     { id, role, position, rationale, concerns, confidence }
-   ]
-   ```
-4. **Step 3.3**: **YOU MUST use Task tool** for facilitator synthesis
-5. **Step 3.4**: **NOW use Edit tool** to append round to session file:
-   - Append to `rounds:` array with: number, question, synthesis, consensus, conflicts
-   - **IF verbose_flag == true**: Include `responses:` with full participant_responses array
-6. **Step 3.5**: Display round recap to terminal
-7. **Step 3.6**: Evaluate next_action:
-   - **min_rounds CHECK**: If round < 3 AND "conclude" → OVERRIDE to "continue"
-   - **Agenda CHECK**: If critical topics pending → OVERRIDE to "continue"
-   - **Interactive mode**: Only ask user if `interactive_flag == true`
+**YOU MUST use Edit tool NOW** to update `.s2s/state.yaml`:
+```yaml
+current_session: "{session-id}"
+```
 
-**PHASE 4 - Completion:**
+---
 
-1. **Update session status**: Edit session file, set `status: "completed"` and `completed_at: "{ISO timestamp}"`
+## Phase 2: Round Execution Loop
 
-2. **CRITICAL - Read session file for summary**:
-   - **YOU MUST use Read tool** to read the completed session file
-   - Extract ALL consensus points from ALL rounds
-   - Extract unresolved conflicts (those without resolution in any round)
-   - This ensures summary matches persisted data (Single Source of Truth)
+**Follow the `roundtable-execution` skill instructions EXACTLY.**
 
-3. **Generate output**: Based on output_type ("architecture"), create architecture documents
+Initialize:
+- `round_number = 0`
+- `session_folder = ".s2s/sessions/{session-id}/"`
 
-**Summary MUST be derived from session file, NOT from facilitator memory.**
+### Round Loop (repeat until conclusion)
 
-After reading session file, extract:
-- Architecture decisions from consensus (ARCH-001, ARCH-002, etc.)
-- Component design consensus
-- Technology stack recommendations
-- Unresolved conflicts for user review
+#### Step 2.2: Facilitator Question
 
-**If --skip-roundtable IS present:**
-- Analyze requirements directly
-- Generate basic architecture from patterns
-- Ask user for technology preferences
+**YOU MUST use Task tool NOW** to call facilitator:
 
-### Phase 2: User Review
+```yaml
+subagent_type: "general-purpose"
+prompt: |
+  You are the Roundtable Facilitator.
+  Read your agent definition from: agents/roundtable/facilitator.md
+
+  === SESSION STATE ===
+  Round: {round_number + 1}
+  Session folder: {session_folder}
+
+  === ARTIFACT SUMMARY ===
+  Decisions: {list IDs}
+  Components: {list IDs}
+  Conflicts: {list IDs}
+  Open questions: {list IDs}
+
+  === AGENDA STATUS ===
+  {for each topic}
+  [{status}] {topic_id} (CRITICAL if critical)
+  {/for}
+
+  === PREVIOUS ROUND ===
+  {synthesis from last round or "First round"}
+
+  === ESCALATION CONFIG ===
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  min_rounds: 3
+
+  === YOUR TASK ===
+  1. DECIDE focus for this round
+  2. SELECT context files for participants
+  3. GENERATE question + exploration prompt
+```
+
+**IF verbose_flag == true**: Write dump file.
+
+#### Step 2.3: Participant Responses
+
+**YOU MUST launch ALL participant Tasks in SINGLE message**:
+
+For each of: software-architect, technical-lead, devops-engineer
+
+```yaml
+subagent_type: "general-purpose"
+prompt: |
+  You are the {Role} in a roundtable discussion.
+  Read your agent definition from: agents/roundtable/{participant-id}.md
+
+  === CONTEXT FILES ===
+  Read these files (DO NOT read other session files):
+  {for each file in facilitator's context_files}
+  - {session_folder}/{file}
+  {/for}
+
+  === QUESTION ===
+  {facilitator's question}
+
+  === EXPLORATION ===
+  {facilitator's exploration prompt}
+
+  === YOUR RESPONSE FORMAT ===
+  Return YAML with position, rationale, confidence, concerns, suggestions.
+```
+
+**IF verbose_flag == true**: Write dump for each participant.
+
+#### Step 2.4: Facilitator Synthesis
+
+**YOU MUST use Task tool NOW** for synthesis.
+
+**IF verbose_flag == true**: Write dump file.
+
+#### Step 2.5: Process Artifacts
+
+For each `proposed_artifact`:
+- Architecture decisions: `ARCH-{NNN}.yaml`
+- Component definitions: `COMP-{NNN}.yaml`
+- Conflicts: `CONF-{NNN}.yaml`
+- Open questions: `OQ-{NNN}.yaml`
+
+#### Step 2.6-2.9: Standard roundtable steps
+
+Follow roundtable-execution skill for update, recap, interactive, and next action.
+
+---
+
+## Phase 3: Completion
+
+### Step 3.1: Update Session Status
+
+**YOU MUST use Edit tool NOW** to update session file.
+
+### Step 3.2: Clear State
+
+**YOU MUST use Edit tool NOW** to clear current_session.
+
+### Step 3.3: Read Session for Summary
+
+**YOU MUST use Read tool** to read session file and artifact files.
+
+### Step 3.4: User Review
 
 Present architecture decisions:
 
@@ -222,34 +338,33 @@ Present architecture decisions:
 
     Components:
     ───────────
-    1. {Component 1}: {responsibility}
-    2. {Component 2}: {responsibility}
+    {for each COMP-* artifact}
+    - {ID}: {title} - {responsibility}
+    {/for}
 
     Key Decisions:
     ──────────────
-    ARCH-001: {title}
-    Decision: {chosen option}
-    Rationale: {why}
-
-    ARCH-002: {title}
-    ...
+    {for each ARCH-* artifact}
+    {ID}: {title}
+    Decision: {decision}
+    Rationale: {rationale}
+    {/for}
 
     Tech Stack:
     ───────────
     - Backend: {choice}
     - Frontend: {choice}
     - Database: {choice}
-    - Infrastructure: {choice}
 
     Open Questions:
     ───────────────
-    - {from conflicts}
+    {list OQ-* artifacts}
 
 Ask using AskUserQuestion:
 - "Review architecture. Would you like to:"
   - Options: "Approve and generate docs" / "Refine decisions" / "Discuss specific area"
 
-### Phase 3: Generate Architecture Documentation
+### Step 3.5: Generate Architecture Documentation
 
 Create/update documents:
 
@@ -260,7 +375,6 @@ Create/update documents:
 **Project**: {name}
 **Version**: 1.0
 **Date**: {date}
-**Phase**: design
 
 ## System Context
 
@@ -268,125 +382,112 @@ Create/update documents:
 
 ## Architecture Principles
 
-1. {principle 1}
-2. {principle 2}
+{from ARCH-* artifacts where type=principle}
 
 ## Component Overview
 
 | Component | Responsibility | Technology |
 |-----------|---------------|------------|
-| {name} | {description} | {tech} |
+{for each COMP-* artifact}
+| {title} | {description} | {tech} |
+{/for}
 
 ## Key Decisions
 
 See individual ADRs in `/docs/decisions/`
 
-## Documentation Index
-
-- [Components](./components.md)
-- [API Contracts](./api-contracts.md)
-- [Deployment](./deployment.md)
-
 ---
 *Generated by Spec2Ship /s2s:design*
+*Session: {session-id}*
 ```
 
 **docs/architecture/components.md:**
 ```markdown
 # Component Design
 
-## {Component 1 Name}
+{for each COMP-* artifact}
+## {title}
 
 ### Responsibility
-{what this component does}
+{description}
 
 ### Interfaces
-- Input: {what it receives}
-- Output: {what it produces}
+{interfaces}
 
 ### Dependencies
-- {dependency 1}
+{dependencies}
 
 ### Technology
-{stack for this component}
+{technology}
+{/for}
 ```
 
-**docs/architecture/deployment.md:**
-```markdown
-# Deployment Architecture
+### Step 3.6: Generate ADRs
 
-## Overview
-{deployment approach}
-
-## Environments
-| Environment | Purpose | Infrastructure |
-|-------------|---------|----------------|
-| Development | Local dev | {description} |
-| Staging | Testing | {description} |
-| Production | Live | {description} |
-
-## Deployment Process
-{high-level flow}
-```
-
-### Phase 4: Generate ADRs
-
-For each architecture decision, create `docs/decisions/ARCH-{NNN}-{slug}.md`:
+For each ARCH-* artifact, create `docs/decisions/ARCH-{NNN}-{slug}.md`:
 
 ```markdown
-# ARCH-{NNN}: {Title}
+# {ID}: {title}
 
 **Status**: accepted
 **Date**: {date}
-**Participants**: {roundtable participants}
+**Participants**: software-architect, technical-lead, devops-engineer
 
 ## Context
-{why decision was needed}
+{context from artifact}
 
 ## Decision
-{what was decided}
+{decision from artifact}
 
 ## Options Considered
 
-### Option 1: {name}
-- Pros: {list}
-- Cons: {list}
-
-### Option 2: {name}
-- Pros: {list}
-- Cons: {list}
+{for each option in artifact}
+### {option.name}
+- Pros: {option.pros}
+- Cons: {option.cons}
+{/for}
 
 ## Consequences
 
 ### Positive
-- {benefit}
+{positive consequences}
 
 ### Negative
-- {trade-off}
+{negative consequences}
 ```
 
-### Phase 5: Update CONTEXT.md
+### Step 3.7: Update CONTEXT.md
 
 Update `.s2s/CONTEXT.md`:
 - Update phase to "design"
 - Add Technical Stack section
 - Update "Last updated" date
 
-### Phase 6: Output Summary
+### Step 3.8: Output Summary
 
     Architecture design complete!
 
     Documents created:
     - docs/architecture/README.md
     - docs/architecture/components.md
-    - docs/architecture/deployment.md
     - docs/decisions/ARCH-*.md ({count} decisions)
 
     Tech Stack:
     {summary}
 
-    Phase: design (ready for implementation)
+    Session folder: .s2s/sessions/{session-id}/
 
     Next steps:
       /s2s:plan              - Generate implementation plans
       /s2s:plan:create "x"   - Create specific plan
+
+---
+
+## Skip Roundtable Mode
+
+**If --skip-roundtable IS present:**
+
+1. Analyze requirements directly
+2. Generate basic architecture from patterns
+3. Ask user for technology preferences
+4. Skip session folder creation
