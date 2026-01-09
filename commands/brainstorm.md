@@ -224,83 +224,50 @@ ARTIFACTS: {count} ideas, {count} risks, {count} mitigations
 
 #### Step 2.2: Facilitator Question
 
-**YOU MUST use Task tool NOW** to call facilitator:
+**Use the roundtable-facilitator agent** with this input:
 
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the Roundtable Facilitator.
-  Read your agent definition from: agents/roundtable/facilitator.md
+action: "question"
+round: {round_number + 1}
+topic: "{brainstorm topic}"
+strategy: "disney"
+phase: "{current_phase}"  # dreamer | realist | critic
+workflow_type: "brainstorm"
 
-  === WORKFLOW ===
-  Type: brainstorm (creative ideation)
-  Strategy: disney (Dreamer → Realist → Critic)
-  Current Phase: {current_phase}
-  Participants: product-manager, software-architect, technical-lead, devops-engineer
-
-  === DISNEY PHASE RULES ===
-  {if current_phase == "dreamer"}
-  DREAMER: Generate creative ideas without constraints.
-  - NO criticism allowed in this phase
-  - Encourage wild, ambitious thinking
-  - Quantity over quality
-  {/if}
-  {if current_phase == "realist"}
-  REALIST: Evaluate feasibility of ideas.
-  - Focus on "how to" thinking
-  - Convert ideas to actionable items
-  - Practical implementation paths
-  {/if}
-  {if current_phase == "critic"}
-  CRITIC: Identify risks and issues.
-  - What could go wrong?
-  - Propose mitigations
-  - Challenge assumptions
-  {/if}
-
-  === CURRENT STATE (Round {round_number + 1}) ===
-  Session folder: {session_folder}
-
-  Artifacts created:
-  - Ideas: {list IDs or "none yet"}
-  - Risks: {list IDs or "none"}
-  - Mitigations: {list IDs or "none"}
-  - Conflicts: {list IDs or "none"}
-
-  Previous round synthesis:
-  {synthesis from last round or "First round - no previous context"}
-
-  === CONSTRAINTS ===
+escalation_config:
   min_rounds: 3
   max_rounds: 20
   max_rounds_per_conflict: 3
   confidence_below: 0.5
 
-  === YOUR AUTONOMOUS DECISION ===
-  Within the {current_phase} phase rules above:
+disney_phase_rules:
+  dreamer: "Generate creative ideas without constraints. NO criticism. Wild, ambitious thinking."
+  realist: "Evaluate feasibility. Focus on 'how to' thinking. Practical implementation paths."
+  critic: "Identify risks. What could go wrong? Propose mitigations. Challenge assumptions."
 
-  1. YOU DECIDE how to explore this phase:
-     - What aspect to focus on?
-     - How many questions to ask?
-     - Whether to go deeper or broader?
+artifacts_summary:
+  ideas: []  # or list of IDEA-* IDs
+  risks: []  # or list of RISK-* IDs
+  mitigations: []  # or list of MIT-* IDs
+  conflicts: []
 
-  2. YOU DECIDE the question format:
-     - Open-ended exploration?
-     - Specific prompts?
-     - Building on previous ideas?
+open_conflicts: []
+open_questions: []
+artifacts_count: {count}
+previous_synthesis: "{synthesis from last round or null}"
+```
 
-  3. SELECT which context files participants should read
-
-  4. GENERATE your question(s) and exploration prompt
-
-  You have full autonomy within the phase constraints.
-  Focus on creativity over consensus.
-
-  IMPORTANT REMINDERS:
-  - Stay focused within current phase (no mixing Dreamer/Realist/Critic)
-  - You have up to {max_rounds} rounds - explore each phase thoroughly
-  - Depth matters. Better to have fewer deep ideas than many shallow ones.
-  - Include constraints_check in your synthesis output (MANDATORY).
+The facilitator will return:
+```yaml
+action: "question"
+decision:
+  focus_type: "disney_phase"
+  phase: "{dreamer|realist|critic}"
+  rationale: "{reason}"
+question: "{the question}"
+exploration: "{exploration prompt}"
+participants: "all"
+context_files: ["context-snapshot.yaml", ...]
 ```
 
 **IF verbose_flag == true**: Write dump to `rounds/{NNN}-01-facilitator-question.yaml`:
@@ -314,10 +281,7 @@ disney_phase: "{dreamer|realist|critic}"
 started: "{ISO timestamp}"
 completed: "{ISO timestamp}"
 
-prompt:
-  session_state: "{summary}"
-  disney_phase_goal: "{phase instructions}"
-  artifact_summary: "{counts}"
+input: {... the YAML input sent to facilitator ...}
 
 response:
   question: "{question}"
@@ -334,57 +298,63 @@ tokens:
 
 #### Step 2.3: Participant Responses
 
-**YOU MUST launch ALL participant Tasks in SINGLE message**:
+**Launch ALL participant agents in SINGLE message** (parallel execution):
+
+For each of: product-manager, software-architect, technical-lead, devops-engineer
+
+**Use the roundtable-{participant-id} agent** with this input:
 
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the {Role} in a brainstorming session.
-  Read your agent definition from: agents/roundtable/{participant-id}.md
+round: {round_number + 1}
+topic: "{brainstorm topic}"
+phase: "{current_phase}"  # dreamer | realist | critic
+workflow_type: "brainstorm"
 
-  === DISNEY PHASE: {current_phase} ===
-  {if current_phase == "dreamer"}
-  Think BIG! No constraints. What would be IDEAL?
-  NO criticism of ideas in this phase.
-  {/if}
-  {if current_phase == "realist"}
-  Evaluate feasibility. How would we BUILD this?
-  Be practical but constructive.
-  {/if}
-  {if current_phase == "critic"}
-  Identify risks. What could go WRONG?
-  Propose mitigations for each risk.
-  {/if}
+disney_phase_instructions:
+  dreamer: "Think BIG! No constraints. What would be IDEAL? NO criticism of ideas."
+  realist: "Evaluate feasibility. How would we BUILD this? Be practical but constructive."
+  critic: "Identify risks. What could go WRONG? Propose mitigations for each risk."
 
-  === CONTEXT FILES ===
-  Read these files (DO NOT read other session files):
-  {for each file in facilitator's context_files}
-  - {session_folder}/{file}
-  {/for}
+question: "{facilitator's question}"
 
-  === QUESTION ===
-  {facilitator's question}
+exploration: "{facilitator's exploration prompt}"
 
-  === EXPLORATION ===
-  {facilitator's exploration prompt}
+context_files:
+  - "{session_folder}/context-snapshot.yaml"
+  # ... other files from facilitator's context_files
+```
 
-  === YOUR RESPONSE FORMAT ===
-  Return YAML:
-  position: "{your contribution}"
-  rationale:
-    - "{reason 1}"
-  confidence: 0.85
-  {if current_phase == "dreamer"}
-  ideas:
-    - "{new idea}"
-  {/if}
-  {if current_phase == "critic"}
+Each participant will return:
+```yaml
+participant: "{participant-id}"
+
+position: |
+  {2-3 sentence contribution}
+
+rationale:
+  - "{reason}"
+
+trade_offs:
+  optimizing_for: "{priority}"
+  accepting_as_cost: "{trade-off}"
   risks:
-    - "{identified risk}"
-  mitigations:
-    - risk: "{risk}"
-      mitigation: "{how to address}"
-  {/if}
+    - "{risk}"
+
+concerns:
+  - "{concern}"
+
+suggestions:
+  - "{suggestion}"
+
+# Phase-specific fields:
+ideas: [...]       # dreamer phase
+risks: [...]       # critic phase
+mitigations: [...]  # critic phase
+
+confidence: 0.85
+
+references:
+  - "{reference}"
 ```
 
 **IF verbose_flag == true**: Write dump for each participant to `rounds/{NNN}-02-{participant-id}.yaml`:
@@ -398,19 +368,17 @@ disney_phase: "{dreamer|realist|critic}"
 started: "{ISO timestamp}"
 completed: "{ISO timestamp}"
 
-prompt:
-  question: "{question}"
-  disney_phase_instructions: "{phase-specific instructions}"
+input: {... the YAML input sent to participant ...}
 
 response:
+  participant: "{participant-id}"
   position: "{full response}"
   confidence: {0.0-1.0}
-  ideas: [...]      # dreamer phase
-  risks: [...]      # critic phase
-  mitigations: [...] # critic phase
+  ideas: [...]
+  risks: [...]
+  mitigations: [...]
 
 result:
-  artifacts_proposed: {count}
   status: "completed"
 
 tokens:
@@ -420,9 +388,106 @@ tokens:
 
 #### Step 2.4: Facilitator Synthesis
 
-**YOU MUST use Task tool NOW** for synthesis.
+**Use the roundtable-facilitator agent** with this input:
 
-Include phase-specific artifact extraction:
+```yaml
+action: "synthesis"
+round: {round_number + 1}
+topic: "{brainstorm topic}"
+strategy: "disney"
+phase: "{current_phase}"  # dreamer | realist | critic
+
+escalation_config:
+  min_rounds: 3
+  max_rounds: 20
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+
+question_asked: "{facilitator's question from step 2.2}"
+
+responses:
+  product-manager:
+    position: "{position}"
+    rationale: [...]
+    ideas: [...]
+    risks: [...]
+    mitigations: [...]
+    confidence: 0.85
+  software-architect:
+    position: "{position}"
+    rationale: [...]
+    ideas: [...]
+    risks: [...]
+    mitigations: [...]
+    confidence: 0.8
+  # ... all participant responses
+
+phases_status:
+  - name: "dreamer"
+    status: "{active|completed|pending}"
+    rounds_completed: {N}
+  - name: "realist"
+    status: "{active|completed|pending}"
+    rounds_completed: {N}
+  - name: "critic"
+    status: "{active|completed|pending}"
+    rounds_completed: {N}
+  # NOTE: Include ALL phases with CURRENT status from session file
+  # Facilitator can only conclude when in critic phase AND all phases explored
+
+current_phase: "{dreamer|realist|critic}"
+
+artifacts_summary:
+  ideas: []  # current IDEA-* list
+  risks: []  # current RISK-* list
+  mitigations: []  # current MIT-* list
+
+open_conflicts: []
+artifacts_count: {current count}
+```
+
+The facilitator will return:
+```yaml
+action: "synthesis"
+
+synthesis: "{2-4 sentence summary of phase contributions}"
+
+proposed_artifacts:
+  - type: "idea"       # dreamer phase
+    title: "{title}"
+    status: "draft"
+    description: "..."
+  - type: "risk"       # critic phase
+    title: "{title}"
+    status: "identified"
+    description: "..."
+    severity: "{high|medium|low}"
+  - type: "mitigation"  # critic phase
+    title: "{title}"
+    risk_id: "{RISK-NNN to mitigate}"
+    description: "..."
+
+resolved_conflicts: []
+
+phase_recommendation: "{stay|advance|conclude}"
+
+constraints_check:
+  rounds_completed: {N}
+  min_rounds: 3
+  can_conclude: {true|false}
+  reason: "{reason}"
+
+next: "{continue|phase|conclude}"  # "phase" = advance to next Disney phase
+
+next_focus:
+  type: "disney_phase"
+  phase: "{dreamer|realist|critic}"
+  reason: "{reason}"
+
+escalation_reason: null
+```
+
+**Phase-specific artifact extraction:**
 - **Dreamer**: Extract ideas as IDEA-* artifacts
 - **Realist**: Assess feasibility, categorize ideas
 - **Critic**: Extract risks as RISK-*, mitigations as MIT-*
@@ -438,8 +503,7 @@ disney_phase: "{dreamer|realist|critic}"
 started: "{ISO timestamp}"
 completed: "{ISO timestamp}"
 
-prompt:
-  participant_responses: "{summary}"
+input: {... the YAML input sent to facilitator ...}
 
 response:
   synthesis: "{summary}"

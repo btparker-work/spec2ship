@@ -245,49 +245,53 @@ For each round until conclusion or max_rounds:
 
 (Already done in PHASE 2, but refresh after each round)
 
-### Step 2: Generate question (Facilitator Task)
+### Step 2: Generate question (Facilitator)
 
-```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are the Roundtable Facilitator resuming a session.
+**Use the roundtable-facilitator agent** with this input:
 
-Read your agent definition from: agents/roundtable/facilitator.md
-
-=== SESSION STATE (RESUMED) ===
-Topic: {topic}
-Strategy: {strategy}
-Current Phase: {current_phase}
-Round: {round_number + 1}
-Rounds in this phase: {rounds_in_phase}
-
-=== HISTORY ===
-Previous synthesis: {previous_synthesis}
-Current consensus: {current_consensus}
-Open conflicts: {open_conflicts with round counts}
-
-=== ESCALATION CONFIG ===
-max_rounds_per_conflict: {from config}
-confidence_below: {from config}
-critical_keywords: {from config}
-
-=== CONTEXT ===
-This is a RESUMED session. Focus on:
-1. Resolving open conflicts
-2. Building on existing consensus
-3. Completing current phase goals
-
-=== TASK ===
-Generate the next question for this phase.
-
-Return YAML:
 ```yaml
-action: 'question'
-question: '{the question}'
-participants: 'all'
-focus: '{focus area}'
-```"
-)
+action: "question"
+round: {round_number + 1}
+topic: "{topic}"
+strategy: "{strategy}"
+phase: "{current_phase}"
+workflow_type: "{workflow_type}"
+
+resumed_session: true
+rounds_in_phase: {rounds_in_phase}
+
+escalation_config:
+  min_rounds: 3
+  max_rounds: 20
+  max_rounds_per_conflict: {from config}
+  confidence_below: {from config}
+
+# State derived from rounds[]
+current_consensus: [...]
+open_conflicts:
+  - id: "{conflict_id}"
+    description: "{description}"
+    rounds_persisted: {count}
+open_questions: [...]
+
+agenda:
+  # ... from session file
+
+artifacts_count: {count}
+previous_synthesis: "{previous_synthesis}"
+```
+
+The facilitator will return:
+```yaml
+action: "question"
+decision:
+  focus_type: "{agenda|conflict|open_question}"
+  topic_id: "{topic}"
+  rationale: "{reason}"
+question: "{the question}"
+exploration: "{exploration prompt}"
+participants: "all"
+context_files: ["context-snapshot.yaml", ...]
 ```
 
 ### Step 3: Collect participant responses (PARALLEL)

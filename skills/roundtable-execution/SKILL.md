@@ -152,42 +152,49 @@ ARTIFACTS: {count} requirements, {count} conflicts, {count} open questions
 
 ### Step 2.2: Facilitator Question
 
-**YOU MUST use Task tool** to call facilitator:
+**Use the roundtable-facilitator agent** with this input:
 
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the Roundtable Facilitator.
-  Read your agent definition from: agents/roundtable/facilitator.md
+action: "question"
+round: {round_number + 1}
+topic: "{session topic}"
+strategy: "{strategy}"
+phase: "{current phase from strategy}"
+workflow_type: "{workflow_type}"
 
-  === SESSION STATE ===
-  Round: {round_number + 1}
-  Session folder: {session_folder}
-
-  === ARTIFACT SUMMARY ===
-  Requirements: {list IDs with title, status}
-  Conflicts: {list IDs with title, status}
-  Open questions: {list IDs with title, status}
-
-  (Read artifact files only if you need full details)
-
-  === AGENDA STATUS ===
-  {for each topic}
-  [{status}] {topic_id} - DoD: {criteria summary}
-  {/for}
-
-  === PREVIOUS ROUND ===
-  {synthesis from last round or "First round"}
-
-  === ESCALATION CONFIG ===
+escalation_config:
+  min_rounds: 3
+  max_rounds: 20
   max_rounds_per_conflict: 3
   confidence_below: 0.5
-  min_rounds: 3
 
-  === YOUR TASK ===
-  1. DECIDE focus for this round (agenda/conflict/open_question)
-  2. SELECT context files for participants
-  3. GENERATE question + exploration prompt
+agenda:
+  - id: "{topic_id}"
+    title: "{topic title}"
+    status: "{open|partial|closed}"
+    priority: "{critical|normal}"
+    done_when:
+      criteria: [...]
+      min_requirements: {N}
+  # ... more topics from agenda.yaml
+
+open_conflicts: []  # list of {id, description, rounds_persisted}
+open_questions: []  # list of {id, description, blocking_topic}
+artifacts_count: {count from session file}
+previous_synthesis: "{synthesis from last round or null}"
+```
+
+The facilitator will return:
+```yaml
+action: "question"
+decision:
+  focus_type: "{agenda|conflict|open_question}"
+  topic_id: "{topic}"
+  rationale: "{reason}"
+question: "{the question for participants}"
+exploration: "{exploration prompt}"
+participants: "all"  # or list of specific participants
+context_files: ["context-snapshot.yaml", ...]
 ```
 
 **Parse response**: Extract `decision`, `context_files`, `question`, `exploration`, `participants`
@@ -196,39 +203,52 @@ prompt: |
 
 ### Step 2.3: Participant Responses (PARALLEL)
 
-**YOU MUST launch ALL participant Tasks in SINGLE message** for blind voting.
+**Launch ALL participant agents in SINGLE message** for blind voting.
 
-For EACH participant:
+For EACH participant, **use the roundtable-{participant-id} agent** with this input:
 
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the {Participant Role} in a roundtable discussion.
-  Read your agent definition from: agents/roundtable/{participant-id}.md
+round: {round_number + 1}
+topic: "{session topic}"
+phase: "{current phase}"
+workflow_type: "{workflow_type}"
 
-  === CONTEXT FILES ===
-  Read these files (DO NOT read other session files):
-  {for each file in context_files}
-  - {session_folder}/{file}
-  {/for}
+question: "{facilitator's question}"
 
-  === QUESTION ===
-  {facilitator's question}
+exploration: "{facilitator's exploration prompt}"
 
-  === EXPLORATION ===
-  {facilitator's exploration prompt}
+context_files:
+  - "{session_folder}/context-snapshot.yaml"
+  # ... other files from facilitator's context_files
+```
 
-  === YOUR RESPONSE FORMAT ===
-  Return YAML:
-  position: "{your position}"
-  rationale:
-    - "{reason 1}"
-    - "{reason 2}"
-  confidence: 0.85
-  concerns:
-    - "{concern}"
-  suggestions:
-    - "{new idea or question}"
+Each participant will return:
+```yaml
+participant: "{participant-id}"
+
+position: |
+  {2-3 sentence position statement}
+
+rationale:
+  - "{reason 1}"
+  - "{reason 2}"
+
+trade_offs:
+  optimizing_for: "{what they prioritize}"
+  accepting_as_cost: "{trade-off accepted}"
+  risks:
+    - "{risk}"
+
+concerns:
+  - "{concern}"
+
+suggestions:
+  - "{suggestion}"
+
+confidence: 0.85
+
+references:
+  - "{reference}"
 ```
 
 **Store responses** in `participant_responses[]`
@@ -237,39 +257,94 @@ prompt: |
 
 ### Step 2.4: Facilitator Synthesis
 
-**YOU MUST use Task tool** for synthesis:
+**Use the roundtable-facilitator agent** with this input:
 
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the Roundtable Facilitator.
-  Read your agent definition from: agents/roundtable/facilitator.md
+action: "synthesis"
+round: {round_number + 1}
+topic: "{session topic}"
+strategy: "{strategy}"
+phase: "{current phase}"
 
-  === ROUND {round_number + 1} RESPONSES ===
-  {for each participant}
-  **{Participant Role}** (confidence: {confidence}):
-  Position: {position}
-  Rationale: {rationale}
-  Concerns: {concerns}
-  Suggestions: {suggestions}
-  {/for}
-
-  === ARTIFACT SUMMARY ===
-  {same as in question phase}
-
-  === AGENDA STATUS ===
-  {same as in question phase}
-
-  === ESCALATION CONFIG ===
+escalation_config:
+  min_rounds: 3
+  max_rounds: 20
   max_rounds_per_conflict: 3
   confidence_below: 0.5
-  min_rounds: 3
 
-  === YOUR TASK ===
-  1. SYNTHESIZE responses
-  2. PROPOSE new artifacts (without IDs)
-  3. UPDATE agenda status
-  4. DECIDE next action
+question_asked: "{facilitator's question from step 2.2}"
+
+responses:
+  software-architect:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: 0.85
+  technical-lead:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: 0.8
+  # ... all participant responses
+
+full_agenda:
+  - id: "{topic_id_1}"
+    status: "{open|partial|closed}"
+    priority: "{critical|normal}"
+  - id: "{topic_id_2}"
+    status: "{open|partial|closed}"
+    priority: "{critical|normal}"
+  # ... ALL topics from agenda.yaml with CURRENT status
+  # CRITICAL: Facilitator needs full visibility to enforce closure rules
+
+focus_topic:
+  id: "{topic from step 2.2}"
+  done_when:
+    criteria: [...]
+    min_requirements: {N}
+
+open_conflicts: []
+artifacts_count: {current count}
+```
+
+The facilitator will return:
+```yaml
+action: "synthesis"
+
+synthesis: "{2-4 sentence summary of alignment and key points}"
+
+proposed_artifacts:
+  - type: "{requirement|conflict|open_question|business_rule|...}"
+    title: "{title}"
+    status: "{consensus|draft|conflict}"
+    topic_id: "{agenda topic}"
+    description: "..."
+    # ... type-specific fields
+
+resolved_conflicts: []  # or list of {conflict_id, resolution, method}
+
+agenda_update:
+  topic_id: "{topic}"
+  new_status: "{open|partial|closed}"
+  coverage_added: [...]
+  remaining_for_closure: [...]
+
+constraints_check:
+  rounds_completed: {N}
+  min_rounds: 3
+  can_conclude: {true|false}
+  reason: "{explanation}"
+
+next: "{continue|conclude|escalate}"
+
+next_focus:
+  type: "{agenda|conflict|open_question}"
+  topic_id: "{topic}"
+  reason: "{reason}"
+
+escalation_reason: null
 ```
 
 **Parse response**: Extract `synthesis`, `proposed_artifacts`, `resolved_conflicts`, `agenda_update`, `next`, `next_focus`
@@ -494,21 +569,21 @@ result:
 ## Definition of Done Checklist
 
 ### After Step 2.2 (Facilitator Question):
-- [ ] Task tool was used
+- [ ] roundtable-facilitator agent was invoked with `action: "question"` input
 - [ ] Facilitator returned valid YAML with `action: "question"`
 - [ ] Decision includes focus_type and topic_id
 - [ ] Context files list is present
 - [ ] Dump file written (if verbose)
 
 ### After Step 2.3 (Participant Responses):
-- [ ] ALL participants launched in SINGLE message
-- [ ] ALL participants returned valid YAML
-- [ ] Each response has position, rationale, confidence
+- [ ] ALL participant agents launched in SINGLE message (parallel execution)
+- [ ] ALL participants returned valid YAML with `participant: "{id}"`
+- [ ] Each response has position, rationale, confidence, concerns, suggestions
 - [ ] Dump files written (if verbose)
 
 ### After Step 2.4 (Facilitator Synthesis):
-- [ ] Task tool was used
-- [ ] Synthesis identifies proposed_artifacts
+- [ ] roundtable-facilitator agent was invoked with `action: "synthesis"` input
+- [ ] Synthesis includes proposed_artifacts and constraints_check
 - [ ] next is one of: continue, conclude, escalate
 - [ ] Dump file written (if verbose)
 

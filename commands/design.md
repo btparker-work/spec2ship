@@ -223,69 +223,51 @@ Initialize:
 
 #### Step 2.2: Facilitator Question
 
-**YOU MUST use Task tool NOW** to call facilitator:
+**Use the roundtable-facilitator agent** with this input:
 
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the Roundtable Facilitator.
-  Read your agent definition from: agents/roundtable/facilitator.md
+action: "question"
+round: {round_number + 1}
+topic: "Architecture design for {project name}"
+strategy: "{strategy from config, e.g. debate}"
+phase: "design"
+workflow_type: "design"
 
-  === WORKFLOW ===
-  Type: design (architecture definition)
-  Strategy: {strategy from config, e.g. "debate"}
-  Participants: software-architect, technical-lead, devops-engineer
-
-  === CURRENT STATE (Round {round_number + 1}) ===
-  Session folder: {session_folder}
-
-  Artifacts created:
-  - Architecture decisions: {list IDs or "none yet"}
-  - Components: {list IDs or "none"}
-  - Conflicts: {list IDs or "none"}
-  - Open questions: {list IDs or "none"}
-
-  Agenda topics (in priority order):
-  {for each topic in agenda, list status and ID - order implies priority}
-  - [{status}] {topic_id}
-  {/for}
-  Note: Topics are listed in priority order. First = highest priority.
-
-  Previous round synthesis:
-  {synthesis from last round or "First round - no previous context"}
-
-  === CONSTRAINTS ===
+escalation_config:
   min_rounds: 3
   max_rounds: 20
   max_rounds_per_conflict: 3
   confidence_below: 0.5
 
-  === YOUR AUTONOMOUS DECISION ===
-  Based on the strategy ({strategy}) and current state above:
+agenda:
+  - id: "high-level-arch"
+    title: "High-Level Architecture"
+    status: "{open|partial|closed}"
+    priority: "critical"
+    done_when:
+      criteria:
+        - "System boundaries defined"
+        - "External interfaces identified"
+      min_requirements: 2
+  # ... more topics from agenda.yaml
 
-  1. YOU DECIDE what to focus on this round:
-     - A specific agenda topic?
-     - Resolving an open conflict?
-     - Addressing an open question?
-     - Multiple items if they are independent?
-     - Something else entirely?
+open_conflicts: []  # or list of {id, description, rounds_persisted}
+open_questions: []  # or list of {id, description, blocking_topic}
+artifacts_count: {count from session}
+previous_synthesis: "{synthesis from last round or null}"
+```
 
-  2. YOU DECIDE the question format:
-     - Single focused question?
-     - Multiple related questions?
-     - Pro/Con debate setup?
-
-  3. SELECT which context files participants should read
-
-  4. GENERATE your question(s) and exploration prompt
-
-  You have full autonomy. Apply the strategy as you see fit.
-
-  IMPORTANT REMINDERS:
-  - Focus on ONE topic per round (no mixing agenda + OQ + conflicts)
-  - You have up to {max_rounds} rounds - do NOT rush
-  - Coverage ≠ Closure. Take time to achieve depth.
-  - Include constraints_check in your synthesis output (MANDATORY).
+The facilitator will return:
+```yaml
+action: "question"
+decision:
+  focus_type: "{agenda|conflict|open_question}"
+  topic_id: "{topic}"
+  rationale: "{reason}"
+question: "{the question}"
+exploration: "{exploration prompt}"
+participants: "all"
+context_files: ["context-snapshot.yaml", ...]
 ```
 
 **IF verbose_flag == true**: Write dump to `rounds/{NNN}-01-facilitator-question.yaml`:
@@ -298,10 +280,7 @@ action: "question"
 started: "{ISO timestamp}"
 completed: "{ISO timestamp}"
 
-prompt:
-  session_state: "{summary}"
-  artifact_summary: "{counts}"
-  agenda_status: "{state}"
+input: {... the YAML input sent to facilitator ...}
 
 response:
   decision: {focus_type, topic_id, rationale}
@@ -319,30 +298,53 @@ tokens:
 
 #### Step 2.3: Participant Responses
 
-**YOU MUST launch ALL participant Tasks in SINGLE message**:
+**Launch ALL participant agents in SINGLE message** (parallel execution):
 
 For each of: software-architect, technical-lead, devops-engineer
 
+**Use the roundtable-{participant-id} agent** with this input:
+
 ```yaml
-subagent_type: "general-purpose"
-prompt: |
-  You are the {Role} in a roundtable discussion.
-  Read your agent definition from: agents/roundtable/{participant-id}.md
+round: {round_number + 1}
+topic: "Architecture design for {project name}"
+phase: "design"
+workflow_type: "design"
 
-  === CONTEXT FILES ===
-  Read these files (DO NOT read other session files):
-  {for each file in facilitator's context_files}
-  - {session_folder}/{file}
-  {/for}
+question: "{facilitator's question}"
 
-  === QUESTION ===
-  {facilitator's question}
+exploration: "{facilitator's exploration prompt}"
 
-  === EXPLORATION ===
-  {facilitator's exploration prompt}
+context_files:
+  - "{session_folder}/context-snapshot.yaml"
+  # ... other files from facilitator's context_files
+```
 
-  === YOUR RESPONSE FORMAT ===
-  Return YAML with position, rationale, confidence, concerns, suggestions.
+Each participant will return:
+```yaml
+participant: "{participant-id}"
+
+position: |
+  {2-3 sentence position statement}
+
+rationale:
+  - "{reason}"
+
+trade_offs:
+  optimizing_for: "{priority}"
+  accepting_as_cost: "{trade-off}"
+  risks:
+    - "{risk}"
+
+concerns:
+  - "{concern}"
+
+suggestions:
+  - "{suggestion}"
+
+confidence: 0.85
+
+references:
+  - "{reference}"
 ```
 
 **IF verbose_flag == true**: Write dump for each participant to `rounds/{NNN}-02-{participant-id}.yaml`:
@@ -355,12 +357,10 @@ action: "response"
 started: "{ISO timestamp}"
 completed: "{ISO timestamp}"
 
-prompt:
-  question: "{question}"
-  exploration: "{exploration}"
-  context_files: [...]
+input: {... the YAML input sent to participant ...}
 
 response:
+  participant: "{participant-id}"
   position: "{full response}"
   rationale: [...]
   confidence: {0.0-1.0}
@@ -368,7 +368,6 @@ response:
   suggestions: [...]
 
 result:
-  artifacts_proposed: {count}
   status: "completed"
 
 tokens:
@@ -378,7 +377,109 @@ tokens:
 
 #### Step 2.4: Facilitator Synthesis
 
-**YOU MUST use Task tool NOW** for synthesis.
+**Use the roundtable-facilitator agent** with this input:
+
+```yaml
+action: "synthesis"
+round: {round_number + 1}
+topic: "Architecture design for {project name}"
+strategy: "{strategy}"
+phase: "design"
+
+escalation_config:
+  min_rounds: 3
+  max_rounds: 20
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+
+question_asked: "{facilitator's question from step 2.2}"
+
+responses:
+  software-architect:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: 0.85
+  technical-lead:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: 0.8
+  devops-engineer:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: 0.75
+
+full_agenda:
+  - id: "high-level-arch"
+    status: "{open|partial|closed}"
+    priority: "critical"
+  - id: "components"
+    status: "{open|partial|closed}"
+    priority: "critical"
+  - id: "data-flow"
+    status: "{open|partial|closed}"
+    priority: "normal"
+  - id: "tech-choices"
+    status: "{open|partial|closed}"
+    priority: "normal"
+  - id: "integration"
+    status: "{open|partial|closed}"
+    priority: "normal"
+  # NOTE: Include ALL topics with CURRENT status from session file
+
+focus_topic:
+  id: "{topic from step 2.2}"
+  done_when:
+    criteria: [...]
+    min_requirements: {N}
+
+open_conflicts: []
+artifacts_count: {current count}
+```
+
+The facilitator will return:
+```yaml
+action: "synthesis"
+
+synthesis: "{2-4 sentence summary}"
+
+proposed_artifacts:
+  - type: "decision"
+    title: "{title}"
+    status: "consensus"
+    topic_id: "{topic}"
+    description: "..."
+    options: [...]
+    rationale: "..."
+
+resolved_conflicts: []
+
+agenda_update:
+  topic_id: "{topic}"
+  new_status: "{partial|closed}"
+  coverage_added: [...]
+  remaining_for_closure: [...]
+
+constraints_check:
+  rounds_completed: {N}
+  min_rounds: 3
+  can_conclude: {true|false}
+  reason: "{reason}"
+
+next: "{continue|conclude|escalate}"
+
+next_focus:
+  type: "{agenda|conflict|open_question}"
+  topic_id: "{topic}"
+  reason: "{reason}"
+
+escalation_reason: null
+```
 
 **IF verbose_flag == true**: Write dump to `rounds/{NNN}-03-facilitator-synthesis.yaml`:
 ```yaml
@@ -390,8 +491,7 @@ action: "synthesis"
 started: "{ISO timestamp}"
 completed: "{ISO timestamp}"
 
-prompt:
-  participant_responses: "{summary}"
+input: {... the YAML input sent to facilitator ...}
 
 response:
   synthesis: "{summary}"

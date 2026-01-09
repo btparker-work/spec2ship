@@ -111,24 +111,23 @@ If strategy is "debate":
 1. Check if --pro and --con flags provided
 2. If NOT provided, ask facilitator to assign sides:
 
+**Use the roundtable-facilitator agent** with this input:
+```yaml
+action: "assign_debate_sides"
+topic: "{topic}"
+participants:
+  - id: "{participant-1}"
+    role: "{role-1}"
+  - id: "{participant-2}"
+    role: "{role-2}"
+  # ... all participants
 ```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are the Facilitator for a Debate roundtable.
 
-Assign participants to Pro and Con sides based on:
-- Proposal: {topic}
-- Participants: {participant list with roles}
-
-Consider typical perspectives of each role.
-Assign roughly equal numbers to each side.
-
-Return YAML:
+The facilitator will return:
 ```yaml
 pro: [list of participant ids]
 con: [list of participant ids]
-```"
-)
+rationale: "Assignment reasoning"
 ```
 
 3. Store debate_sides in session file
