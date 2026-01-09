@@ -198,15 +198,15 @@ Load agenda from `skills/roundtable-execution/references/agenda-{workflow_type}.
 
 1. PHASE 3 of skill: Round Execution Loop
    - Step 3.1: Facilitator Question (use Task tool)
-     - Include `min_rounds: 3` and `REQUIRED_TOPICS` in prompt
+     - Include `min_rounds` (from config-snapshot) and `REQUIRED_TOPICS` in prompt
    - Step 3.2: Participant Responses (use Task tool, ALL in parallel)
    - Step 3.3: Facilitator Synthesis (use Task tool)
    - Step 3.4: Update Session File (include agenda_coverage)
    - Step 3.5: Handle --interactive mode (if enabled)
    - Step 3.6: Evaluate Next Action:
-     - **min_rounds CHECK**: If round < 3 AND "conclude" → OVERRIDE to "continue"
+     - **min_rounds CHECK**: If round < min_rounds (from config-snapshot) AND "conclude" → OVERRIDE to "continue"
      - **Agenda CHECK**: If critical topics pending → OVERRIDE to "continue"
-   - REPEAT until: next_action == "conclude" AND round >= 3 AND critical topics covered
+   - REPEAT until: next_action == "conclude" AND round >= min_rounds AND critical topics covered
 
 2. PHASE 4 of skill: Completion
    - Update session status to "completed"

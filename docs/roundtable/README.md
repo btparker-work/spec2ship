@@ -107,7 +107,6 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 - [Mitigations](./research/mitigations.md) - How we address limitations
 
 ### Examples
-- [Simple Brainstorm](./examples/simple-brainstorm.md)
 - [Specs Workflow](./examples/specs-workflow.md)
 - [Tech Decision](./examples/tech-decision.md)
 

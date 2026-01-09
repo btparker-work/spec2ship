@@ -135,12 +135,12 @@ verbose: {verbose_flag}
 interactive: {interactive_flag}
 strategy: "{strategy or consensus-driven}"
 limits:
-  min_rounds: 3
-  max_rounds: 20
+  min_rounds: {from config: roundtable.limits.min_rounds, default: 3}
+  max_rounds: {from config: roundtable.limits.max_rounds, default: 20}
 escalation:
-  max_rounds_per_conflict: 3
-  confidence_below: 0.5
-  critical_keywords: ["security", "must-have", "blocking", "legal"]
+  max_rounds_per_conflict: {from config: roundtable.escalation.triggers.max_rounds_per_conflict, default: 3}
+  confidence_below: {from config: roundtable.escalation.triggers.confidence_below, default: 0.5}
+  critical_keywords: {from config: roundtable.escalation.triggers.critical_keywords, default: ["security", "must-have", "blocking", "legal"]}
 participants:
   - "product-manager"
   - "business-analyst"
@@ -256,10 +256,10 @@ phase: "requirements"
 workflow_type: "specs"
 
 escalation_config:
-  min_rounds: 3
-  max_rounds: 20
-  max_rounds_per_conflict: 3
-  confidence_below: 0.5
+  min_rounds: {from config-snapshot.yaml: limits.min_rounds}
+  max_rounds: {from config-snapshot.yaml: limits.max_rounds}
+  max_rounds_per_conflict: {from config-snapshot.yaml: escalation.max_rounds_per_conflict}
+  confidence_below: {from config-snapshot.yaml: escalation.confidence_below}
 
 agenda:
   - id: "user-workflows"
@@ -415,10 +415,10 @@ strategy: "{strategy}"
 phase: "requirements"
 
 escalation_config:
-  min_rounds: 3
-  max_rounds: 20
-  max_rounds_per_conflict: 3
-  confidence_below: 0.5
+  min_rounds: {from config-snapshot.yaml: limits.min_rounds}
+  max_rounds: {from config-snapshot.yaml: limits.max_rounds}
+  max_rounds_per_conflict: {from config-snapshot.yaml: escalation.max_rounds_per_conflict}
+  confidence_below: {from config-snapshot.yaml: escalation.confidence_below}
 
 question_asked: "{facilitator's question from step 2.2}"
 
@@ -498,7 +498,7 @@ agenda_update:
 
 constraints_check:
   rounds_completed: {N}
-  min_rounds: 3
+  min_rounds: {from config-snapshot.yaml: limits.min_rounds}
   can_conclude: {true|false}
   reason: "{reason}"
 

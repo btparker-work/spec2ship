@@ -261,10 +261,10 @@ resumed_session: true
 rounds_in_phase: {rounds_in_phase}
 
 escalation_config:
-  min_rounds: 3
-  max_rounds: 20
-  max_rounds_per_conflict: {from config}
-  confidence_below: {from config}
+  min_rounds: {from config-snapshot.yaml: limits.min_rounds}
+  max_rounds: {from config-snapshot.yaml: limits.max_rounds}
+  max_rounds_per_conflict: {from config-snapshot.yaml: escalation.max_rounds_per_conflict}
+  confidence_below: {from config-snapshot.yaml: escalation.confidence_below}
 
 # State derived from rounds[]
 current_consensus: [...]
