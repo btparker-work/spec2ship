@@ -197,6 +197,8 @@ participant_context:
    - **six-hats**: Assign thinking mode via `facilitator_directive`
    - **standard/consensus-driven**: Usually no overrides needed
 
+7. **Context completeness check**: Before finalizing `participant_context`, verify you have the data needed. If something critical seems missing (e.g., round > 1 but session_state.artifacts is empty, or agenda references prior decisions that aren't provided), include a brief note in your `decision.rationale` like: "Note: round 2 but no prior artifacts in session_state - proceeding with available context."
+
 ---
 
 ## ACTION: synthesis
