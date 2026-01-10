@@ -884,17 +884,17 @@ tokens:
 
 # VERIFICATION CHECKLIST - for automated checking
 verification:
-  # Artifact files that MUST exist after Step 2.5
-  expected_artifact_files:
-    - "{ID}.yaml"  # for each proposed_artifact
-  # Session file updates that MUST be present after Step 2.6
+  # Session file updates that MUST be present after Step 2.5/2.6
+  # Note: Artifacts are EMBEDDED in session file (no separate files)
   session_file_updates:
-    artifacts_registry:
+    artifacts_embedded:
       # Check each artifact type that was proposed this round
-      - field: "artifacts.decisions"
+      - field: "artifacts.architecture_decisions"
         expected_ids: ["{ARCH-*}", ...]
       - field: "artifacts.components"
         expected_ids: ["{COMP-*}", ...]
+      - field: "artifacts.interfaces"
+        expected_ids: ["{INT-*}", ...]
       - field: "artifacts.open_questions"
         expected_ids: ["{OQ-*}", ...]
       - field: "artifacts.conflicts"
@@ -1156,8 +1156,8 @@ metrics:
 
 4. **If validation fails**:
    ```
-   ⚠️ Round {N} Validation Warning:
-   Missing:
+   ⚠️ VALIDATION WARNING
+   Round {N} issues found:
    - {list of missing items}
 
    Continuing execution...
