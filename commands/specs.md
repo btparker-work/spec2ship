@@ -732,7 +732,8 @@ For each `proposed_artifact` from facilitator:
 artifacts:
   requirements:
     REQ-001:
-      status: "active"    # active|amended|superseded|withdrawn
+      status: "active"    # Lifecycle: active|amended|superseded|withdrawn
+      agreement: "consensus"  # From synthesis: consensus|draft|conflict
       created_round: {N}
       topic_id: "{topic}"
       title: "{title}"
@@ -748,12 +749,16 @@ artifacts:
       amendments: []      # For future modifications
 ```
 
+**Note**: Map facilitator's `proposed_artifact.status` → `agreement` field.
+Lifecycle `status` is always `"active"` for new artifacts.
+
 **Artifact schema** (business rules - add to `artifacts.business_rules`):
 ```yaml
 artifacts:
   business_rules:
     BR-001:
       status: "active"
+      agreement: "consensus"
       created_round: {N}
       topic_id: "{topic}"
       title: "{title}"
@@ -772,6 +777,7 @@ artifacts:
   nfr:
     NFR-001:
       status: "active"
+      agreement: "consensus"
       created_round: {N}
       topic_id: "nfr-measurable"
       title: "{title}"
@@ -790,6 +796,7 @@ artifacts:
   exclusions:
     EX-001:
       status: "active"
+      agreement: "consensus"
       created_round: {N}
       topic_id: "out-of-scope"
       title: "{title}"
@@ -916,7 +923,10 @@ metrics:
     by_status:
       active: {count}
       amended: {count}
-      resolved: {count}
+      superseded: {count}
+      withdrawn: {count}
+      open: {count}        # For OQ, CONF
+      resolved: {count}    # For OQ, CONF
   topics:
     total: 6
     closed: {count closed topics}
@@ -954,8 +964,8 @@ metrics:
 
 5. **If validation fails**:
    ```
-   Warning: ROUND {N} VALIDATION WARNING
-   Issues found:
+   ⚠️ VALIDATION WARNING
+   Round {N} issues found:
    - {list of issues}
 
    Continuing execution...

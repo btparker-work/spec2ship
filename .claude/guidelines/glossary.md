@@ -42,6 +42,31 @@ Each artifact has a status that changes throughout its lifecycle.
 - `superseded` requires reference to replacement artifact
 - `withdrawn` requires rationale
 
+### Special Artifact States
+
+Some artifact types have specialized lifecycles:
+
+| Type | States | Notes |
+|------|--------|-------|
+| **open_questions** | `open`, `resolved` | Questions are answered, not amended |
+| **conflicts** | `open`, `resolved` | Conflicts are resolved through discussion |
+
+These do not follow the standard `active→amended→superseded/withdrawn` lifecycle.
+
+---
+
+## Agreement Level
+
+Artifacts have an `agreement` field indicating participant consensus when created.
+
+| Level | Description |
+|-------|-------------|
+| **consensus** | All participants agreed |
+| **draft** | Tentative, needs further discussion |
+| **conflict** | Disagreement exists, separate CONF artifact created |
+
+**Note**: `agreement` is separate from lifecycle `status`. An artifact can be `status: "active"` with `agreement: "draft"`.
+
 ---
 
 ## Topic States
