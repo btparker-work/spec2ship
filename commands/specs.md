@@ -189,11 +189,13 @@ timing:
   completed: null
 
 # Agent state (for resume capability)
+# Stores agent IDs to enable resuming agents across rounds
 agent_state:
   facilitator:
-    agent_id: null
-    last_round: 0
-  participants: {}
+    agent_id: null      # agentId from last facilitator call
+    last_round: 0       # round number of last call
+    last_action: null   # "question" or "synthesis"
+  participants: {}      # {participant-id}: {agent_id, last_round}
 
 # ARTIFACTS - embedded with full content (NOT just IDs)
 # Each artifact type is a map keyed by ID
@@ -275,6 +277,48 @@ Initialize:
 Display agenda status and artifact counts.
 
 #### Step 2.2: Facilitator Question
+
+**Check for resume capability:**
+
+Read `agent_state.facilitator` from session file.
+
+**IF** `agent_state.facilitator.agent_id` is NOT null AND this is a continuation (not first round of new session):
+
+**Resume the roundtable-facilitator agent** with `resume: "{agent_state.facilitator.agent_id}"` and this update prompt:
+
+```yaml
+action: "question"
+round: {round_number + 1}
+resume: true
+
+# Delta since last round (what changed)
+updates_since_last_round:
+  new_artifacts: ["{IDs of artifacts created last round}"]
+  resolved_conflicts: ["{IDs of conflicts resolved}"]
+  agenda_changes:
+    - topic_id: "{topic}"
+      old_status: "{previous}"
+      new_status: "{current}"
+
+# Current full state for reference
+session_state:
+  artifacts:
+    requirements: [{id, title, status, ...}]
+    conflicts: [{id, title, status, ...}]
+    open_questions: [{id, title, status, ...}]
+  rounds:
+    - round: {N}
+      focus: "{topic_id}"
+      synthesis: "{synthesis text}"
+
+agenda:
+  # Current agenda with updated statuses
+  - id: "{topic}"
+    status: "{current status}"
+    priority: "{priority}"
+```
+
+**ELSE** (fresh invocation - first round or no saved agent_id):
 
 **Use the roundtable-facilitator agent** with this input:
 
@@ -422,11 +466,45 @@ tokens:
   output_estimate: {estimated output tokens}
 ```
 
+**Save facilitator agent_id for resume:**
+
+The facilitator agent returns an `agentId` in its response. **YOU MUST** update the session file:
+
+```yaml
+agent_state:
+  facilitator:
+    agent_id: "{agentId from facilitator response}"
+    last_round: {round_number + 1}
+    last_action: "question"
+```
+
 #### Step 2.3: Participant Responses
 
 **Launch ALL participant agents in SINGLE message** (parallel execution):
 
 For each of: product-manager, business-analyst, qa-lead
+
+**Check for resume capability:**
+
+For each participant, read `agent_state.participants.{participant-id}` from session file.
+
+**IF** participant has saved `agent_id` AND this is a continuation:
+
+**Resume the roundtable-{participant-id} agent** with `resume: "{agent_state.participants.{participant-id}.agent_id}"` and this update prompt:
+
+```yaml
+round: {round_number + 1}
+resume: true
+question: "{facilitator's NEW question for this round}"
+exploration: "{facilitator's exploration prompt}"
+
+# Brief update on what changed
+context_update:
+  new_artifacts_since_last: ["{IDs}"]
+  your_last_position_summary: "{from previous round}"
+```
+
+**ELSE** (fresh invocation):
 
 **Build participant input** by merging:
 1. `participant_context.shared` (common to all)
@@ -530,7 +608,62 @@ tokens:
   output_estimate: {estimated output tokens}
 ```
 
+**Save participant agent_ids for resume:**
+
+Each participant agent returns an `agentId` in its response. **YOU MUST** update the session file:
+
+```yaml
+agent_state:
+  participants:
+    product-manager:
+      agent_id: "{agentId from product-manager response}"
+      last_round: {round_number + 1}
+    business-analyst:
+      agent_id: "{agentId from business-analyst response}"
+      last_round: {round_number + 1}
+    qa-lead:
+      agent_id: "{agentId from qa-lead response}"
+      last_round: {round_number + 1}
+```
+
 #### Step 2.4: Facilitator Synthesis
+
+**Check for resume capability:**
+
+Read `agent_state.facilitator` from session file.
+
+**IF** `agent_state.facilitator.agent_id` is NOT null (same facilitator from question phase):
+
+**Resume the roundtable-facilitator agent** with `resume: "{agent_state.facilitator.agent_id}"` and this synthesis prompt:
+
+```yaml
+action: "synthesis"
+round: {round_number + 1}
+resume: true
+
+# Participant responses to synthesize
+responses:
+  product-manager:
+    position: "{position}"
+    rationale: [...]
+    confidence: {0.0-1.0}
+  business-analyst:
+    position: "{position}"
+    rationale: [...]
+    confidence: {0.0-1.0}
+  qa-lead:
+    position: "{position}"
+    rationale: [...]
+    confidence: {0.0-1.0}
+
+# Current agenda state
+full_agenda:
+  - id: "{topic}"
+    status: "{open|partial|closed}"
+    priority: "{priority}"
+```
+
+**ELSE** (fresh invocation):
 
 **Use the roundtable-facilitator agent** with this input:
 
@@ -713,6 +846,18 @@ verification:
       - "open_conflicts"
       - "open_questions"
       - "recent_rounds"
+```
+
+**Update facilitator agent_id after synthesis:**
+
+The facilitator synthesis may return a new `agentId` (or same if resumed). **YOU MUST** update the session file to ensure latest agent_id is saved:
+
+```yaml
+agent_state:
+  facilitator:
+    agent_id: "{agentId from synthesis response}"
+    last_round: {round_number + 1}
+    last_action: "synthesis"
 ```
 
 #### Step 2.5: Process Artifacts
