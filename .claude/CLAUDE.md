@@ -7,10 +7,18 @@ Spec2Ship (s2s) is a Claude Code plugin that automates the software lifecycle: s
 ```
 spec2ship/
 ├── .claude/                  # Claude configuration (this folder)
+│   ├── CLAUDE.md             # Main context (you're reading it)
+│   ├── s2s-development.md    # Development patterns
+│   ├── guidelines/           # Standards and conventions
+│   │   ├── glossary.md       # Terminology definitions
+│   │   ├── naming-conventions.md
+│   │   ├── state-machine.md  # State transitions
+│   │   └── llm-patterns.md   # Instruction patterns
+│   └── decisions/            # Architecture decisions (MADR format)
+│       └── SAD-006-*.md      # SAD-001 to SAD-005 inline below
 ├── .claude-plugin/           # Plugin manifest
 ├── commands/                 # Slash commands (/s2s:*)
 │   ├── init.md, brainstorm.md, specs.md, design.md, plan.md
-│   ├── init/                 # detect, setup, context
 │   ├── plan/                 # create, list, start, complete
 │   └── roundtable/           # start, list, resume
 ├── agents/roundtable/        # Discussion participants
@@ -143,3 +151,20 @@ Key topics covered:
 3. **SlashCommand**: Is ASYNCHRONOUS - cannot wait for results
 4. **Skills**: Third person description with exact trigger phrases
 5. **Config flow**: config.yaml → arguments → snapshot → subagent prompt
+
+---
+
+## Reference Documentation
+
+For detailed guidelines, see:
+
+| Document | Contents |
+|----------|----------|
+| `@.claude/s2s-development.md` | Development patterns, anti-patterns, lessons learned |
+| `@.claude/guidelines/glossary.md` | Terminology: artifact types, states, strategies |
+| `@.claude/guidelines/naming-conventions.md` | ID formats, file paths, command structure |
+| `@.claude/guidelines/state-machine.md` | Session, artifact, topic lifecycles |
+| `@.claude/guidelines/llm-patterns.md` | Instruction patterns for commands |
+| `@.claude/decisions/` | Architecture decisions SAD-006+ (MADR format) |
+
+**Note**: SAD-001 through SAD-005 remain inline above for quick reference. New decisions go in `decisions/` folder.
