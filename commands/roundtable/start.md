@@ -46,16 +46,7 @@ Extract from $ARGUMENTS:
 - **--verbose**: Optional. Include full participant responses in session file
 - **--interactive**: Optional. Ask user after each round
 
-**Boolean flags** (convert to true/false):
-
-| Argument | Type | Parsed Value |
-|----------|------|--------------|
-| `--verbose` | boolean | present in $ARGUMENTS → `true`, absent → `false` |
-| `--interactive` | boolean | present in $ARGUMENTS → `true`, absent → `false` |
-
-Store as:
-- **verbose_flag**: true or false
-- **interactive_flag**: true or false
+**Boolean flags**: `--verbose` and `--interactive` → parse as `true` if present, `false` if absent.
 
 Other optional arguments:
 - **--pro**: Optional (debate only). Comma-separated list of participant IDs for Pro side
@@ -120,24 +111,23 @@ If strategy is "debate":
 1. Check if --pro and --con flags provided
 2. If NOT provided, ask facilitator to assign sides:
 
+**Use the roundtable-facilitator agent** with this input:
+```yaml
+action: "assign_debate_sides"
+topic: "{topic}"
+participants:
+  - id: "{participant-1}"
+    role: "{role-1}"
+  - id: "{participant-2}"
+    role: "{role-2}"
+  # ... all participants
 ```
-Task(
-  subagent_type="general-purpose",
-  prompt="You are the Facilitator for a Debate roundtable.
 
-Assign participants to Pro and Con sides based on:
-- Proposal: {topic}
-- Participants: {participant list with roles}
-
-Consider typical perspectives of each role.
-Assign roughly equal numbers to each side.
-
-Return YAML:
+The facilitator will return:
 ```yaml
 pro: [list of participant ids]
 con: [list of participant ids]
-```"
-)
+rationale: "Assignment reasoning"
 ```
 
 3. Store debate_sides in session file
@@ -154,55 +144,10 @@ If active session exists:
 ## Create session
 
 1. Create sessions directory: `mkdir -p .s2s/sessions`
-
-2. Generate session ID: `{timestamp}-{topic-slug}`
-   - Slug: lowercase, spaces to hyphens, max 30 chars
-
+2. Generate session ID: `{timestamp}-{topic-slug}` (slug: lowercase, hyphens, max 30 chars)
 3. Determine initial phase from strategy phases[0]
-
-4. Write `.s2s/sessions/{session-id}.yaml`:
-
-```yaml
-# === IDENTIFICATION ===
-id: "{session-id}"
-topic: "{topic}"
-workflow_type: "{workflow-type}"
-strategy: "{strategy}"
-status: "active"
-
-# === TIMESTAMPS ===
-started: "{ISO timestamp}"
-paused_at: null
-completed_at: null
-
-# === PARTICIPANTS ===
-participants:
-  - id: "{participant-1}"
-    name: "{Participant 1 Display Name}"
-  - id: "{participant-2}"
-    name: "{Participant 2 Display Name}"
-
-# === DEBATE ONLY ===
-# (Only include if strategy = debate)
-debate_sides:
-  pro: ["{participant-ids}"]
-  con: ["{participant-ids}"]
-  proposal: "{topic}"
-
-# === EXECUTION STATE ===
-current_phase: "{initial phase}"
-total_rounds: 0
-
-# === ROUNDS (Single Source of Truth) ===
-rounds: []
-
-# === ESCALATIONS ===
-escalations: []
-
-# === OUTPUT ===
-outcome: null
-```
-
+4. Create session file following schema in `skills/roundtable-execution/references/session-schema.md`
+   - If strategy="debate", include `debate_sides` with pro/con participant assignments
 5. Update `.s2s/state.yaml`: Set `current_session: "{session-id}"`
 
 ## Display session start
@@ -241,14 +186,9 @@ Pass these values to the skill execution:
 - **verbose**: {verbose_flag}
 - **interactive**: {interactive_flag}
 
-## Load Agenda (v4.2)
+## Load Agenda
 
-Based on workflow_type, load agenda if available:
-- If workflow_type == "specs": Read `skills/roundtable-execution/references/agenda-specs.md`
-- If workflow_type == "design": Read `skills/roundtable-execution/references/agenda-design.md`
-- If workflow_type == "brainstorm": No agenda (free-form)
-
-Extract REQUIRED_TOPICS list and track coverage status.
+Load agenda from `skills/roundtable-execution/references/agenda-{workflow_type}.md` if workflow_type is specs or design. Brainstorm has no agenda (free-form).
 
 ## Execute roundtable
 
@@ -258,15 +198,15 @@ Extract REQUIRED_TOPICS list and track coverage status.
 
 1. PHASE 3 of skill: Round Execution Loop
    - Step 3.1: Facilitator Question (use Task tool)
-     - Include `min_rounds: 3` and `REQUIRED_TOPICS` in prompt
+     - Include `min_rounds` (from config-snapshot) and `REQUIRED_TOPICS` in prompt
    - Step 3.2: Participant Responses (use Task tool, ALL in parallel)
    - Step 3.3: Facilitator Synthesis (use Task tool)
    - Step 3.4: Update Session File (include agenda_coverage)
    - Step 3.5: Handle --interactive mode (if enabled)
-   - Step 3.6: Evaluate Next Action with v4.2 checks:
-     - **min_rounds CHECK**: If round < 3 AND "conclude" → OVERRIDE to "continue"
+   - Step 3.6: Evaluate Next Action:
+     - **min_rounds CHECK**: If round < min_rounds (from config-snapshot) AND "conclude" → OVERRIDE to "continue"
      - **Agenda CHECK**: If critical topics pending → OVERRIDE to "continue"
-   - REPEAT until: next_action == "conclude" AND round >= 3 AND critical topics covered
+   - REPEAT until: next_action == "conclude" AND round >= min_rounds AND critical topics covered
 
 2. PHASE 4 of skill: Completion
    - Update session status to "completed"
@@ -284,7 +224,7 @@ Extract REQUIRED_TOPICS list and track coverage status.
 - **Minimum 3 rounds** - do NOT conclude before round 3
 - **Maximum 20 rounds** - force conclude if reached
 
-**CRITICAL REMINDERS (v4.4):**
+**ADDITIONAL REMINDERS:**
 
 - **Store participant responses**: After Step 3.2, keep responses in `participant_responses` array
 - **Write session file per-round**: After Step 3.3, IMMEDIATELY write to session file using Write/Edit tool

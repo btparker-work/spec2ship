@@ -1,10 +1,10 @@
-# Roundtable Components (v4)
+# Roundtable Components
 
-This document describes how Commands, Agents, and Skills work together in the Roundtable v4 system.
+This document describes how Commands, Agents, and Skills work together in the Roundtable system.
 
 ## Component Overview
 
-> **Key Constraint (v4)**: Claude Code subagents cannot spawn other subagents.
+> **Key Constraint**: Claude Code subagents cannot spawn other subagents.
 > Solution: Orchestration logic is **inline in start.md**, not a separate agent.
 
 ```
@@ -250,4 +250,4 @@ Hardcoded fallbacks
 
 ---
 *See [flow.md](./flow.md) for sequence diagrams*
-*Part of Spec2Ship Roundtable v4 documentation*
+*Part of Spec2Ship Roundtable documentation*

@@ -1,4 +1,4 @@
-# Roundtable v4.4.1
+# Roundtable
 
 The Roundtable is Spec2Ship's multi-agent discussion system for collaborative decision-making.
 
@@ -13,9 +13,9 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 - **Escalation Triggers**: Human-in-the-loop when needed
 - **Session Persistence**: Resume interrupted discussions
 - **Parallel Execution**: Blind voting to prevent sycophancy
-- **Inline Orchestration**: Loop logic in command (v4 - Claude Code compliant)
-- **Agenda Tracking** (v4.2): Required topics for specs/design workflows
-- **Per-Round Persistence** (v4.4.1): Session file written after each round
+- **Inline Orchestration**: Loop logic in command (Claude Code compliant)
+- **Agenda Tracking**: Required topics for specs/design workflows
+- **Per-Round Persistence**: Session file written after each round
 
 ## Flags
 
@@ -65,7 +65,7 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 │ PHASE 2: Discussion Loop (INLINE)                               │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │ For each round:                                             │ │
-│ │ 0. Display agenda status (v4.4.1)                           │ │
+│ │ 0. Display agenda status                                     │ │
 │ │ 1. Task(facilitator) → generate question                    │ │
 │ │ 2. Task(participants) → parallel responses (blind voting)   │ │
 │ │    → Store responses for verbose mode                       │ │
@@ -107,7 +107,6 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 - [Mitigations](./research/mitigations.md) - How we address limitations
 
 ### Examples
-- [Simple Brainstorm](./examples/simple-brainstorm.md)
 - [Specs Workflow](./examples/specs-workflow.md)
 - [Tech Decision](./examples/tech-decision.md)
 
@@ -131,4 +130,4 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 | `/s2s:roundtable:list` | View all sessions |
 
 ---
-*Part of Spec2Ship Roundtable v4 - AI-assisted software development*
+*Part of Spec2Ship - AI-assisted software development*

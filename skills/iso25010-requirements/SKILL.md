@@ -40,16 +40,81 @@ ISO 25010 defines a product quality model with 8 characteristics and 31 sub-char
 | **Maintainability** | Modularity, Reusability, Analysability, Modifiability, Testability | Can it be maintained? |
 | **Portability** | Adaptability, Installability, Replaceability | Can it run in different environments? |
 
-## Requirement ID Conventions
+## Artifact ID Schema (S2S Canonical)
+
+**These IDs are immutable across roundtable rounds and output formats.**
+
+### Specs Workflow (Requirements)
+
+| Prefix | Description | Example |
+|--------|-------------|---------|
+| `REQ-{NNN}` | Generic requirement | REQ-001 |
+| `FR-{AREA}-{NNN}` | Functional requirement (with area) | FR-AUTH-001 |
+| `NFR-{QUAL}-{NNN}` | Non-functional requirement | NFR-PERF-001 |
+| `BR-{NNN}` | Business rule | BR-001 |
+| `EX-{NNN}` | Exclusion (out-of-scope) | EX-001 |
+
+### Design Workflow (Architecture)
+
+| Prefix | Description | Example |
+|--------|-------------|---------|
+| `ARCH-{NNN}` | Architecture decision | ARCH-001 |
+| `COMP-{NNN}` | Component definition | COMP-001 |
+
+### Brainstorm Workflow (Ideas)
+
+| Prefix | Description | Example |
+|--------|-------------|---------|
+| `IDEA-{NNN}` | Idea from dreamer phase | IDEA-001 |
+| `RISK-{NNN}` | Risk from critic phase | RISK-001 |
+| `MIT-{NNN}` | Mitigation for risk | MIT-001 |
+
+### Cross-Workflow (Shared)
+
+| Prefix | Description | Example |
+|--------|-------------|---------|
+| `OQ-{NNN}` | Open question | OQ-001 |
+| `CONF-{NNN}` | Conflict between participants | CONF-001 |
+| `UC-{NNN}` | Use case / user workflow | UC-001 |
+| `CN-{NNN}` | Technical/business constraint | CN-001 |
+| `AS-{NNN}` | Assumption to validate | AS-001 |
+
+**Area codes for FR-** (functional):
+- AUTH: Authentication/Authorization
+- USER: User management
+- DATA: Data handling
+- API: API/Integration
+- UI: User interface
+- NOTIF: Notifications
+- REPORT: Reporting
+
+**Quality codes for NFR-** (non-functional):
+- PERF: Performance Efficiency
+- REL: Reliability
+- SEC: Security
+- MAINT: Maintainability
+- USE: Usability
+- COMPAT: Compatibility
+
+**Mapping to Output Formats**:
+
+| Internal ID | SRS Section | Volere | Checklist |
+|-------------|-------------|--------|-----------|
+| FR-AUTH-001 | 3.1.1 | FR-1 | ☐ Feature |
+| NFR-PERF-001 | 4.1 | NFR-1 | ☐ Quality |
+| EX-001 | 5.x | Excluded | (omitted) |
 
 ```
-FR-{AREA}-{NUMBER}    Functional Requirement
-NFR-{QUALITY}-{NUMBER} Non-Functional Requirement
-
 Examples:
-FR-AUTH-001          Authentication functional requirement
-NFR-PERF-001         Performance requirement
-NFR-SEC-001          Security requirement
+FR-AUTH-001          Login with email/password
+FR-USER-002          View user profile
+NFR-PERF-001         Response time < 2s
+NFR-SEC-001          Data encryption at rest
+BR-001               Maximum 5 login attempts
+UC-001               New user registration flow
+EX-001               Mobile app (future phase)
+CN-001               Must use existing PostgreSQL
+AS-001               Users have stable internet
 ```
 
 ## Requirement Template

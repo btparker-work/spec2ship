@@ -90,4 +90,4 @@ This document defines the terminology used in s2s Roundtable discussions.
 | `summary` | Discussion summary | Brainstorm, general |
 
 ---
-*This glossary is part of Spec2Ship Roundtable v4 documentation.*
+*This glossary is part of Spec2Ship Roundtable documentation.*

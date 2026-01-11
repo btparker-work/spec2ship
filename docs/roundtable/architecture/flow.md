@@ -108,8 +108,8 @@ Previous architecture (v3) used a separate orchestrator agent:
 This fails because **subagents cannot spawn other subagents** in Claude Code.
 
 ```
-✅ v4 (WORKS): start.md contains loop → Task(facilitator)
-                                      → Task(participants)
+✅ (WORKS): start.md contains loop → Task(facilitator)
+                                   → Task(participants)
 ```
 
 The **main agent** (executing the command) CAN call Task() multiple times.
@@ -329,4 +329,4 @@ This isolation ensures:
 
 ---
 *See [components.md](./components.md) for detailed component documentation*
-*Part of Spec2Ship Roundtable v4 documentation*
+*Part of Spec2Ship Roundtable documentation*

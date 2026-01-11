@@ -1,0 +1,504 @@
+# Session File Schema
+
+Complete YAML schema for roundtable session files and folder structure.
+
+## File Structure
+
+```
+.s2s/sessions/
+├── {session-id}.yaml              # Session index
+└── {session-id}/                  # Session folder
+    ├── context-snapshot.yaml      # Immutable project context
+    ├── config-snapshot.yaml       # Immutable config
+    ├── agenda.yaml                # Workflow agenda with DoD
+    │
+    ├── REQ-001.yaml               # Artifacts (always created)
+    ├── REQ-002.yaml
+    ├── CONF-001.yaml
+    ├── OQ-001.yaml
+    │
+    └── rounds/                    # Verbose dumps (only with --verbose)
+        ├── 001-01-facilitator-question.yaml
+        ├── 001-02-product-manager.yaml
+        ├── 001-02-business-analyst.yaml
+        ├── 001-02-qa-lead.yaml
+        ├── 001-03-facilitator-synthesis.yaml
+        └── ...
+```
+
+---
+
+## Session File: `{session-id}.yaml`
+
+Slim index file with metadata, artifact registry, and round summaries.
+
+```yaml
+id: "20260107-requirements-elfgiftrush"
+topic: "Requirements definition for ElfGiftRush"
+workflow_type: "specs"  # specs | design | brainstorm
+strategy: "consensus-driven"
+status: "completed"  # active | paused | completed
+
+timing:
+  started: "2026-01-07T13:05:00Z"
+  completed: "2026-01-07T13:25:00Z"
+  duration_ms: 1200000
+
+# Artifact registry (content in files)
+artifacts:
+  requirements: ["REQ-001", "REQ-002", "REQ-003"]
+  business_rules: ["BR-001"]
+  conflicts: ["CONF-001"]
+  open_questions: ["OQ-001"]
+  exclusions: ["EX-001"]
+
+# Agenda status
+agenda:
+  - topic_id: "user-workflows"
+    status: "closed"
+    coverage: ["REQ-001", "REQ-002"]
+    closed_round: 2
+  - topic_id: "functional-requirements"
+    status: "closed"
+    coverage: ["REQ-003"]
+    closed_round: 3
+
+# Round summaries (details in rounds/ folder if verbose)
+rounds:
+  - number: 1
+    focus:
+      type: "agenda"  # agenda | conflict | open_question
+      topic_id: "user-workflows"
+    created: ["REQ-001", "REQ-002", "CONF-001"]
+    resolved: []
+    next: "continue"  # continue | conclude | escalate
+  - number: 2
+    focus:
+      type: "conflict"
+      topic_id: "CONF-001"
+    created: ["REQ-003"]
+    resolved: ["CONF-001"]
+    next: "conclude"
+
+# Aggregated metrics
+metrics:
+  rounds: 3
+  tasks: 15
+  tokens: 45000
+```
+
+---
+
+## Snapshot Files
+
+### context-snapshot.yaml
+
+Immutable copy of CONTEXT.md at session start.
+
+```yaml
+# Captured: 2026-01-07T13:05:00Z
+source: ".s2s/CONTEXT.md"
+
+project_name: "ElfGiftRush"
+description: "Holiday-themed arcade game"
+
+objectives:
+  - "Create fun casual game"
+  - "Simple mechanics"
+
+constraints:
+  - "Browser-based"
+  - "Desktop + mobile"
+
+scope:
+  in:
+    - "Single-player"
+    - "Score tracking"
+  out:
+    - "Multiplayer"
+    - "Backend"
+```
+
+### config-snapshot.yaml
+
+Immutable copy of roundtable config at session start.
+
+```yaml
+# Captured: 2026-01-07T13:05:00Z
+source: ".s2s/config.yaml"
+
+verbose: true
+interactive: false
+strategy: "consensus-driven"
+
+limits:
+  min_rounds: 3
+  max_rounds: 20
+
+escalation:
+  max_rounds_per_conflict: 3
+  confidence_below: 0.5
+  critical_keywords: ["security", "must-have", "blocking", "legal"]
+
+participants:
+  - "product-manager"
+  - "business-analyst"
+  - "qa-lead"
+```
+
+### agenda.yaml
+
+Workflow agenda with Definition of Done criteria.
+
+```yaml
+# Captured: 2026-01-07T13:05:00Z
+source: "skills/roundtable-execution/references/agenda-specs.md"
+workflow: "specs"
+
+topics:
+  - id: "user-workflows"
+    name: "User workflows"
+    critical: true
+    done_when:
+      criteria:
+        - "Entry/exit conditions defined"
+        - "Happy path documented"
+      min_requirements: 2
+    exploration: "Are there other workflows we should consider?"
+
+  - id: "functional-requirements"
+    name: "Functional requirements"
+    critical: true
+    done_when:
+      criteria:
+        - "Core mechanics defined"
+        - "Measurable criteria for each"
+      min_requirements: 3
+    exploration: "Are there other features we should consider?"
+```
+
+---
+
+## Artifact Files
+
+### REQ-*.yaml (Requirement)
+
+```yaml
+id: "REQ-001"
+type: "requirement"
+title: "Game Entry"
+status: "consensus"  # draft | consensus | conflict
+topic_id: "user-workflows"
+created_round: 1
+priority: "must"  # must | should | could | wont
+
+description: |
+  Zero-friction start with prominent Play button.
+
+acceptance:
+  - "One-tap start"
+  - "No registration"
+  - "<3 seconds to gameplay"
+
+related:
+  enables: ["REQ-002"]
+  depends: []
+```
+
+### BR-*.yaml (Business Rule)
+
+```yaml
+id: "BR-001"
+type: "business_rule"
+title: "60-Second Game Duration"
+status: "consensus"
+topic_id: "business-rules"
+created_round: 1
+
+description: |
+  Game duration is fixed at exactly 60 seconds.
+
+rationale: "Creates urgency without frustration for casual players."
+```
+
+### NFR-*.yaml (Non-Functional Requirement)
+
+```yaml
+id: "NFR-001"
+type: "nfr"
+title: "Frame Rate"
+status: "consensus"
+topic_id: "nfr-measurable"
+created_round: 3
+category: "performance"  # performance | reliability | security | usability
+
+target: "60 FPS"
+minimum: "30 FPS"
+measurement: "Browser DevTools performance panel"
+```
+
+### CONF-*.yaml (Conflict)
+
+```yaml
+id: "CONF-001"
+type: "conflict"
+title: "Mobile Input Method"
+status: "resolved"  # open | resolved | escalated
+topic_id: "functional-requirements"
+created_round: 1
+resolved_round: 2
+
+description: |
+  No agreement on touch control implementation.
+
+positions:
+  product-manager:
+    position: "Virtual joystick"
+    round: 1
+  qa-lead:
+    position: "Touch-drag with offset"
+    round: 1
+
+resolution:
+  method: "consensus"  # consensus | escalation | facilitator
+  decision: "Direct touch-drag with 40-60px offset"
+```
+
+### OQ-*.yaml (Open Question)
+
+```yaml
+id: "OQ-001"
+type: "open_question"
+title: "Pause Functionality"
+status: "deferred"  # pending | addressed | deferred
+topic_id: "user-workflows"
+created_round: 1
+raised_by: "qa-lead"
+
+question: |
+  Should the game have pause functionality?
+
+resolution:
+  status: "deferred"
+  reason: "Out of scope for MVP"
+  round: 3
+```
+
+### EX-*.yaml (Exclusion)
+
+```yaml
+id: "EX-001"
+type: "exclusion"
+title: "Multiplayer Mode"
+status: "confirmed"
+topic_id: "out-of-scope"
+created_round: 3
+
+description: |
+  Multiplayer/networking is explicitly out of scope.
+
+rationale: "MVP focus on single-player experience."
+future_phase: "v2.0"
+```
+
+---
+
+## Verbose Dump Files (rounds/ folder)
+
+Only created when `--verbose` flag is used.
+
+### Naming Convention
+
+```
+{round}-{phase}-{actor}.yaml
+
+Examples:
+001-01-facilitator-question.yaml
+001-02-product-manager.yaml
+001-02-business-analyst.yaml
+001-02-qa-lead.yaml
+001-03-facilitator-synthesis.yaml
+```
+
+- `{round}`: 3-digit round number (001, 002, ...)
+- `{phase}`: 2-digit phase (01=question, 02=responses, 03=synthesis)
+- `{actor}`: facilitator, product-manager, etc.
+
+### Facilitator Question Dump
+
+```yaml
+round: 1
+phase: 1
+actor: "facilitator"
+
+timing:
+  started: "2026-01-07T13:05:00Z"
+  completed: "2026-01-07T13:05:12Z"
+  duration_ms: 12345
+
+tokens:
+  input: 2500
+  output: 400
+
+prompt: |
+  You are the Roundtable Facilitator.
+
+  === SESSION STATE ===
+  Round: 1
+  Session folder: .s2s/sessions/20260107-requirements-elfgiftrush/
+
+  === ARTIFACT SUMMARY ===
+  (none yet - first round)
+
+  === AGENDA STATUS ===
+  [open] user-workflows (CRITICAL)
+  [open] functional-requirements (CRITICAL)
+
+  === YOUR TASK ===
+  1. Decide focus for this round
+  2. Select context files for participants
+  3. Generate question + exploration prompt
+
+response: |
+  action: "question"
+  decision:
+    focus_type: "agenda"
+    topic_id: "user-workflows"
+    rationale: "Starting with critical topic"
+  context_files:
+    - "context-snapshot.yaml"
+  question: "What are the primary user workflows?"
+  exploration: "Are there other workflows we should consider?"
+  participants: "all"
+
+result:
+  valid: true
+  warnings: []
+```
+
+### Participant Response Dump
+
+```yaml
+round: 1
+phase: 2
+actor: "product-manager"
+
+timing:
+  started: "2026-01-07T13:05:15Z"
+  completed: "2026-01-07T13:05:28Z"
+  duration_ms: 13123
+
+tokens:
+  input: 1800
+  output: 450
+
+prompt: |
+  You are the Product Manager in a roundtable discussion.
+
+  === CONTEXT FILES ===
+  Read these files (DO NOT read other session files):
+  - .s2s/sessions/20260107-.../context-snapshot.yaml
+
+  === QUESTION ===
+  What are the primary user workflows?
+
+  === EXPLORATION ===
+  Are there other workflows we should consider?
+
+response: |
+  position: "Four-phase workflow with zero-friction entry"
+  rationale:
+    - "Casual players expect instant start"
+    - "Holiday theme suggests fun"
+  confidence: 0.85
+  concerns:
+    - "Mobile controls responsiveness"
+  suggestions:
+    - "Onboarding hint on first play"
+
+result:
+  valid: true
+  warnings: []
+```
+
+### Facilitator Synthesis Dump
+
+```yaml
+round: 1
+phase: 3
+actor: "facilitator"
+
+timing:
+  started: "2026-01-07T13:06:00Z"
+  completed: "2026-01-07T13:06:25Z"
+  duration_ms: 25678
+
+tokens:
+  input: 3500
+  output: 800
+
+prompt: |
+  === ROUND 1 RESPONSES ===
+  **Product Manager** (0.85): Four-phase workflow...
+  **Business Analyst** (0.80): Same four phases...
+  **QA Lead** (0.85): Four-phase with testing focus...
+
+  === ARTIFACT SUMMARY ===
+  (none yet)
+
+  === YOUR TASK ===
+  Synthesize and propose artifacts.
+
+response: |
+  action: "synthesis"
+  synthesis: "Strong alignment on four-phase workflow..."
+  proposed_artifacts:
+    - type: "requirement"
+      title: "Game Entry"
+      status: "consensus"
+      description: "Zero-friction start"
+      acceptance:
+        - "One-tap start"
+    - type: "conflict"
+      title: "Mobile Input Method"
+      positions:
+        product-manager: "Virtual joystick"
+        qa-lead: "Touch-drag"
+  agenda_update:
+    topic_id: "user-workflows"
+    new_status: "partial"
+    coverage_added: ["Core workflow phases"]
+  next: "continue"
+
+result:
+  valid: true
+  warnings: []
+  artifacts_created: ["REQ-001", "CONF-001"]
+```
+
+---
+
+## Artifact Types by Workflow
+
+| Workflow | Artifact Types |
+|----------|---------------|
+| **specs** | REQ-*, BR-*, NFR-*, EX-*, CONF-*, OQ-* |
+| **design** | ARCH-*, COMP-*, CONF-*, OQ-* |
+| **brainstorm** | IDEA-*, RISK-*, MIT-*, OQ-* |
+
+---
+
+## Status Values
+
+| Entity | Valid Statuses |
+|--------|---------------|
+| Session | active, paused, completed |
+| Agenda topic | open, partial, closed |
+| Requirement | draft, consensus, conflict |
+| Conflict | open, resolved, escalated |
+| Open question | pending, addressed, deferred |
+| Exclusion | proposed, confirmed |
+
+---
+
+*Part of roundtable-execution skill*
