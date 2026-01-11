@@ -3,7 +3,7 @@ name: roundtable-business-analyst
 description: "Use this agent for business/domain perspective in roundtable discussions.
   Focuses on requirements clarity, use cases, domain rules. Receives YAML input, returns YAML output."
 model: inherit
-color: cyan
+color: purple
 tools: []
 ---
 

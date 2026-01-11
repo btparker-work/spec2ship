@@ -3,7 +3,7 @@ name: roundtable-oss-community-manager
 description: "Use this agent for open source community perspective in roundtable discussions.
   Focuses on contributor experience, governance, adoption. Receives YAML input, returns YAML output."
 model: inherit
-color: magenta
+color: cyan
 tools: []
 ---
 

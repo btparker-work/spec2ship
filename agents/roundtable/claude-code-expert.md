@@ -3,7 +3,7 @@ name: roundtable-claude-code-expert
 description: "Use this agent for Claude Code platform perspective in roundtable discussions.
   Focuses on plugin architecture, tool usage, best practices. Receives YAML input, returns YAML output."
 model: inherit
-color: yellow
+color: blue
 tools: []
 ---
 
