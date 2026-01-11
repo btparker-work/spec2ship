@@ -137,6 +137,22 @@ Standard participants for each workflow.
 - claude-code-expert
 - oss-community-manager
 
+### Workflow-Specific Behavior
+
+Participants adapt their contribution based on workflow type:
+
+| Participant | specs | design | brainstorm |
+|-------------|-------|--------|------------|
+| product-manager | Primary: user value | Advisory: UX impact | Champion ideas |
+| business-analyst | Primary: requirements | Validator: alignment | Grounding |
+| qa-lead | Primary: testability | Reviewer: quality | Risk spotter |
+| software-architect | Feasibility | Primary: structure | Evaluator |
+| technical-lead | Complexity | Primary: code | Practical |
+| devops-engineer | Early warning | Primary: ops | Operations lens |
+| documentation-specialist | Clarity | Planning | Capture |
+| claude-code-expert | Platform | Primary: plugin | Enabler |
+| oss-community-manager | Contributor | Extension | Adoption |
+
 ---
 
 ## Strategies
