@@ -209,6 +209,84 @@ references:
   - "arc42 Section 5: Building Block View"
 ```
 
+### Example: Brainstorm Workflow (Disney Critic Phase)
+
+```yaml
+participant: "software-architect"
+
+position: |
+  The proposed real-time sync architecture has fundamental scalability issues.
+  WebSocket connections per user won't scale beyond 10K concurrent users.
+
+rationale:
+  - "Each WebSocket requires persistent server resources"
+  - "Current proposal lacks horizontal scaling strategy"
+  - "No mention of connection recovery or state reconciliation"
+
+trade_offs:
+  optimizing_for: "Identifying architectural risks early"
+  accepting_as_cost: "May slow down ideation phase"
+  risks:
+    - "Team may commit to unscalable approach"
+
+concerns:
+  - "How do we handle server restarts with 10K open connections?"
+  - "What happens when a user switches networks mid-session?"
+  - "No mention of message ordering guarantees"
+
+suggestions:
+  - "Consider Server-Sent Events for read-heavy scenarios"
+  - "Evaluate Redis pub/sub for horizontal WebSocket scaling"
+  - "Prototype with 1K connections before committing"
+
+confidence: 0.75
+
+references:
+  - "arc42 Section 9: Design Decisions"
+  - "CAP theorem implications"
+```
+
+### Example: With Facilitator Directive (Debate - Con Position)
+
+```yaml
+# Input includes: facilitator_directive: "Argue AGAINST the proposed microservices approach"
+
+participant: "software-architect"
+
+position: |
+  A microservices architecture is premature for this team and product stage.
+  The operational complexity will slow us down, not speed us up.
+
+rationale:
+  - "Team has no Kubernetes experience - 3-6 month learning curve"
+  - "We have 2 developers - microservices need dedicated DevOps"
+  - "Network debugging is 10x harder than monolith debugging"
+  - "Every service boundary is a potential failure point"
+
+trade_offs:
+  optimizing_for: "Delivery speed and team capability"
+  accepting_as_cost: "Future refactoring when we actually need to scale"
+  risks:
+    - "Monolith may become harder to split later"
+    - "May limit independent deployments"
+
+concerns:
+  - "Who will maintain the service mesh?"
+  - "How do we handle distributed transactions?"
+  - "What's our strategy for data consistency across services?"
+
+suggestions:
+  - "Start with modular monolith - clear boundaries, single deployment"
+  - "Extract services only when we have evidence of need"
+  - "Invest in good module boundaries now, easier split later"
+
+confidence: 0.80
+
+references:
+  - "Monolith First - Martin Fowler"
+  - "Don't start with microservices - Sam Newman"
+```
+
 ---
 
 ## Critical Stance (MANDATORY)

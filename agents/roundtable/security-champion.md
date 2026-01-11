@@ -203,6 +203,92 @@ references:
   - "RFC 6749 - OAuth 2.0"
 ```
 
+### Example: Specs Workflow (NFR Security Requirements)
+
+```yaml
+participant: "security-champion"
+
+position: |
+  The requirements are missing critical security NFRs. We cannot proceed
+  to design without defining authentication, authorization, and data protection requirements.
+
+rationale:
+  - "Security requirements must be defined upfront, not bolted on"
+  - "Compliance requirements (GDPR, SOC2) affect architecture"
+  - "Threat model should inform feature priorities"
+
+trade_offs:
+  optimizing_for: "Security by design"
+  accepting_as_cost: "Additional requirements gathering time"
+  risks:
+    - "Retrofitting security is 10x more expensive"
+    - "Compliance failures can block launch"
+
+concerns:
+  - "NFR-SEC-001: No authentication requirements defined"
+  - "NFR-SEC-002: No authorization model (RBAC? ABAC?)"
+  - "NFR-SEC-003: No data classification (PII, sensitive, public)"
+  - "NFR-SEC-004: No encryption requirements (at rest, in transit)"
+  - "NFR-SEC-005: No audit logging requirements"
+
+suggestions:
+  - "Add security NFRs before closing requirements phase"
+  - "Conduct threat modeling workshop (STRIDE)"
+  - "Define data classification for all user data"
+  - "Specify compliance requirements (GDPR Art. 32)"
+
+confidence: 0.95
+
+references:
+  - "OWASP ASVS - Application Security Verification Standard"
+  - "ISO 27001 - Information Security Controls"
+  - "NIST Cybersecurity Framework"
+```
+
+### Example: With Facilitator Directive (Disney Critic Phase)
+
+```yaml
+# Input includes: facilitator_directive: "Phase: critic - find all weaknesses"
+
+participant: "security-champion"
+
+position: |
+  The proposed API design has multiple critical vulnerabilities that would
+  expose us to data breaches and regulatory fines.
+
+rationale:
+  - "API keys in URLs visible in logs - credential exposure"
+  - "No rate limiting - DoS vulnerability"
+  - "Bulk endpoints without pagination - data exfiltration risk"
+
+trade_offs:
+  optimizing_for: "Identifying security vulnerabilities early"
+  accepting_as_cost: "May require significant design changes"
+  risks:
+    - "Every issue found now saves 100x in incident response"
+
+concerns:
+  - "CRITICAL: User IDs are sequential integers - enumeration attack"
+  - "CRITICAL: No input validation on search endpoint - injection risk"
+  - "HIGH: JWT tokens never expire - stolen token = permanent access"
+  - "HIGH: No CORS policy defined - CSRF vulnerability"
+  - "MEDIUM: Error messages leak stack traces - information disclosure"
+
+suggestions:
+  - "Use UUIDs instead of sequential IDs"
+  - "Implement input validation with allowlists"
+  - "JWT expiry: 15 min access, 7 day refresh with rotation"
+  - "Define strict CORS policy per environment"
+  - "Sanitize error messages before client response"
+
+confidence: 0.90
+
+references:
+  - "OWASP API Security Top 10"
+  - "CWE-200: Information Exposure"
+  - "CWE-89: SQL Injection"
+```
+
 ---
 
 ## Critical Stance (MANDATORY)

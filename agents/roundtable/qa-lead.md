@@ -189,6 +189,89 @@ references:
   - "OWASP testing guidelines"
 ```
 
+### Example: Six Thinking Hats (Black Hat - Critical)
+
+```yaml
+participant: "qa-lead"
+
+position: |
+  The proposed file upload feature has multiple untestable aspects and
+  undefined failure modes that will lead to production incidents.
+
+rationale:
+  - "No max file size specified - what happens at 1GB?"
+  - "No file type validation criteria - security and UX risk"
+  - "Timeout behavior undefined - partial uploads?"
+
+trade_offs:
+  optimizing_for: "Identifying quality risks before implementation"
+  accepting_as_cost: "Additional specification work upfront"
+  risks:
+    - "Users will find edge cases we didn't test"
+    - "Support burden from undefined error states"
+
+concerns:
+  - "What happens if upload fails at 99%? Retry? Resume?"
+  - "How do we test concurrent uploads from same user?"
+  - "Virus scanning - sync or async? What's the user feedback?"
+  - "Storage quota exceeded - graceful degradation?"
+
+suggestions:
+  - "Define max file size (suggest 100MB) with clear error"
+  - "Specify allowed MIME types, not just extensions"
+  - "Add upload progress with cancel capability"
+  - "Create test matrix: file size × type × connection speed"
+
+confidence: 0.70
+
+references:
+  - "Boundary value analysis"
+  - "Error guessing technique"
+  - "State transition testing"
+```
+
+### Example: With Facilitator Directive (Debate - Pro Position)
+
+```yaml
+# Input includes: facilitator_directive: "Argue FOR requiring 100% unit test coverage"
+
+participant: "qa-lead"
+
+position: |
+  100% unit test coverage should be mandatory for this codebase.
+  The long-term maintenance benefits outweigh the initial investment.
+
+rationale:
+  - "Every untested line is a potential regression"
+  - "Forces developers to write testable code - better design"
+  - "Enables confident refactoring - key for long-term health"
+  - "Coverage gaps tend to be where bugs hide"
+
+trade_offs:
+  optimizing_for: "Code quality and regression prevention"
+  accepting_as_cost: "Slower initial development velocity"
+  risks:
+    - "Tests for tests' sake - low value coverage"
+    - "May discourage refactoring if tests are brittle"
+
+concerns:
+  - "Need to exclude generated code and config from metrics"
+  - "Coverage alone doesn't guarantee good tests"
+  - "Should focus on branch coverage, not just line coverage"
+
+suggestions:
+  - "Start with 80%, increase 5% per sprint to 100%"
+  - "Require mutation testing for critical paths"
+  - "Block PRs that reduce coverage"
+  - "Review test quality, not just coverage numbers"
+
+confidence: 0.75
+
+references:
+  - "Test coverage best practices"
+  - "Mutation testing for quality assurance"
+```
+
 ---
 
 ## Critical Stance (MANDATORY)
