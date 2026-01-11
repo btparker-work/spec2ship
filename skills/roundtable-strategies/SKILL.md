@@ -55,6 +55,38 @@ Topic: "Creative approach for new authentication feature"
 | **consensus-driven** | Fast decision-making | Converging rounds | parallel |
 | **six-hats** | Comprehensive analysis | 6 thinking modes | sequential |
 
+---
+
+## Workflow-Specific Defaults
+
+Each workflow has a recommended default strategy and participant set:
+
+| Workflow | Default Strategy | Default Participants | Rationale |
+|----------|------------------|---------------------|-----------|
+| **specs** | consensus-driven | PM, UX-Researcher, BA, QA | Requirements need broad agreement, not debate |
+| **design** | debate | Architect, Security, TechLead, DevOps | Architecture trade-offs benefit from Pro/Con analysis |
+| **brainstorm** | disney (forced) | Variable (--participants) | Creative exploration requires Dreamer→Realist→Critic |
+
+### Artifact Types by Workflow
+
+| Workflow | Primary Artifacts | Secondary Artifacts |
+|----------|-------------------|---------------------|
+| **specs** | REQ-*, BR-*, NFR-* | OQ-*, CONF-*, EX-* |
+| **design** | ARCH-*, COMP-*, INT-* | ADR-*, OQ-*, CONF-* |
+| **brainstorm** | IDEA-*, RISK-*, MIT-* | OQ-* |
+
+### Strategy-Workflow Compatibility
+
+| Strategy | specs | design | brainstorm |
+|----------|-------|--------|------------|
+| **standard** | ✓ | ✓ | - |
+| **consensus-driven** | ✓ (default) | ✓ | - |
+| **debate** | ✓ | ✓ (default) | - |
+| **disney** | - | - | ✓ (forced) |
+| **six-hats** | ✓ | ✓ | - |
+
+**Note**: Brainstorm workflow ALWAYS uses disney strategy regardless of --strategy flag.
+
 ## Strategy Selection Guide
 
 ### Use `standard` when:

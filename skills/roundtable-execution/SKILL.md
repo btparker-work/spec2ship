@@ -17,6 +17,59 @@ This skill provides step-by-step instructions for executing a multi-agent roundt
 - Executing `/s2s:design` architecture design
 - Executing `/s2s:brainstorm` ideation sessions
 
+---
+
+## Workflow Context
+
+Each workflow has specific goals, participants, artifacts, and outputs:
+
+### specs Workflow
+
+| Aspect | Value |
+|--------|-------|
+| **Goal** | Define WHAT to build - requirements, constraints, scope |
+| **Default Participants** | product-manager, ux-researcher, business-analyst, qa-lead |
+| **Default Strategy** | consensus-driven |
+| **Primary Artifacts** | REQ-* (requirements), BR-* (business rules), NFR-* (non-functional) |
+| **Secondary Artifacts** | OQ-* (open questions), CONF-* (conflicts), EX-* (exclusions) |
+| **Output** | `docs/specifications/requirements.md` |
+| **Agenda** | `references/agenda-specs.md` |
+
+### design Workflow
+
+| Aspect | Value |
+|--------|-------|
+| **Goal** | Define HOW to build - architecture, components, interfaces |
+| **Default Participants** | software-architect, security-champion, technical-lead, devops-engineer |
+| **Default Strategy** | debate |
+| **Primary Artifacts** | ARCH-* (decisions), COMP-* (components), INT-* (interfaces) |
+| **Secondary Artifacts** | ADR-* (decision records), OQ-*, CONF-* |
+| **Output** | `docs/architecture/` + ADR files |
+| **Agenda** | `references/agenda-design.md` |
+
+### brainstorm Workflow
+
+| Aspect | Value |
+|--------|-------|
+| **Goal** | Explore possibilities - ideas, risks, mitigations |
+| **Default Participants** | Variable (specified via --participants flag) |
+| **Default Strategy** | disney (FORCED - cannot be changed) |
+| **Primary Artifacts** | IDEA-* (ideas), RISK-* (risks), MIT-* (mitigations) |
+| **Secondary Artifacts** | OQ-* |
+| **Output** | `.s2s/sessions/{session-id}-summary.md` |
+| **Agenda** | `references/agenda-brainstorm.md` (phase-based) |
+
+### Workflow Differences Summary
+
+| Aspect | specs | design | brainstorm |
+|--------|-------|--------|------------|
+| Focus | User needs, requirements | Technical architecture | Creative exploration |
+| Tone | Collaborative agreement | Adversarial evaluation | No criticism (dreamer) → Full critique (critic) |
+| Participants | Business + QA focus | Technical focus | Flexible |
+| Strategy | Consensus | Debate | Disney phases |
+
+---
+
 ## Key Architecture
 
 - **Session file**: `.s2s/sessions/{session-id}.yaml` - Slim index
@@ -599,6 +652,8 @@ result:
 - `references/session-schema.md` - Full YAML schema
 - `references/agenda-specs.md` - Specs workflow agenda with DoD
 - `references/agenda-design.md` - Design workflow agenda with DoD
+- `references/agenda-brainstorm.md` - Brainstorm workflow (phase-based)
+- `references/error-handling.md` - Error recovery patterns
 
 ---
 
