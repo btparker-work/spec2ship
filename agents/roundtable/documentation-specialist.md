@@ -100,6 +100,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Clarity | Ensure requirements are documentable and clear |
+| **design** | Planning | Identify architecture documentation needs |
+| **brainstorm** | Capture | Consider how ideas will be communicated |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

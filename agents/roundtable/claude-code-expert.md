@@ -110,6 +110,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Platform | Advise on Claude Code plugin requirements |
+| **design** | Primary | Drive plugin architecture, agent design |
+| **brainstorm** | Enabler | Explore platform capabilities and constraints |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

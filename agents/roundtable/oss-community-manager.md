@@ -100,6 +100,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Contributor | Ensure requirements support community contribution |
+| **design** | Extension | Advocate for extension points and APIs |
+| **brainstorm** | Adoption | Consider community adoption implications |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

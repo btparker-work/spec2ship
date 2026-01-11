@@ -102,6 +102,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Primary | Testability, acceptance criteria, edge cases |
+| **design** | Reviewer | Evaluate architecture for testability and quality |
+| **brainstorm** | Risk spotter | Identify quality risks in proposed ideas |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

@@ -100,6 +100,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Primary | Requirements clarity, use cases, domain rules |
+| **design** | Validator | Ensure technical decisions align with requirements |
+| **brainstorm** | Grounding | Connect ideas to business context and constraints |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

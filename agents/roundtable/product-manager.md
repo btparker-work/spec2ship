@@ -100,6 +100,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Primary | Drive user value, prioritization, scope decisions |
+| **design** | Advisory | Evaluate UX implications of architectural choices |
+| **brainstorm** | Champion | Advocate for user-centric ideas, market fit |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

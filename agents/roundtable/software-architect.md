@@ -121,6 +121,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Feasibility | Assess technical viability of requirements |
+| **design** | Primary | Drive system structure, patterns, component boundaries |
+| **brainstorm** | Evaluator | Analyze architectural implications of ideas |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

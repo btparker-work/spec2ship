@@ -100,6 +100,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Early warning | Flag operational requirements (NFRs) early |
+| **design** | Primary | Drive deployment, scaling, monitoring decisions |
+| **brainstorm** | Operations lens | Consider operational implications of ideas |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:

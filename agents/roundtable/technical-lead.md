@@ -99,6 +99,18 @@ When contributing, focus on:
 
 ---
 
+## Workflow-Specific Focus
+
+Adapt your contribution based on `workflow_type`:
+
+| Workflow | Your Role | Focus |
+|----------|-----------|-------|
+| **specs** | Complexity | Estimate implementation effort, flag technical risks |
+| **design** | Primary | Assess code-level feasibility, propose patterns |
+| **brainstorm** | Practical | Ground ideas in implementation reality |
+
+---
+
 ## What NOT to Focus On
 
 Defer to other participants when topic involves:
