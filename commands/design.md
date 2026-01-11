@@ -504,6 +504,17 @@ agent_state:
 
 For each of: software-architect, security-champion, technical-lead, devops-engineer
 
+**CRITICAL - Context Passing Rules**:
+
+Participants have `tools: []` - they CANNOT read files. They base ALL their reasoning on the context you provide. **YOU MUST**:
+
+1. **Copy `participant_context.shared` VERBATIM** - do NOT summarize, paraphrase, or truncate
+2. **Include ALL fields of each artifact** - not just id/title/status, but description, options, rationale, etc.
+3. **Preserve full text** - if facilitator provided a 10-line description, pass all 10 lines
+4. **Never omit fields** - if an artifact has `consequences: {...}`, include the full object
+
+**If you pass incomplete context, participants will INFER (hallucinate) information, degrading quality.**
+
 **Check for resume capability:**
 
 For each participant, read `agent_state.participants.{participant-id}` from session file.
@@ -534,27 +545,40 @@ context_update:
 
 # CRITICAL: Participants have tools: [] - they CANNOT read files
 # Full context MUST be provided inline even in resume mode
+# YOU MUST COPY VERBATIM from participant_context.shared - NO summarizing
 context:
+  # COPY EXACTLY from participant_context.shared.project_summary
   project_summary: |
-    {from participant_context.shared.project_summary}
+    {COPY VERBATIM from participant_context.shared.project_summary}
 
+  # COPY ALL artifacts with ALL their fields - do NOT truncate
   relevant_artifacts:
+    # For EACH artifact in participant_context.shared.relevant_artifacts:
+    # Copy ALL fields: id, title, status, description, options, rationale, consequences, etc.
     - id: "ARCH-001"
-      title: "..."
-      status: "consensus"
-      description: "..."
-      # {from participant_context.shared.relevant_artifacts - FULL content}
+      title: "{copy full title}"
+      status: "{copy status}"
+      description: |
+        {copy FULL description - do NOT summarize}
+      options: [...]  # copy full array
+      rationale: |
+        {copy FULL rationale}
+      # ... copy ALL other fields present in the artifact
 
+  # COPY ALL conflicts with FULL positions
   open_conflicts:
-    # {from participant_context.shared.open_conflicts - FULL content}
+    # Copy from participant_context.shared.open_conflicts with ALL fields
 
+  # COPY ALL open questions with FULL descriptions
   open_questions:
-    # {from participant_context.shared.open_questions - FULL content}
+    # Copy from participant_context.shared.open_questions with ALL fields
 
+  # COPY ALL recent rounds with FULL synthesis text
   recent_rounds:
     - round: 1
-      synthesis: "..."
-    # {from participant_context.shared.recent_rounds}
+      synthesis: |
+        {copy FULL synthesis text - do NOT truncate}
+    # Copy from participant_context.shared.recent_rounds
 ```
 
 **ELSE** (fresh invocation):
@@ -580,27 +604,40 @@ exploration: "{facilitator's exploration prompt}"
 #   {from participant_context.overrides[participant-id].facilitator_directive}
 
 # ALL context inline (participants have NO tools)
+# YOU MUST COPY VERBATIM from participant_context.shared - NO summarizing
 context:
+  # COPY EXACTLY from participant_context.shared.project_summary
   project_summary: |
-    {from participant_context.shared.project_summary}
+    {COPY VERBATIM from participant_context.shared.project_summary}
 
+  # COPY ALL artifacts with ALL their fields - do NOT truncate
   relevant_artifacts:
+    # For EACH artifact in participant_context.shared.relevant_artifacts:
+    # Copy ALL fields: id, title, status, description, options, rationale, consequences, etc.
     - id: "ARCH-001"
-      title: "..."
-      status: "consensus"
-      description: "..."
-      # {from participant_context.shared.relevant_artifacts}
+      title: "{copy full title}"
+      status: "{copy status}"
+      description: |
+        {copy FULL description - do NOT summarize}
+      options: [...]  # copy full array
+      rationale: |
+        {copy FULL rationale}
+      # ... copy ALL other fields present in the artifact
 
+  # COPY ALL conflicts with FULL positions
   open_conflicts:
-    # {from participant_context.shared.open_conflicts}
+    # Copy from participant_context.shared.open_conflicts with ALL fields
 
+  # COPY ALL open questions with FULL descriptions
   open_questions:
-    # {from participant_context.shared.open_questions}
+    # Copy from participant_context.shared.open_questions with ALL fields
 
+  # COPY ALL recent rounds with FULL synthesis text
   recent_rounds:
     - round: 1
-      synthesis: "..."
-    # {from participant_context.shared.recent_rounds}
+      synthesis: |
+        {copy FULL synthesis text - do NOT truncate}
+    # Copy from participant_context.shared.recent_rounds
 ```
 
 Each participant will return:

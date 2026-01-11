@@ -180,24 +180,39 @@ participant_context:
 
 ### Participant Context Guidelines
 
-**CRITICAL**: Participants have NO tools. They cannot read files. You MUST provide all relevant context inline.
+**CRITICAL**: Participants have NO tools. They cannot read files. They base ALL reasoning on the context you provide. Insufficient context = poor quality responses.
 
-1. **project_summary**: Keep concise (3-5 lines). Include only facts relevant to current topic.
+1. **project_summary**: **MUST include all facts needed to make informed decisions**. Include:
+   - Project name, description, domain
+   - Tech stack and constraints
+   - Key objectives relevant to current discussion
+   - **DO NOT summarize to the point of losing decision-relevant information**
 
-2. **relevant_artifacts**: Include ONLY artifacts related to current topic/question. Full content, not just IDs.
+2. **relevant_artifacts**: **MUST include COMPLETE artifact content**, not summaries:
+   - Include ALL fields of each artifact (id, title, status, description, acceptance criteria, priority, etc.)
+   - Include artifacts directly related to current topic
+   - Include artifacts referenced by other artifacts in scope
+   - **NEVER truncate descriptions or acceptance criteria**
+   - **If an artifact is mentioned, include its FULL content**
 
-3. **open_conflicts**: Include if the conflict is relevant to the question being asked.
+3. **open_conflicts**: Include with FULL positions and rationale if:
+   - The conflict is relevant to the question being asked
+   - Participants need to understand the disagreement to contribute meaningfully
 
-4. **open_questions**: Include if they might inform the discussion.
+4. **open_questions**: Include with FULL description if they might inform the discussion.
 
-5. **recent_rounds**: Include synthesis only (not full responses). Last 2-3 rounds max.
+5. **recent_rounds**: Include FULL synthesis text (not truncated). Last 2-3 rounds max. Participants need this to understand discussion progression.
 
 6. **overrides**: Use for strategies that require different perspectives:
    - **debate**: Assign `facilitator_directive` with position and guidance
    - **six-hats**: Assign thinking mode via `facilitator_directive`
    - **standard/consensus-driven**: Usually no overrides needed
 
-7. **Context completeness check**: Before finalizing `participant_context`, verify you have the data needed. If something critical seems missing (e.g., round > 1 but session_state.artifacts is empty, or agenda references prior decisions that aren't provided), include a brief note in your `decision.rationale` like: "Note: round 2 but no prior artifacts in session_state - proceeding with available context."
+7. **Context completeness check**: Before finalizing `participant_context`:
+   - Verify all referenced artifacts are included with FULL content
+   - Verify project constraints relevant to the question are included
+   - If something critical seems missing (e.g., round > 1 but session_state.artifacts is empty), include a note in your `decision.rationale`
+   - **Ask yourself: "Does a participant have enough information to argue their position?"**
 
 ---
 
