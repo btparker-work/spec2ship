@@ -8,8 +8,7 @@ This document provides a high-level overview of Spec2Ship's architecture for con
 spec2ship/
 ├── .claude/                  # Claude context and guidelines
 │   ├── CLAUDE.md             # Main context file
-│   ├── guidelines/           # Conventions and patterns
-│   └── decisions/            # Architecture decisions (SAD-*)
+│   └── guidelines/           # Conventions and patterns
 ├── .claude-plugin/           # Plugin manifest
 ├── commands/                 # Slash commands (/s2s:*)
 │   ├── init.md

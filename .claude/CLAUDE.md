@@ -9,13 +9,11 @@ spec2ship/
 ├── .claude/                  # Claude configuration (this folder)
 │   ├── CLAUDE.md             # Main context (you're reading it)
 │   ├── s2s-development.md    # Development patterns
-│   ├── guidelines/           # Standards and conventions
-│   │   ├── glossary.md       # Terminology definitions
-│   │   ├── naming-conventions.md
-│   │   ├── state-machine.md  # State transitions
-│   │   └── llm-patterns.md   # Instruction patterns
-│   └── decisions/            # Architecture decisions (MADR format)
-│       └── SAD-006-*.md      # SAD-001 to SAD-005 inline below
+│   └── guidelines/           # Standards and conventions
+│       ├── glossary.md       # Terminology definitions
+│       ├── naming-conventions.md
+│       ├── state-machine.md  # State transitions
+│       └── llm-patterns.md   # Instruction patterns
 ├── .claude-plugin/           # Plugin manifest
 ├── commands/                 # Slash commands (/s2s:*)
 │   ├── init.md, brainstorm.md, specs.md, design.md, plan.md
@@ -165,6 +163,4 @@ For detailed guidelines, see:
 | `@.claude/guidelines/naming-conventions.md` | ID formats, file paths, command structure |
 | `@.claude/guidelines/state-machine.md` | Session, artifact, topic lifecycles |
 | `@.claude/guidelines/llm-patterns.md` | Instruction patterns for commands |
-| `@.claude/decisions/` | Architecture decisions SAD-006+ (MADR format) |
 
-**Note**: SAD-001 through SAD-005 remain inline above for quick reference. New decisions go in `decisions/` folder.
