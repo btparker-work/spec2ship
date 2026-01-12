@@ -44,18 +44,10 @@ temp/
 
 # S2S local state (not part of plugin distribution)
 # When using s2s to develop s2s itself, these are generated files
-.s2s/config.yaml
-.s2s/state.yaml
-.s2s/CONTEXT.md
-.s2s/sessions/
-.s2s/plans/
+# The entire .s2s/ folder is local development state
+.s2s/
 
-# S2S-generated docs (not plugin documentation)
-# Plugin docs are in: docs/extending/, docs/roundtable/
-docs/architecture/
-docs/specifications/
-docs/decisions/
-docs/guides/
+# All docs/ content is public - no exclusions
 
 # Local archive (development notes, test suites, etc.)
 .archive/

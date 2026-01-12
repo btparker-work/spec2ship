@@ -1,27 +1,20 @@
-# Roundtable Flow (v4)
+# Roundtable Flow
 
 This document describes the complete flow of a roundtable discussion from user command to output document.
 
 ## Architecture Overview
 
 > **Key Constraint**: Claude Code subagents cannot spawn other subagents.
-> Solution: Orchestration logic is **inline in the command** (start.md), not a separate agent.
+> Solution: Orchestration logic is **inline in workflow commands**, not a separate agent.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  User: /s2s:specs, /s2s:design, /s2s:brainstorm                │
-│  • Workflow-specific setup and validation                       │
-│  • Delegates via SlashCommand:/s2s:roundtable:start             │
-│  • Post-processes results into workflow-specific output         │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │ SlashCommand
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Command (start.md) - INLINE ORCHESTRATION                      │
+│  WORKFLOW COMMANDS - INLINE ORCHESTRATION                       │
 │                                                                 │
 │  PHASE 1: SETUP                                                 │
 │  • Parse arguments, validate environment                        │
-│  • Auto-detect strategy from topic keywords                     │
+│  • Workflow-specific defaults (strategy, participants)          │
 │  • Create session file .s2s/sessions/{id}.yaml                  │
 │  • Load strategy config from skill                              │
 │                                                                 │
@@ -32,14 +25,14 @@ This document describes the complete flow of a roundtable discussion from user c
 │  │ Step 1: Task(facilitator) → generate question               ││
 │  │ Step 2: Task(participants) → parallel responses             ││
 │  │ Step 3: Task(facilitator) → synthesize                      ││
-│  │ Step 4: Batch write round to session file                   ││
+│  │ Step 4: Update session file                                 ││
 │  │ Step 5: Evaluate next_action                                ││
 │  │         continue → loop | phase → advance | conclude → exit ││
 │  │         escalate → ask user → continue or conclude          ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                                                                 │
 │  PHASE 3: COMPLETION                                            │
-│  • Generate output (ADR, requirements, architecture, summary)   │
+│  • Generate output (requirements.md, architecture/, summary)    │
 │  • Update state.yaml                                            │
 │  • Display summary                                              │
 └─────────────────────────────────────────────────────────────────┘
@@ -96,23 +89,23 @@ Agents (stateless, called per-round):
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-## Why Inline Orchestration (v4)
+## Why Inline Orchestration
 
-Previous architecture (v3) used a separate orchestrator agent:
+A previous architecture approach used a separate orchestrator agent:
 
 ```
-❌ v3 (BROKEN): start.md → Task(orchestrator) → Task(facilitator)
-                                              → Task(participants)
+❌ BROKEN: command → Task(orchestrator) → Task(facilitator)
+                                        → Task(participants)
 ```
 
 This fails because **subagents cannot spawn other subagents** in Claude Code.
 
 ```
-✅ (WORKS): start.md contains loop → Task(facilitator)
-                                   → Task(participants)
+✅ (WORKS): command contains loop → Task(facilitator)
+                                  → Task(participants)
 ```
 
-The **main agent** (executing the command) CAN call Task() multiple times.
+The **main agent** (executing the workflow or start command) CAN call Task() multiple times.
 
 ## Participation Modes
 
@@ -153,7 +146,7 @@ Command launches sequentially:
 - Iterative refinement
 - Deeper exploration
 
-## Session File Structure (v4)
+## Session File Structure
 
 Single source of truth with flat `rounds[]` array:
 
@@ -282,15 +275,15 @@ Con presents case      Con addresses Pro       Con final summary
 ## Data Flow Summary
 
 ```
-User Command
+User Command (/s2s:specs, /s2s:design, /s2s:brainstorm, or /s2s:roundtable:start)
     │
     ▼
 ┌─────────────┐
-│ start.md    │──┬── Creates session file
-│ (inline     │  ├── Runs discussion loop
+│  Command    │──┬── Creates session file
+│  (inline    │  ├── Runs discussion loop
 │ orchestr.)  │  ├── Launches facilitator (2x/round)
 │             │  ├── Launches participants (parallel)
-│             │  └── Batch writes after each round
+│             │  └── Updates session after each round
 └─────────────┘
        │
        ▼
@@ -306,19 +299,19 @@ User Command
        │
        ▼
 ┌─────────────┐
-│ start.md    │──┬── Evaluates next_action
+│  Command    │──┬── Evaluates next_action
 │             │  └── Generates output document
 └─────────────┘
        │
        ▼
-Output: ADR, Requirements, Architecture, Summary
+Output: requirements.md, architecture/, or summary
 ```
 
 ## Agent Isolation
 
 | Component | Reads Session? | Receives in Prompt |
 |-----------|----------------|-------------------|
-| **start.md** | ✅ YES | N/A (is the orchestrator) |
+| **Command** | ✅ YES | N/A (is the orchestrator) |
 | **Facilitator** | ❌ NO | Curated state (phase, consensus, conflicts) |
 | **Participants** | ❌ NO | Topic + question + project context only |
 

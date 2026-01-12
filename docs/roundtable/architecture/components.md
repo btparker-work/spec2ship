@@ -5,7 +5,7 @@ This document describes how Commands, Agents, and Skills work together in the Ro
 ## Component Overview
 
 > **Key Constraint**: Claude Code subagents cannot spawn other subagents.
-> Solution: Orchestration logic is **inline in start.md**, not a separate agent.
+> Solution: Orchestration logic is **inline in workflow commands**, not a separate agent.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -14,18 +14,10 @@ This document describes how Commands, Agents, and Skills work together in the Ro
 │                           ▼                                     │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │ WORKFLOW COMMANDS (specs.md, design.md, brainstorm.md)  │   │
-│  │ • Workflow-specific setup and validation                 │   │
-│  │ • Delegates via SlashCommand:/s2s:roundtable:start       │   │
-│  │ • Post-processes results                                 │   │
-│  └──────────────────────────┬──────────────────────────────┘   │
-│                             │ SlashCommand                      │
-│                             ▼                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ COMMAND: roundtable/start.md (Inline Orchestration)     │   │
 │  │                                                          │   │
 │  │ PHASE 1: Setup                                           │   │
 │  │ • Creates session file .s2s/sessions/{id}.yaml           │   │
-│  │ • Auto-detects strategy from topic keywords              │   │
+│  │ • Workflow-specific validation and defaults              │   │
 │  │                                                          │   │
 │  │ PHASE 2: Discussion Loop (INLINE)                        │   │
 │  │ ┌──────────────────────────────────────────────────────┐ │   │
@@ -33,12 +25,12 @@ This document describes how Commands, Agents, and Skills work together in the Ro
 │  │ │ 1. Task(facilitator) → question                      │ │   │
 │  │ │ 2. Task(participants) → parallel (blind voting)      │ │   │
 │  │ │ 3. Task(facilitator) → synthesis                     │ │   │
-│  │ │ 4. Batch write to session file                       │ │   │
+│  │ │ 4. Update session file                               │ │   │
 │  │ │ 5. Evaluate next_action                              │ │   │
 │  │ └──────────────────────────────────────────────────────┘ │   │
 │  │                                                          │   │
 │  │ PHASE 3: Completion                                      │   │
-│  │ • Generates output (ADR, requirements, architecture)     │   │
+│  │ • Generates output (requirements.md, architecture/)      │   │
 │  └──────────────────────────┬──────────────────────────────┘   │
 │                             │                                   │
 │           ┌─────────────────┼─────────────────┐                │
@@ -58,11 +50,28 @@ This document describes how Commands, Agents, and Skills work together in the Ro
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+> **Note**: `roundtable/start.md` is a separate command for ad-hoc roundtable discussions,
+> not used by workflow commands which have their own inline orchestration.
+
 ## Commands
+
+There are two types of commands that run roundtable discussions:
+
+1. **Workflow commands** (`specs.md`, `design.md`, `brainstorm.md`) - Have inline orchestration with workflow-specific setup and output
+2. **Ad-hoc command** (`roundtable/start.md`) - For standalone discussions on any topic
+
+Both use the same inline orchestration pattern.
+
+### Workflow Commands (specs.md, design.md, brainstorm.md)
+
+Each workflow command includes:
+- Workflow-specific defaults (strategy, participants)
+- Inline roundtable orchestration loop
+- Workflow-specific output generation
 
 ### roundtable/start.md
 
-The session lifecycle manager with **inline orchestration** (v4):
+For ad-hoc roundtable discussions with **inline orchestration**:
 
 | Responsibility | Description |
 |----------------|-------------|
@@ -74,8 +83,8 @@ The session lifecycle manager with **inline orchestration** (v4):
 | Handle escalation | AskUserQuestion when triggers fire |
 | Generate output | Create ADR, requirements, or architecture docs |
 
-**Why inline orchestration (v4)?**
-Claude Code subagents cannot spawn other subagents. The v3 pattern of `Task(orchestrator) → Task(facilitator)` doesn't work. Solution: keep the loop in the command, which CAN call Task() multiple times.
+**Why inline orchestration?**
+Claude Code subagents cannot spawn other subagents. A pattern like `Task(orchestrator) → Task(facilitator)` doesn't work. Solution: keep the loop in the command, which CAN call Task() multiple times.
 
 ### roundtable/resume.md
 
@@ -100,9 +109,9 @@ Location: `agents/roundtable/facilitator.md`
 
 **Role**: Generate questions, synthesize responses, decide next action
 
-**Called by**: start.md (twice per round: question + synthesis)
+**Called by**: Workflow commands or roundtable/start.md (twice per round: question + synthesis)
 
-**2 Action Types (v4)**:
+**2 Action Types**:
 
 | Action | Input | Output |
 |--------|-------|--------|
@@ -122,13 +131,19 @@ Location: `agents/roundtable/facilitator.md`
 
 Location: `agents/roundtable/`
 
-| Agent | File | Perspective |
-|-------|------|-------------|
-| Software Architect | `software-architect.md` | Structure, patterns, design |
-| Technical Lead | `technical-lead.md` | Implementation, tech stack |
-| QA Lead | `qa-lead.md` | Quality, testing, edge cases |
-| DevOps Engineer | `devops-engineer.md` | Deploy, infra, operations |
-| Product Manager | `product-manager.md` | User needs, business value |
+| Agent | File | Perspective | Default In |
+|-------|------|-------------|------------|
+| Product Manager | `product-manager.md` | User needs, business value | specs, brainstorm |
+| Business Analyst | `business-analyst.md` | Domain modeling, use cases | specs |
+| QA Lead | `qa-lead.md` | Quality, testing, edge cases | specs |
+| UX Researcher | `ux-researcher.md` | User needs, accessibility | - |
+| Software Architect | `software-architect.md` | Structure, patterns, design | design, brainstorm |
+| Technical Lead | `technical-lead.md` | Implementation, tech stack | design, brainstorm |
+| DevOps Engineer | `devops-engineer.md` | Deploy, infra, operations | design, brainstorm |
+| Security Champion | `security-champion.md` | Threats, OWASP, compliance | - |
+| Documentation Specialist | `documentation-specialist.md` | API docs, guides | - |
+| Claude Code Expert | `claude-code-expert.md` | Plugin architecture | - |
+| OSS Community Manager | `oss-community-manager.md` | Open source focus | - |
 
 **Input**: Topic, question, context, previous synthesis
 **Output**: Position, rationale, confidence, concerns
@@ -148,8 +163,12 @@ skills: arc42-templates, iso25010-requirements
 
 | Agent | Location | Skills | Why |
 |-------|----------|--------|-----|
-| facilitator | `agents/roundtable/` | `roundtable-strategies` | Strategy-specific behavior |
+| facilitator | `agents/roundtable/` | `roundtable-strategies, iso25010-requirements, arc42-templates, madr-decisions` | Multi-domain knowledge |
 | software-architect | `agents/roundtable/` | `arc42-templates` | Architecture patterns |
+| devops-engineer | `agents/roundtable/` | `arc42-templates` | Deployment views |
+| qa-lead | `agents/roundtable/` | `iso25010-requirements` | Quality model |
+| security-champion | `agents/roundtable/` | `threat-modeling` | Threat analysis |
+| business-analyst | `agents/roundtable/` | `ddd-strategic` | Domain modeling |
 | spec-validator | `agents/validation/` | `iso25010-requirements, arc42-templates, madr-decisions` | Validation standards |
 | requirements-mapper | `agents/exploration/` | `iso25010-requirements` | Requirement patterns |
 
@@ -180,8 +199,7 @@ skills/roundtable-strategies/
 - Consensus policy
 - Validation rules
 
-## Data Flow (v4)
-
+## Data Flow 
 ### Question Generation Flow
 
 ```
@@ -212,11 +230,10 @@ skills/roundtable-strategies/
 6. Command proceeds based on next_action (continue/phase/conclude/escalate)
 ```
 
-## Separation of Concerns (v4)
-
+## Separation of Concerns
 | Component | Decides | Executes |
 |-----------|---------|----------|
-| Command (start.md) | Session lifecycle, loop execution | File I/O, Task launching, escalation |
+| Command (workflow or start.md) | Session lifecycle, loop execution | File I/O, Task launching, escalation |
 | Facilitator | What questions, synthesis, next action | Nothing (returns structured data) |
 | Participants | Their perspective | Nothing (returns structured data) |
 | Strategy Skill | Facilitation method | Nothing (provides prompts) |
@@ -227,7 +244,7 @@ skills/roundtable-strategies/
 
 | Component | Reads Session? | Receives in Prompt |
 |-----------|----------------|-------------------|
-| Command (start.md) | YES | N/A (is the orchestrator) |
+| Command (workflow or start.md) | YES | N/A (is the orchestrator) |
 | Facilitator | NO | Curated state (phase, consensus, conflicts) |
 | Participants | NO | Topic + question + project context only |
 
