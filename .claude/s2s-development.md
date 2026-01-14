@@ -164,7 +164,7 @@ Claude Code subagents cannot use the Task tool to spawn further subagents.
 orchestrator.md (agent) → Task(facilitator) → Task(participant)
 
 # CORRECT - Orchestration inline in command
-start.md (command) → Task(facilitator) → Task(participant)
+roundtable.md (command) → Task(facilitator) → Task(participant)
 ```
 
 **Solution**: All orchestration logic must be in commands, not agents.

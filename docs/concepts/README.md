@@ -34,7 +34,7 @@ Spec2Ship guides software development through structured **workflows**, using **
 ┌─────────────────────────────────────────────────────────────┐
 │                      SESSION                                │
 │  Persistent state: artifacts, positions, decisions          │
-│  Can be paused, resumed, validated                          │
+│  Can be resumed, validated                                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 

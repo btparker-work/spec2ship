@@ -59,9 +59,8 @@ This document defines the terminology used in s2s Roundtable discussions.
 
 | State | Description |
 |-------|-------------|
-| `active` | Session is currently in progress |
-| `paused` | Session interrupted, can be resumed |
-| `completed` | Session finished with outcome |
+| `active` | Session in progress, can be resumed |
+| `closed` | Session finished (successfully or not) |
 
 ## Participation Modes
 

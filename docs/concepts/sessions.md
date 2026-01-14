@@ -5,13 +5,12 @@ Sessions are the persistent state of roundtable discussions. They track artifact
 ## Session Lifecycle
 
 ```
-┌─────────┐   ┌─────────┐   ┌───────────┐   ┌───────────┐
-│ created │──▶│ active  │──▶│ completed │   │  failed   │
-└─────────┘   └─────────┘   └───────────┘   └───────────┘
-                  │              ▲               ▲
-                  │              │               │
-                  └──── paused ──┴───────────────┘
+┌─────────┐   ┌─────────┐
+│ active  │──▶│ closed  │
+└─────────┘   └─────────┘
 ```
+
+Sessions have only two states: `active` (in progress, can be resumed) and `closed` (finished).
 
 ## Session File
 
@@ -25,8 +24,8 @@ strategy: "consensus-driven"
 status: "active"
 
 timing:
-  started: "2026-01-11T10:00:00Z"
-  last_activity: "2026-01-11T11:30:00Z"
+  started_at: "2026-01-11T10:00:00Z"
+  updated_at: "2026-01-11T11:30:00Z"
 
 artifacts:
   requirements:
@@ -101,14 +100,14 @@ Validate sessions for consistency:
 
 ## Resuming Sessions
 
-Sessions can be paused and resumed:
+Active sessions can be resumed:
 
 ```bash
-# Pause during interactive mode
-# (choose "pause" when prompted)
-
-# Resume later
+# Resume an active session
 /s2s:roundtable --session
+
+# Or workflow commands auto-detect active sessions
+/s2s:specs
 ```
 
 The system maintains agent state for continuity:

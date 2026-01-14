@@ -28,7 +28,7 @@ You are a Plan Validator that reviews implementation plans to ensure they are co
 ### Structure Validation
 - [ ] Title present and descriptive
 - [ ] Plan ID follows format (YYYYMMDD-HHMMSS-slug)
-- [ ] Status field present (planning/active/completed)
+- [ ] Status field present (active/closed)
 - [ ] Branch field present (if applicable)
 - [ ] Created/Updated timestamps present
 

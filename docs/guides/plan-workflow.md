@@ -13,7 +13,7 @@ Plans break features into actionable tasks with clear steps and dependencies.
 | `/s2s:plan --new "name"` | Create a new implementation plan |
 | `/s2s:plan:list` | List all plans |
 | `/s2s:plan --session` | Start working on a plan |
-| `/s2s:plan:close` | Mark plan as completed |
+| `/s2s:plan:close` | Close a plan |
 
 ## Creating a Plan
 
@@ -45,9 +45,9 @@ Plans are stored in `.s2s/plans/` as YAML files:
 # .s2s/plans/20260111-143022-user-authentication.yaml
 id: "20260111-143022-user-authentication"
 name: "user-authentication"
-status: "pending"  # pending | active | completed | abandoned
+status: "active"  # active | closed
 
-created: "2026-01-11T14:30:22Z"
+created_at: "2026-01-11T14:30:22Z"
 branch: "feature/F01-user-authentication"
 
 requirements:
@@ -101,11 +101,9 @@ Implementation Plans
 Active:
   → 20260111-143022-user-authentication (3/8 tasks)
     Branch: feature/F01-user-authentication
-
-Pending:
   • 20260111-150000-api-versioning (0/5 tasks)
 
-Completed:
+Closed:
   ✓ 20260110-120000-project-setup (5/5 tasks)
 ```
 
@@ -189,10 +187,8 @@ Also merges the feature branch to develop/main.
 
 | State | Description |
 |-------|-------------|
-| `pending` | Created but not started |
-| `active` | Currently being worked on |
-| `completed` | All tasks done |
-| `abandoned` | Cancelled before completion |
+| `active` | In progress (can be worked on) |
+| `closed` | Finished (successfully or abandoned) |
 
 ## Best Practices
 
@@ -274,7 +270,7 @@ Ask for help with the specific task. The system has context about:
     ↓
 (implement tasks)
     ↓
-/s2s:plan:close --merge       # Complete and merge
+/s2s:plan:close --merge       # Close and merge
 ```
 
 ### Multiple Plans

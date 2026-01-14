@@ -50,7 +50,7 @@ This document describes how Commands, Agents, and Skills work together in the Ro
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-> **Note**: `roundtable/start.md` is a separate command for ad-hoc roundtable discussions,
+> **Note**: `roundtable.md` is a separate command for ad-hoc roundtable discussions,
 > not used by workflow commands which have their own inline orchestration.
 
 ## Commands
@@ -58,7 +58,7 @@ This document describes how Commands, Agents, and Skills work together in the Ro
 There are two types of commands that run roundtable discussions:
 
 1. **Workflow commands** (`specs.md`, `design.md`, `brainstorm.md`) - Have inline orchestration with workflow-specific setup and output
-2. **Ad-hoc command** (`roundtable/start.md`) - For standalone discussions on any topic
+2. **Ad-hoc command** (`roundtable.md`) - For standalone discussions on any topic
 
 Both use the same inline orchestration pattern.
 
@@ -69,7 +69,7 @@ Each workflow command includes:
 - Inline roundtable orchestration loop
 - Workflow-specific output generation
 
-### roundtable/start.md
+### roundtable.md
 
 For ad-hoc roundtable discussions with **inline orchestration**:
 
@@ -86,20 +86,20 @@ For ad-hoc roundtable discussions with **inline orchestration**:
 **Why inline orchestration?**
 Claude Code subagents cannot spawn other subagents. A pattern like `Task(orchestrator) → Task(facilitator)` doesn't work. Solution: keep the loop in the command, which CAN call Task() multiple times.
 
-### roundtable/resume.md
+### Session Resume (via --session flag)
 
-Continues an interrupted session:
+Resume functionality is built into `/s2s:roundtable --session`:
 - Loads full session history
 - Synthesizes state from `rounds[]` (single source of truth)
 - Continues discussion loop from where it left off
-- Uses same inline orchestration as start.md
+- Uses same inline orchestration as roundtable.md
 
-### roundtable/list.md
+### Session Listing (via /s2s:session:list)
 
-Displays session status:
-- Groups by active/paused/completed
+Session listing is now centralized in `/s2s:session:list`:
+- Groups by active/closed
 - Shows strategy, phase, round count
-- Marks current session
+- Filters by workflow type
 
 ## Agents
 
@@ -109,7 +109,7 @@ Location: `agents/roundtable/facilitator.md`
 
 **Role**: Generate questions, synthesize responses, decide next action
 
-**Called by**: Workflow commands or roundtable/start.md (twice per round: question + synthesis)
+**Called by**: Workflow commands or roundtable.md (twice per round: question + synthesis)
 
 **2 Action Types**:
 
@@ -233,7 +233,7 @@ skills/roundtable-strategies/
 ## Separation of Concerns
 | Component | Decides | Executes |
 |-----------|---------|----------|
-| Command (workflow or start.md) | Session lifecycle, loop execution | File I/O, Task launching, escalation |
+| Command (workflow or roundtable.md) | Session lifecycle, loop execution | File I/O, Task launching, escalation |
 | Facilitator | What questions, synthesis, next action | Nothing (returns structured data) |
 | Participants | Their perspective | Nothing (returns structured data) |
 | Strategy Skill | Facilitation method | Nothing (provides prompts) |
@@ -244,7 +244,7 @@ skills/roundtable-strategies/
 
 | Component | Reads Session? | Receives in Prompt |
 |-----------|----------------|-------------------|
-| Command (workflow or start.md) | YES | N/A (is the orchestrator) |
+| Command (workflow or roundtable.md) | YES | N/A (is the orchestrator) |
 | Facilitator | NO | Curated state (phase, consensus, conflicts) |
 | Participants | NO | Topic + question + project context only |
 

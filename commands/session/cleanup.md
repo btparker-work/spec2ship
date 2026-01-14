@@ -1,7 +1,7 @@
 ---
 description: Remove old or abandoned sessions to free up space.
 allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(rm:*), Bash(date:*), Read, Glob, AskUserQuestion
-argument-hint: [--older-than 7d|30d|90d] [--status completed|failed|abandoned] [--dry-run]
+argument-hint: [--older-than 7d|30d|90d] [--status closed] [--dry-run]
 ---
 
 # Cleanup Sessions
@@ -136,8 +136,7 @@ rm -rf .s2s/sessions/{id}/
 
     Remaining: {count} sessions
       - Active: {count}
-      - Completed: {count}
-      - Other: {count}
+      - Closed: {count}
 
 **IF** user cancels:
 
@@ -148,14 +147,14 @@ rm -rf .s2s/sessions/{id}/
 ## Examples
 
 ```bash
-# Remove completed sessions older than 7 days
-/s2s:session:cleanup --older-than 7d --status completed
+# Remove closed sessions older than 7 days
+/s2s:session:cleanup --older-than 7d --status closed
 
 # Preview what would be deleted (30 days, all non-active)
 /s2s:session:cleanup --dry-run
 
-# Remove all failed/abandoned sessions older than 90 days
-/s2s:session:cleanup --older-than 90d --status failed,abandoned
+# Remove all closed sessions older than 90 days
+/s2s:session:cleanup --older-than 90d --status closed
 ```
 
 ---
@@ -164,7 +163,6 @@ rm -rf .s2s/sessions/{id}/
 
 | Status | Icon |
 |--------|------|
-| completed | ✓ |
-| failed | ✗ |
-| abandoned | ∅ |
+| active | → |
+| closed | ✓ |
 | protected | 🛡️ |

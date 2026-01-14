@@ -41,7 +41,7 @@ Component registry from components.yaml
 |---------|-------------|
 | `/s2s:plan --new "topic"` | Create cross-component plan |
 | `/s2s:plan --session "id"` | Start plan |
-| `/s2s:plan:close` | Complete plan |
+| `/s2s:plan:close` | Close plan |
 
 ### Roundtable
 

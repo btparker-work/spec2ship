@@ -68,7 +68,7 @@ Display session summary:
     Strategy: {strategy}
     Status:   {status}
 
-    Started:  {timing.started}
+    Started:  {timing.started_at}
     Duration: {calculated from timing}
 
     Progress

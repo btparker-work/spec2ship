@@ -87,11 +87,8 @@ Sessions track the lifecycle of a roundtable discussion.
 
 | State | Description | Transitions |
 |-------|-------------|-------------|
-| **active** | Session in progress | paused, completed, failed |
-| **paused** | Interrupted, can resume | active, abandoned |
-| **completed** | Successfully concluded | - (terminal) |
-| **failed** | Terminated due to error | - (terminal) |
-| **abandoned** | User chose not to continue | - (terminal) |
+| **active** | Session in progress, can be resumed | closed |
+| **closed** | Session finished (successfully or not) | - (terminal) |
 
 ---
 

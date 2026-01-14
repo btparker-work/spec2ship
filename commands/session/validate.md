@@ -101,7 +101,7 @@ Verify the session file was parsed correctly (if you're reading it, it's valid).
 
 Verify these top-level fields exist:
 - `id`, `workflow_type`, `strategy`, `status`
-- `timing.started`
+- `timing.started_at`
 - `artifacts` (with at least one sub-map)
 - `agenda` (array)
 - `rounds` (array)

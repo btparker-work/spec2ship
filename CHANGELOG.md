@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session management commands: list, status, validate, cleanup
 - Verbose and diagnostic modes for debugging
 - Critical Stance and Context Check for anti-sycophancy
-- Plan management: create, list, start, complete
+- Plan management: list, close (unified create/start into plan command)
 
 ### Changed
 - Session architecture: embedded artifacts in single YAML file

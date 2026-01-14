@@ -1,5 +1,5 @@
 ---
-description: Close a session and mark it as completed. Works with any workflow type (specs, design, brainstorm, roundtable).
+description: Close a session and mark it as closed. Works with any workflow type (specs, design, brainstorm, roundtable).
 allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(date:*), Bash(grep:*), Read, Write, Edit, Glob, AskUserQuestion
 argument-hint: [session-id]
 ---
@@ -93,7 +93,7 @@ Read `.s2s/sessions/{session-id}.yaml` and extract:
 - `workflow_type`
 - `topic`
 - `status`
-- `timing.started`
+- `timing.started_at`
 - `metrics.rounds_completed`
 - `metrics.artifacts.total`
 
@@ -107,7 +107,7 @@ Present summary and ask for confirmation using AskUserQuestion:
     Session: {id}
     Type: {workflow_type}
     Topic: {topic}
-    Started: {timing.started}
+    Started: {timing.started_at}
     Progress: {rounds_completed} rounds, {artifacts.total} artifacts
 
     Are you sure you want to close this session?

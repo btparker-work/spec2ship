@@ -16,9 +16,9 @@ spec2ship/
 │       └── llm-patterns.md   # Instruction patterns
 ├── .claude-plugin/           # Plugin manifest
 ├── commands/                 # Slash commands (/s2s:*)
-│   ├── init.md, brainstorm.md, specs.md, design.md, plan.md
-│   ├── plan/                 # create, list, start, complete
-│   └── roundtable/           # start, list, resume
+│   ├── init.md, brainstorm.md, specs.md, design.md, plan.md, roundtable.md
+│   ├── plan/                 # close, list
+│   └── session/              # list, status, close, cleanup, validate
 ├── agents/roundtable/        # Discussion participants
 │   ├── facilitator.md        # Orchestrates rounds
 │   └── *.md                  # Participants (architect, tech-lead, etc.)

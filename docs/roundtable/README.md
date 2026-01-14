@@ -122,7 +122,7 @@ Roundtable enables AI agents with different perspectives to discuss topics, iden
 | `/s2s:design` | Architecture design via roundtable |
 | `/s2s:brainstorm` | Creative exploration via roundtable |
 | `/s2s:roundtable` | Start ad-hoc discussion |
-| `/s2s:roundtable --session` | Continue paused session |
+| `/s2s:roundtable --session` | Resume active session |
 | `/s2s:session:list` | View all sessions |
 | `/s2s:session:validate` | Check session consistency |
 

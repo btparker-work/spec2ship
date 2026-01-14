@@ -139,7 +139,7 @@ List all roundtable sessions.
 
 ### `/s2s:roundtable --session`
 
-Resume a paused roundtable session.
+Resume an active roundtable session.
 
 ```bash
 /s2s:roundtable --session
@@ -181,7 +181,7 @@ Start working on an implementation plan.
 
 ### `/s2s:plan:close`
 
-Mark a plan as completed.
+Close a plan and mark it as closed.
 
 ```bash
 /s2s:plan:close

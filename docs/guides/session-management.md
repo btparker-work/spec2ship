@@ -15,7 +15,7 @@ Every roundtable discussion (specs, design, brainstorm) creates a session that p
 | `/s2s:session:status [id]` | Detailed session info |
 | `/s2s:session:validate [id]` | Check session consistency |
 | `/s2s:session:cleanup` | Remove old sessions |
-| `/s2s:roundtable --session` | Continue a paused session |
+| `/s2s:roundtable --session` | Resume an active session |
 
 ## Viewing Sessions
 
@@ -59,11 +59,9 @@ Active:
   → 20260111-143000-specs-my-project
     Strategy: consensus-driven | Rounds: 3 | Artifacts: 7
 
-Paused:
-  ⏸ 20260110-160000-design-my-project
-    Strategy: debate | Rounds: 2 | Last: 1 day ago
-
-Completed:
+Closed:
+  ✓ 20260110-160000-design-my-project
+    Strategy: debate | Rounds: 5 | Output: architecture/
   ✓ 20260109-120000-brainstorm-api
     Strategy: disney | Rounds: 5 | Output: summary.md
 ```
@@ -84,38 +82,23 @@ Shows complete session details including:
 
 | State | Description | Can Resume? |
 |-------|-------------|-------------|
-| `active` | Currently in progress | Yes (automatic) |
-| `paused` | Interrupted by user | Yes |
-| `completed` | Finished with output | No |
-| `failed` | Error during execution | No |
+| `active` | Currently in progress | Yes |
+| `closed` | Finished (successfully or not) | No |
 
-## Pausing and Resuming
+## Resuming Sessions
 
-### Pausing a Session
-
-During `--interactive` mode, choose "pause" when prompted:
-
-```
-What would you like to do?
-  continue - Proceed to next round
-  skip     - Skip current topic
-› pause    - Save and exit
-```
-
-The session is saved with all current state.
-
-### Resuming a Session
+### Resuming an Active Session
 
 ```bash
-/s2s:roundtable --session
+/s2s:roundtable --session <session-id>
 ```
 
-If there's only one paused session, it resumes automatically.
-
-### Resume a Specific Session
+Or use auto-detect to resume the most recent active session:
 
 ```bash
-/s2s:roundtable --session --session 20260110-160000-design-my-project
+/s2s:specs      # auto-detects active specs sessions
+/s2s:design     # auto-detects active design sessions
+/s2s:brainstorm # auto-detects active brainstorm sessions
 ```
 
 ### What's Preserved
@@ -192,14 +175,12 @@ Removes sessions older than 7 days.
 
 ### What Gets Cleaned
 
-- Completed sessions (output already generated)
-- Failed sessions
+- Closed sessions (output already generated)
 - Sessions older than threshold
 
 ### What's Preserved
 
 - Active sessions
-- Paused sessions (unless explicitly old)
 
 ## Session Files
 
@@ -221,8 +202,8 @@ strategy: "consensus-driven"
 status: "active"
 
 timing:
-  started: "2026-01-11T14:30:00Z"
-  last_activity: "2026-01-11T15:45:00Z"
+  started_at: "2026-01-11T14:30:00Z"
+  updated_at: "2026-01-11T15:45:00Z"
 
 config:
   participants: [product-manager, business-analyst, qa-lead]
@@ -330,11 +311,11 @@ Check if session exists:
 /s2s:session:list
 ```
 
-Session may have been cleaned up or completed.
+Session may have been cleaned up or closed.
 
-### "Cannot resume completed session"
+### "Cannot resume closed session"
 
-Completed sessions can't be resumed. Start a new session:
+Closed sessions can't be resumed. Start a new session:
 
 ```bash
 /s2s:specs  # or /s2s:design, /s2s:brainstorm

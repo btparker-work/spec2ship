@@ -7,38 +7,23 @@ This document defines all state transitions in Spec2Ship.
 ## Session Lifecycle
 
 ```
-                    ┌─────────┐
-                    │  init   │
-                    └────┬────┘
-                         │
-                         ▼
-                    ┌─────────┐
-          ┌────────►│ active  │◄────────┐
-          │         └────┬────┘         │
-          │              │              │
-          │   ┌──────────┼──────────┐   │
-          │   │          │          │   │
-          │   ▼          ▼          ▼   │
-     ┌────────┐    ┌──────────┐  ┌──────┐
-     │ paused │    │completed │  │failed│
-     └────────┘    └──────────┘  └──────┘
-          │
-          ▼
-     ┌─────────┐
-     │abandoned│
-     └─────────┘
+┌─────────┐    ┌────────┐
+│ active  │───▶│ closed │
+└─────────┘    └────────┘
 ```
+
+Sessions have only two states:
+- **active**: Session in progress, can be resumed
+- **closed**: Session finished (successfully or not)
 
 ### Transitions
 
 | From | To | Trigger |
 |------|-----|---------|
-| init | active | Session created |
-| active | paused | User interruption / timeout |
-| active | completed | All agenda items closed + min_rounds met |
-| active | failed | Unrecoverable error |
-| paused | active | User resumes |
-| paused | abandoned | User declines to continue |
+| active | closed | All agenda items closed + min_rounds met |
+| active | closed | rounds >= max_rounds |
+| active | closed | User manually closes session |
+| active | closed | Unrecoverable error |
 
 ---
 
