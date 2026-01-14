@@ -170,18 +170,17 @@ As you complete tasks, the plan is updated automatically. The system tracks:
 When all tasks are done:
 
 ```bash
-/s2s:plan:complete
+/s2s:plan:close
 ```
 
 This will:
-1. Mark the plan as completed
-2. Update `.s2s/state.yaml`
-3. Optionally merge the feature branch
+1. Mark the plan as closed
+2. Optionally merge the feature branch
 
 ### With Merge
 
 ```bash
-/s2s:plan:complete --merge
+/s2s:plan:close --merge
 ```
 
 Also merges the feature branch to develop/main.

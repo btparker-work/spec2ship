@@ -1,11 +1,11 @@
 ---
-description: Start a roundtable discussion with AI expert participants. Use for technical decisions, architecture reviews, or requirements refinement.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion
-argument-hint: "topic" [--strategy standard|disney|debate|consensus-driven|six-hats] [--participants list] [--workflow-type specs|design|brainstorm] [--output-type adr|requirements|architecture|summary] [--verbose] [--interactive] [--pro list] [--con list]
+description: Start or resume a roundtable discussion with AI expert participants. Use for technical decisions, architecture reviews, or requirements refinement.
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Bash(grep:*), Read, Write, Edit, Glob, Task, AskUserQuestion
+argument-hint: "topic" [--strategy standard|disney|debate|consensus-driven|six-hats] [--participants list] [--workflow-type specs|design|brainstorm] [--output-type adr|requirements|architecture|summary] [--verbose] [--interactive] [--pro list] [--con list] [--new] [--session <id>]
 skills: roundtable-execution, roundtable-strategies
 ---
 
-# Start Roundtable Discussion
+# Roundtable Discussion
 
 ## Context
 
@@ -23,11 +23,10 @@ Based on the context output above, determine:
 If S2S is initialized:
 - Read `.s2s/CONTEXT.md` for project context
 - Read `.s2s/config.yaml` for roundtable configuration
-- Read `.s2s/state.yaml` to check for active session
 
 ---
 
-# PHASE 1: SETUP
+# PHASE 0: AUTO-DETECT ACTIVE SESSIONS
 
 ## Validate environment
 
@@ -38,13 +37,15 @@ If S2S initialized is "NOT_S2S":
 ## Parse arguments
 
 Extract from $ARGUMENTS:
-- **Topic**: Required. First quoted string or unquoted words
+- **Topic**: First quoted string or unquoted words (required unless resuming)
 - **--strategy**: Optional. Facilitation strategy
 - **--participants**: Optional. Comma-separated list
-- **--workflow-type**: Optional (specs|design|brainstorm). Default: "brainstorm"
+- **--workflow-type**: Optional (specs|design|brainstorm|roundtable). Default: "roundtable"
 - **--output-type**: Optional (adr|requirements|architecture|summary). Default: based on workflow
 - **--verbose**: Optional. Include full participant responses in session file
 - **--interactive**: Optional. Ask user after each round
+- **--new**: Optional. Force create new session (skip auto-detect)
+- **--session**: Optional. Resume specific session by ID
 
 **Boolean flags**: `--verbose` and `--interactive` → parse as `true` if present, `false` if absent.
 
@@ -52,7 +53,72 @@ Other optional arguments:
 - **--pro**: Optional (debate only). Comma-separated list of participant IDs for Pro side
 - **--con**: Optional (debate only). Comma-separated list of participant IDs for Con side
 
-If no topic provided, ask using AskUserQuestion.
+## Check for --session flag
+
+**IF** --session flag is present:
+- Verify session exists: `.s2s/sessions/{session-id}.yaml`
+- If exists, jump to **PHASE 2: RESUME SESSION**
+- If not exists, display error and list available sessions
+
+## Check for --new flag
+
+**IF** --new flag is present:
+- Skip auto-detect
+- Jump to **PHASE 1: SETUP**
+
+## Auto-detect active sessions
+
+**YOU MUST use Bash tool** to find active roundtable sessions:
+
+```bash
+grep -l 'workflow_type: roundtable' .s2s/sessions/*.yaml 2>/dev/null | xargs grep -l 'status: active' 2>/dev/null
+```
+
+**IF** no active sessions found:
+- Jump to **PHASE 1: SETUP** (create new session)
+
+**IF** active sessions found:
+
+1. Read each session file to extract:
+   - `id`
+   - `topic`
+   - `strategy`
+   - `metrics.rounds_completed`
+
+2. Display list:
+
+```
+Active roundtable sessions found:
+══════════════════════════════════
+
+1. {session-id}
+   Topic: {topic}
+   Strategy: {strategy}
+   Progress: Round {rounds_completed}
+
+2. {session-id}
+   ...
+
+[n] Start new session
+
+Which would you like to continue?
+```
+
+3. Ask using AskUserQuestion with options:
+   - For each session: "{session-id} - {topic}"
+   - "Start new session"
+
+4. Based on user choice:
+   - If existing session selected → Jump to **PHASE 2: RESUME SESSION**
+   - If "Start new session" → Jump to **PHASE 1: SETUP**
+
+---
+
+# PHASE 1: SETUP
+
+## Validate topic
+
+If no topic provided and not resuming, ask using AskUserQuestion.
 
 ## Load configuration
 
@@ -64,7 +130,7 @@ Read `.s2s/config.yaml` and extract:
 
 ## Auto-detect strategy (if not specified)
 
-> **Note**: Strategy auto-detection is performed by the **command** (start.md),
+> **Note**: Strategy auto-detection is performed by the **command** (roundtable.md),
 > NOT by the facilitator agent. The command analyzes topic keywords before
 > launching any agents.
 
@@ -132,23 +198,64 @@ rationale: "Assignment reasoning"
 
 3. Store debate_sides in session file
 
-## Check for active session
-
-Read `.s2s/state.yaml` and check `current_session`.
-
-If active session exists:
-- Display: "A roundtable session is already active: {session-id}"
-- Ask: "Start new (archive current) / Resume existing"
-- If resume, redirect to `/s2s:roundtable:resume`
-
 ## Create session
 
 1. Create sessions directory: `mkdir -p .s2s/sessions`
-2. Generate session ID: `{timestamp}-{topic-slug}` (slug: lowercase, hyphens, max 30 chars)
+2. Generate session ID: `{timestamp}-roundtable-{topic-slug}` (slug: lowercase, hyphens, max 30 chars)
 3. Determine initial phase from strategy phases[0]
-4. Create session file following schema in `skills/roundtable-execution/references/session-schema.md`
+4. Create session file `.s2s/sessions/{session-id}.yaml`:
+
+```yaml
+# Session file - Single Source of Truth
+id: "{session-id}"
+workflow_type: "roundtable"
+topic: "{topic}"
+strategy: "{strategy}"
+status: "active"
+
+timing:
+  started: "{ISO timestamp}"
+  last_activity: "{ISO timestamp}"
+  closed_at: null
+
+participants: ["{list}"]
+
+# Agent state (for resume capability)
+agent_state:
+  facilitator:
+    agent_id: null
+    last_round: 0
+    last_action: null
+  participants: {}
+
+# Artifacts embedded
+artifacts:
+  decisions: {}
+  open_questions: {}
+  conflicts: {}
+
+# Agenda (for roundtable, typically single topic)
+agenda:
+  - topic_id: "main"
+    status: "open"
+    coverage: []
+
+# Rounds with summary
+rounds: []
+
+# Metrics
+metrics:
+  rounds_completed: 0
+  artifacts:
+    total: 0
+    by_type: {}
+  consensus_rate: 0.0
+
+# Linked sessions (optional)
+linked_sessions: {}
+```
+
    - If strategy="debate", include `debate_sides` with pro/con participant assignments
-5. Update `.s2s/state.yaml`: Set `current_session: "{session-id}"`
 
 ## Display session start
 
@@ -159,13 +266,36 @@ If active session exists:
     Topic: {topic}
     Strategy: {strategy}
     Participants: {list}
-    Workflow: {workflow-type}
+    Workflow: roundtable
 
     Starting discussion...
 
 ---
 
-# PHASE 2: DISCUSSION LOOP
+# PHASE 2: RESUME SESSION
+
+Read the session file `.s2s/sessions/{session-id}.yaml` and extract:
+- `topic`
+- `strategy`
+- `metrics.rounds_completed`
+- `agent_state` (for resume capability)
+- Current state of artifacts and agenda
+
+Display:
+
+    Resuming Roundtable Session
+    ═══════════════════════════
+
+    Session: {session-id}
+    Topic: {topic}
+    Strategy: {strategy}
+    Progress: Round {rounds_completed}
+
+    Continuing discussion...
+
+---
+
+# PHASE 3: DISCUSSION LOOP
 
 **IMPORTANT: Follow the `roundtable-execution` skill instructions EXACTLY.**
 
@@ -179,16 +309,12 @@ The roundtable-execution skill provides detailed step-by-step instructions for:
 
 Pass these values to the skill execution:
 - **topic**: {parsed topic}
-- **workflow_type**: {--workflow-type or "brainstorm"}
+- **workflow_type**: "roundtable"
 - **strategy**: {selected strategy}
-- **output_type**: {--output-type or based on workflow}
+- **output_type**: {--output-type or "summary"}
 - **participants**: {selected participant list}
 - **verbose**: {verbose_flag}
 - **interactive**: {interactive_flag}
-
-## Load Agenda
-
-Load agenda from `skills/roundtable-execution/references/agenda-{workflow_type}.md` if workflow_type is specs or design. Brainstorm has no agenda (free-form).
 
 ## Execute roundtable
 
@@ -198,20 +324,17 @@ Load agenda from `skills/roundtable-execution/references/agenda-{workflow_type}.
 
 1. PHASE 3 of skill: Round Execution Loop
    - Step 3.1: Facilitator Question (use Task tool)
-     - Include `min_rounds` (from config-snapshot) and `REQUIRED_TOPICS` in prompt
    - Step 3.2: Participant Responses (use Task tool, ALL in parallel)
    - Step 3.3: Facilitator Synthesis (use Task tool)
-   - Step 3.4: Update Session File (include agenda_coverage)
+   - Step 3.4: Update Session File
    - Step 3.5: Handle --interactive mode (if enabled)
-   - Step 3.6: Evaluate Next Action:
-     - **min_rounds CHECK**: If round < min_rounds (from config-snapshot) AND "conclude" → OVERRIDE to "continue"
-     - **Agenda CHECK**: If critical topics pending → OVERRIDE to "continue"
-   - REPEAT until: next_action == "conclude" AND round >= min_rounds AND critical topics covered
+   - Step 3.6: Evaluate Next Action
+   - REPEAT until: next_action == "conclude" AND round >= min_rounds
 
 2. PHASE 4 of skill: Completion
-   - Update session status to "completed"
+   - Update session status to "closed"
+   - Set `closed_at` timestamp
    - Generate output file (based on output_type)
-   - Clear state
    - Display completion summary
 
 **CRITICAL REMINDERS:**

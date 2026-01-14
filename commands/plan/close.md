@@ -1,10 +1,10 @@
 ---
-description: Mark the current implementation plan as completed. Optionally merge the branch.
-allowed-tools: Bash(git:*), Bash(cat:*), Read, Write, Edit, TodoWrite, AskUserQuestion
-argument-hint: [--merge] [--no-delete-branch]
+description: Mark the current implementation plan as closed. Optionally merge the branch.
+allowed-tools: Bash(git:*), Bash(ls:*), Read, Write, Edit, Glob, TodoWrite, AskUserQuestion
+argument-hint: [plan-id] [--merge] [--no-delete-branch]
 ---
 
-# Complete Implementation Plan
+# Close Implementation Plan
 
 ## Context
 
@@ -18,19 +18,47 @@ Based on the context output above, determine:
 - **S2S initialized**: If `.s2s` directory appears in Directory contents → "yes", otherwise → "NOT_S2S"
 - **Is git repo**: If `.git` directory appears in Directory contents → "yes", otherwise → "no"
 
-If S2S is initialized, use Read tool to:
-- Read `.s2s/state.yaml` to get current_plan value
+If S2S is initialized:
+- Use Glob to find plan files: `.s2s/plans/*.md`
 
 ## Instructions
 
-### Check for active plan
+### Validate environment
 
-If current plan is "none", display this message and stop:
+If S2S initialized is "NOT_S2S", display error and stop:
+
+    Error: Not an s2s project. Run /s2s:init first.
+
+### Parse arguments
+
+Extract from $ARGUMENTS:
+- **plan-id**: Optional. Specific plan to close (if not provided, will look for active plans)
+- **--merge**: Merge feature branch to default branch
+- **--no-delete-branch**: Keep branch after merge (only with --merge)
+
+### Find plan to close
+
+**IF** plan-id provided in arguments:
+- Verify plan exists: `.s2s/plans/{plan-id}.md`
+- If not exists, display error and list available plans
+
+**ELSE** find active plans:
+
+For each plan file in `.s2s/plans/*.md`:
+1. Read and check for `**Status**: active`
+
+**IF** no active plans found:
 
     No active plan found.
 
     Use /s2s:plan:list to see available plans.
-    Use /s2s:plan:start "plan-id" to activate a plan.
+    Use /s2s:plan --session "plan-id" to work on a plan.
+
+**IF** multiple active plans found:
+- Display list and ask user which to close using AskUserQuestion
+
+**IF** single active plan found:
+- Use that plan
 
 ### Gather git information (if git repo)
 
@@ -50,7 +78,7 @@ If "Is git repo" is "no":
 
 ### Read plan file
 
-Read .s2s/plans/{current-plan}.md and extract:
+Read .s2s/plans/{plan-id}.md and extract:
 - Topic from "# Implementation Plan: " line
 - Branch from "**Branch**: " line
 - Created date from "**Created**: " line
@@ -60,16 +88,10 @@ Read .s2s/plans/{current-plan}.md and extract:
 
 If there are incomplete tasks:
 - List them to the user
-- Ask: "Complete plan with {n} incomplete tasks?" using AskUserQuestion
+- Ask: "Close plan with {n} incomplete tasks?" using AskUserQuestion
 - If user declines, stop
 
-### Parse arguments
-
-Check $ARGUMENTS for:
-- **--merge**: Merge feature branch to default branch
-- **--no-delete-branch**: Keep branch after merge (only with --merge)
-
-### Confirm completion
+### Confirm closure
 
 Present summary and ask for confirmation:
 - Plan ID and topic
@@ -104,22 +126,16 @@ If --merge flag is present:
 
 ### Update plan file
 
-Edit .s2s/plans/{current-plan}.md:
-- Change "**Status**: active" to "**Status**: completed"
+Edit .s2s/plans/{plan-id}.md:
+- Change "**Status**: active" to "**Status**: closed"
 - Update "**Updated**:" to current ISO timestamp
-- Add "**Completed**: {current ISO timestamp}" after Updated line
-
-### Update state
-
-Update .s2s/state.yaml:
-- Set current_plan to null
-- Update the plan entry status to "completed"
+- Add "**Closed**: {current ISO timestamp}" after Updated line
 
 ### Output
 
 Display confirmation:
 
-    Plan completed!
+    Plan closed!
 
     Plan: {plan-id}
     Topic: {topic}
@@ -132,5 +148,5 @@ Display confirmation:
     {end if}
 
     Next steps:
-    - View completed plans: /s2s:plan:list --status completed
-    - Create new plan: /s2s:plan:create "next feature"
+    - View all plans: /s2s:plan:list
+    - Create new plan: /s2s:plan --new

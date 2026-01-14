@@ -78,7 +78,7 @@ If **Detected.s2s.initialized** is true:
 
 ### Check for incomplete initialization
 
-If `.s2s` exists but is missing essential files (config.yaml, state.yaml):
+If `.s2s` exists but is missing essential files (config.yaml, CONTEXT.md):
 
 Display:
 ```
@@ -373,15 +373,9 @@ workspace:
   path: "{workspace-path}"
 ```
 
-### 5.3 Generate state.yaml
+### 5.3 Create sessions folder
 
-Write `.s2s/state.yaml`:
-
-```yaml
-current_plan: null
-plans: {}
-last_sync: null
-```
+Create `.s2s/sessions/` directory for session files.
 
 ### 5.4 Generate CONTEXT.md
 
@@ -534,7 +528,6 @@ Scope: {Context.scope_type}
 Created:
 - .s2s/config.yaml
 - .s2s/CONTEXT.md
-- .s2s/state.yaml
 - .s2s/sessions/
 - .claude/CLAUDE.md (with @../.s2s/CONTEXT.md reference)
 - docs/ structure

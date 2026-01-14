@@ -1,7 +1,7 @@
 ---
-description: Creative brainstorming session using the Disney strategy (Dreamer → Realist → Critic). Use for ideation and exploring new ideas without constraints.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion
-argument-hint: "topic" [--participants <list>] [--verbose] [--interactive] [--diagnostic]
+description: Creative brainstorming session using the Disney strategy (Dreamer → Realist → Critic). Use for ideation and exploring new ideas without constraints. Auto-detects active sessions.
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Bash(grep:*), Read, Write, Edit, Glob, Task, AskUserQuestion
+argument-hint: "topic" [--participants <list>] [--verbose] [--interactive] [--diagnostic] [--new] [--session <id>]
 skills: roundtable-execution, roundtable-strategies
 ---
 
@@ -33,10 +33,73 @@ Based on the Directory contents output, determine:
 
 ## Instructions
 
+### Parse flags for session handling
+
+Extract from $ARGUMENTS:
+- **--new**: Force create new session (skip auto-detect)
+- **--session**: Resume specific session by ID
+
+### Auto-detect active sessions
+
+**IF** --session flag is present:
+- Verify session exists: `.s2s/sessions/{session-id}.yaml`
+- If exists, jump to **Phase 2: Round Execution Loop** (resume session)
+- If not exists, display error and list available sessions
+
+**IF** --new flag is present:
+- Skip auto-detect
+- Continue to parse arguments
+
+**OTHERWISE** check for active brainstorm sessions:
+
+**Use Bash tool** to find active brainstorm sessions:
+
+```bash
+grep -l 'workflow_type: brainstorm' .s2s/sessions/*.yaml 2>/dev/null | xargs grep -l 'status: active' 2>/dev/null
+```
+
+**IF** no active brainstorm sessions found:
+- Continue to parse arguments (create new session)
+
+**IF** active brainstorm sessions found:
+
+1. Read each session file to extract:
+   - `id`
+   - `topic`
+   - `metrics.rounds_completed`
+
+2. Display list:
+
+```
+Active brainstorm sessions found:
+══════════════════════════════════
+
+1. {session-id}
+   Topic: {topic}
+   Progress: Round {rounds_completed}
+
+2. {session-id}
+   ...
+
+[n] Start new session
+
+Which would you like to continue?
+```
+
+3. Ask using AskUserQuestion with options:
+   - For each session: "{session-id}"
+   - "Start new session"
+
+4. Based on user choice:
+   - If existing session selected → Jump to **Phase 2** (resume)
+   - If "Start new session" → Continue to parse arguments
+
+---
+
 ### Parse Arguments
 
 Extract from $ARGUMENTS:
-- **topic**: Required. The subject for brainstorming (first quoted argument)
+- **topic**: Required (unless resuming). The subject for brainstorming (first quoted argument)
 - **--participants**: Optional. Comma-separated list to override defaults
 
 **Boolean flags**: `--verbose`, `--interactive`, and `--diagnostic` → parse as `true` if present, `false` if absent.
@@ -156,7 +219,7 @@ status: "active"
 timing:
   started: "{ISO timestamp}"
   last_activity: "{ISO timestamp}"
-  completed: null
+  closed_at: null
 
 # Agent state (for resume capability)
 # Stores agent IDs to enable resuming agents across rounds
@@ -213,13 +276,6 @@ validation:
   last_check: null
   status: null
   warnings: []
-```
-
-### Step 1.5: Update State File
-
-**YOU MUST use Edit tool NOW** to update `.s2s/state.yaml`:
-```yaml
-current_session: "{session-id}"
 ```
 
 ---
@@ -468,7 +524,7 @@ response:
     overrides: {... or null ...}
 
 result:
-  status: "completed"
+  status: "closed"
 
 tokens:
   input_estimate: {N}
@@ -692,7 +748,7 @@ response:
   mitigations: [...]
 
 result:
-  status: "completed"
+  status: "closed"
 
 tokens:
   input_estimate: {N}
@@ -930,7 +986,7 @@ response:
 
 result:
   artifacts_proposed: {count}
-  status: "completed"
+  status: "closed"
 
 tokens:
   input_estimate: {N}
@@ -1356,17 +1412,12 @@ The observer will return a final diagnostic summary.
 
 **YOU MUST use Edit tool NOW** to update session file:
 ```yaml
-status: "completed"
+status: "closed"
 timing:
-  completed: "{ISO timestamp}"
-  duration_ms: {calculated}
+  closed_at: "{ISO timestamp}"
 ```
 
-### Step 3.2: Clear State
-
-**YOU MUST use Edit tool NOW** to set `current_session: null` in `.s2s/state.yaml`.
-
-### Step 3.3: Read Session for Summary
+### Step 3.2: Read Session for Summary
 
 **YOU MUST use Read tool** to read the completed session file.
 

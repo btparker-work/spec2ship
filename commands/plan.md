@@ -1,7 +1,7 @@
 ---
-description: Generate implementation plans. Smart behavior - reads from specs/architecture docs if available, otherwise prompts for topic.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Read, Write, Edit, Glob, Task, AskUserQuestion, TodoWrite
-argument-hint: [--component <name>] [--all] [--with-branches]
+description: Generate implementation plans. Smart behavior - reads from specs/architecture docs if available, otherwise prompts for topic. Auto-detects active plans.
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Bash(git:*), Bash(grep:*), Read, Write, Edit, Glob, Task, AskUserQuestion, TodoWrite
+argument-hint: [--component <name>] [--all] [--with-branches] [--new] [--session <id>]
 ---
 
 # Generate Implementation Plans
@@ -76,6 +76,56 @@ Extract from $ARGUMENTS:
 - **--component**: Generate plan for specific component only
 - **--all**: Generate plans for all identified components/features
 - **--with-branches**: Create git branches for each plan
+- **--new**: Force create new plan (skip auto-detect)
+- **--session**: Resume specific plan by ID
+
+---
+
+## Auto-detect Active Plans
+
+**IF** --session flag is present:
+- Verify plan exists: `.s2s/plans/{plan-id}.md`
+- If exists, read plan and display status, then ask what to do
+- If not exists, display error and list available plans
+
+**IF** --new flag is present:
+- Skip auto-detect
+- Continue to Planning Mode
+
+**OTHERWISE** check for active plans:
+
+Use Glob to find plan files: `.s2s/plans/*.md`
+
+For each plan file, read and check for `**Status**: active`:
+
+**IF** active plans found:
+
+1. Display list:
+
+```
+Active implementation plans found:
+══════════════════════════════════
+
+1. {plan-id}
+   Topic: {title from plan}
+   Status: active
+   Tasks: {completed}/{total}
+
+2. {plan-id}
+   ...
+
+[n] Create new plan
+
+What would you like to do?
+```
+
+2. Ask using AskUserQuestion with options:
+   - For each plan: "Continue {plan-id}"
+   - "Create new plan"
+
+3. Based on user choice:
+   - If existing plan selected → Display plan tasks and suggest `/s2s:plan:start "{plan-id}"`
+   - If "Create new plan" → Continue to Planning Mode
 
 ---
 
@@ -310,10 +360,7 @@ For each plan created:
 3. Checkout back to original branch
 4. Update plan file with branch name
 
-### Update State
-
-Update `.s2s/state.yaml`:
-- Add all new plans with status "planning"
+### Update CONTEXT.md
 
 Update `.s2s/CONTEXT.md`:
 - Update phase to "plan"
@@ -339,11 +386,11 @@ Update `.s2s/CONTEXT.md`:
 
     Next steps:
 
-    Start working on the first plan:
-      /s2s:plan:start "{first-plan-id}"
+    Start working on a plan:
+      /s2s:plan --session "{first-plan-id}"
 
     View all plans:
       /s2s:plan:list
 
-    Create a quick ad-hoc plan:
-      /s2s:plan:create "topic"
+    Close a completed plan:
+      /s2s:plan:close

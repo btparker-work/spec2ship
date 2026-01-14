@@ -88,8 +88,8 @@ Examples:
 ### Configuration
 ```
 .s2s/config.yaml                          # Project configuration
-.s2s/state.yaml                           # Current state
 .s2s/CONTEXT.md                           # Project context
+.s2s/sessions/                            # Session files (single folder)
 ```
 
 ### Output Documents

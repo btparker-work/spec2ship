@@ -149,8 +149,8 @@ status: "active"
 
 timing:
   started: "{ISO timestamp}"
-  completed: null
-  duration_ms: null
+  last_activity: "{ISO timestamp}"
+  closed_at: null
 
 artifacts:
   requirements: []
@@ -167,13 +167,6 @@ metrics:
   rounds: 0
   tasks: 0
   tokens: 0
-```
-
-### Step 1.5: Update State File
-
-Edit `.s2s/state.yaml`:
-```yaml
-current_session: "{session-id}"
 ```
 
 ---
@@ -522,17 +515,12 @@ If `next == "escalate"`:
 ### Step 3.1: Update Session Status
 
 ```yaml
-status: "completed"
+status: "closed"
 timing:
-  completed: "{ISO timestamp}"
-  duration_ms: {calculated}
+  closed_at: "{ISO timestamp}"
 ```
 
-### Step 3.2: Clear State
-
-Set `current_session: null` in `.s2s/state.yaml`.
-
-### Step 3.3: Read Session for Summary
+### Step 3.2: Read Session for Summary
 
 **YOU MUST Read session file** to generate summary from Single Source of Truth.
 

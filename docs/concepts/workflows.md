@@ -105,11 +105,12 @@ Each phase can be run independently:
 
 ## State Management
 
-Workflow state is tracked in `.s2s/state.yaml`:
-- Current phase
-- Completed phases
+Workflow state is tracked in session files (`.s2s/sessions/*.yaml`):
+- Session status (active/closed)
 - Last activity timestamp
-- Active sessions and plans
+- Round progress and artifacts
+
+Each session file is the single source of truth for its workflow.
 
 ---
 

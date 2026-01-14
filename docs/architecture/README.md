@@ -162,7 +162,7 @@ COMMAND (orchestrator)
      │    artifacts, next_action
      │         │
      ▼         ▼
-SESSION FILE (state.yaml)
+SESSION FILE (.s2s/sessions/*.yaml)
      │
      ▼
 OUTPUT DOCS (requirements.md, etc.)

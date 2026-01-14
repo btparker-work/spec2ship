@@ -84,9 +84,9 @@ s2s:
   type: "{standalone|workspace|component|null}"
   has_config: {true|false}     # .s2s/config.yaml exists
   has_context: {true|false}    # .s2s/CONTEXT.md exists
-  has_state: {true|false}      # .s2s/state.yaml exists
+  has_sessions: {true|false}   # .s2s/sessions/ exists
   plans_count: {number}
-  current_plan: "{from state.yaml or null}"
+  active_sessions_count: {number}
 
 tech_stack:
   languages: ["{detected}"]
@@ -178,5 +178,5 @@ implementation_status: "none"
 changes_detected:
   any_changes: false
   details: null
-recommendations: ["S2S incomplete - run /s2s:init to add missing config.yaml and state.yaml"]
+recommendations: ["S2S incomplete - run /s2s:init to add missing config.yaml or CONTEXT.md"]
 ```

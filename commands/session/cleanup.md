@@ -19,7 +19,6 @@ Based on the context output above, determine:
 - **S2S initialized**: If `.s2s` directory appears → "yes", otherwise → "NOT_S2S"
 
 If S2S is initialized:
-- Read `.s2s/state.yaml` to get `current_session` value
 - Use Glob to find all `.s2s/sessions/*.yaml` files
 
 ---
@@ -36,7 +35,7 @@ If S2S initialized is "NOT_S2S":
 
 Extract from $ARGUMENTS:
 - **--older-than**: Age threshold (7d|30d|90d). Default: 30d
-- **--status**: Only cleanup sessions with this status. Default: completed,failed,abandoned
+- **--status**: Only cleanup sessions with this status. Default: closed
 - **--dry-run**: Show what would be deleted without deleting
 
 Parse age threshold:
@@ -58,19 +57,17 @@ For each session file:
    - `id`
    - `status`
    - `timing.started`
-   - `timing.completed` (if exists)
+   - `timing.closed_at` (if exists)
    - `timing.last_activity`
-3. Calculate age from `timing.last_activity` or `timing.completed`
+3. Calculate age from `timing.last_activity` or `timing.closed_at`
 4. Mark for deletion if:
    - Age > threshold AND
-   - Status matches filter AND
-   - NOT the current_session
+   - Status matches filter
 
 ### Protection rules
 
 **NEVER delete**:
-- The current active session (`current_session` from state.yaml)
-- Sessions with `status: "active"` (unless explicitly included)
+- Sessions with `status: "active"`
 - Sessions younger than threshold
 
 ### Show cleanup preview

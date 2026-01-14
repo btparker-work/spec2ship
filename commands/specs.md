@@ -1,7 +1,7 @@
 ---
-description: Define functional requirements through a roundtable discussion. Reads CONTEXT.md and produces structured requirements.md.
-allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Read, Write, Edit, Glob, Task, AskUserQuestion
-argument-hint: [--skip-roundtable] [--format srs|volere|simple] [--strategy standard|disney|consensus-driven] [--verbose] [--interactive] [--diagnostic]
+description: Define functional requirements through a roundtable discussion. Reads CONTEXT.md and produces structured requirements.md. Auto-detects active sessions.
+allowed-tools: Bash(pwd:*), Bash(ls:*), Bash(mkdir:*), Bash(date:*), Bash(grep:*), Read, Write, Edit, Glob, Task, AskUserQuestion
+argument-hint: [--skip-roundtable] [--format srs|volere|simple] [--strategy standard|disney|consensus-driven] [--verbose] [--interactive] [--diagnostic] [--new] [--session <id>]
 skills: roundtable-execution, roundtable-strategies, iso25010-requirements
 ---
 
@@ -27,6 +27,69 @@ If S2S is initialized:
 ---
 
 ## Instructions
+
+### Parse flags for session handling
+
+Extract from $ARGUMENTS:
+- **--new**: Force create new session (skip auto-detect)
+- **--session**: Resume specific session by ID
+
+### Auto-detect active sessions
+
+**IF** --session flag is present:
+- Verify session exists: `.s2s/sessions/{session-id}.yaml`
+- If exists, jump to **Phase 2: Round Execution Loop** (resume session)
+- If not exists, display error and list available sessions
+
+**IF** --new flag is present:
+- Skip auto-detect
+- Continue to validation
+
+**OTHERWISE** check for active specs sessions:
+
+**Use Bash tool** to find active specs sessions:
+
+```bash
+grep -l 'workflow_type: specs' .s2s/sessions/*.yaml 2>/dev/null | xargs grep -l 'status: active' 2>/dev/null
+```
+
+**IF** no active specs sessions found:
+- Continue to validation (create new session)
+
+**IF** active specs sessions found:
+
+1. Read each session file to extract:
+   - `id`
+   - `topic`
+   - `metrics.rounds_completed`
+
+2. Display list:
+
+```
+Active specs sessions found:
+════════════════════════════
+
+1. {session-id}
+   Topic: {topic}
+   Progress: Round {rounds_completed}
+
+2. {session-id}
+   ...
+
+[n] Start new session
+
+Which would you like to continue?
+```
+
+3. Ask using AskUserQuestion with options:
+   - For each session: "{session-id}"
+   - "Start new session"
+
+4. Based on user choice:
+   - If existing session selected → Jump to **Phase 2** (resume)
+   - If "Start new session" → Continue to validation
+
+---
 
 ### Validate environment
 
@@ -190,7 +253,7 @@ status: "active"
 timing:
   started: "{ISO timestamp}"
   last_activity: "{ISO timestamp}"
-  completed: null
+  closed_at: null
 
 # Agent state (for resume capability)
 # Stores agent IDs to enable resuming agents across rounds
@@ -255,13 +318,6 @@ validation:
   last_check: null
   status: null
   warnings: []
-```
-
-### Step 1.5: Update State File
-
-**YOU MUST use Edit tool NOW** to update `.s2s/state.yaml`:
-```yaml
-current_session: "{session-id}"
 ```
 
 ---
@@ -493,7 +549,7 @@ response:
   participants: "{all or list}"
 
 result:
-  status: "completed"
+  status: "closed"
 
 tokens:
   input_estimate: {estimated input tokens}
@@ -705,7 +761,7 @@ response:
   suggestions: [...]
 
 result:
-  status: "completed"
+  status: "closed"
 
 tokens:
   input_estimate: {estimated input tokens}
@@ -944,7 +1000,7 @@ response:
 result:
   artifacts_proposed: {count}
   conflicts_resolved: {count}
-  status: "completed"
+  status: "closed"
 
 tokens:
   input_estimate: {estimated input tokens}
@@ -1361,17 +1417,12 @@ The observer will return a final diagnostic summary.
 
 **YOU MUST use Edit tool NOW** to update session file:
 ```yaml
-status: "completed"
+status: "closed"
 timing:
-  completed: "{ISO timestamp}"
-  duration_ms: {calculated}
+  closed_at: "{ISO timestamp}"
 ```
 
-### Step 3.2: Clear State
-
-**YOU MUST use Edit tool NOW** to set `current_session: null` in `.s2s/state.yaml`.
-
-### Step 3.3: Read Session for Summary
+### Step 3.2: Read Session for Summary
 
 **YOU MUST use Read tool** to read the completed session file.
 

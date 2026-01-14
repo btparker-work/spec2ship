@@ -27,7 +27,7 @@ Based on the context output above, determine:
 - **S2S initialized**: If `.s2s` directory appears → "yes", otherwise → "NOT_S2S"
 
 If S2S is initialized:
-- Read `.s2s/state.yaml` to get `current_session` value
+- Use Glob to find session files: `.s2s/sessions/*.yaml`
 
 ---
 
@@ -53,12 +53,18 @@ Extract from $ARGUMENTS:
 **IF** $ARGUMENTS contains a session ID:
 - Use that ID
 
-**ELSE**:
-- Read `.s2s/state.yaml` and use `current_session`
-- **IF** `current_session` is null:
+**ELSE** find active sessions:
+- Use Bash: `grep -l 'status: active' .s2s/sessions/*.yaml 2>/dev/null`
+- **IF** no active sessions found:
 
-      Error: No session specified and no active session.
+      Error: No session specified and no active session found.
       Usage: /s2s:session:validate <session-id>
+
+- **IF** multiple active sessions:
+  - List them and ask user which to validate using AskUserQuestion
+
+- **IF** single active session:
+  - Use that session
 
 ### Read session file
 

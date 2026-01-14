@@ -33,7 +33,7 @@ This document describes the complete flow of a roundtable discussion from user c
 │                                                                 │
 │  PHASE 3: COMPLETION                                            │
 │  • Generate output (requirements.md, architecture/, summary)    │
-│  • Update state.yaml                                            │
+│  • Update session file (status: closed)                         │
 │  • Display summary                                              │
 └─────────────────────────────────────────────────────────────────┘
 

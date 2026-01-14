@@ -88,7 +88,6 @@ After initialization, your project will have:
 your-project/
 ├── .s2s/                    # S2S working directory
 │   ├── config.yaml          # Configuration
-│   ├── state.yaml           # Current state
 │   ├── CONTEXT.md           # Project context
 │   ├── sessions/            # Roundtable sessions
 │   └── plans/               # Implementation plans
