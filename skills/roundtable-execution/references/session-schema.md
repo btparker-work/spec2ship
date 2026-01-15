@@ -10,6 +10,7 @@ Complete YAML schema for roundtable session files and folder structure.
 └── {session-id}/                  # Session folder (for snapshots and verbose)
     ├── context-snapshot.yaml      # Immutable project context
     ├── config-snapshot.yaml       # Immutable roundtable config
+    ├── agenda.yaml                # Workflow agenda with done_when criteria
     │
     └── rounds/                    # Verbose dumps (only with --verbose)
         ├── 001-01-facilitator-question.yaml

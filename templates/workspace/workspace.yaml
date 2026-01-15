@@ -20,7 +20,7 @@ roundtable:
   default_participants:
     - software-architect
     - technical-lead
-  strategy: "round-robin"
+  strategy: "standard"
 
 # Documentation paths
 docs:
