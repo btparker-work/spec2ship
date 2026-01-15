@@ -61,7 +61,8 @@ Complexity: {Detected.complexity.level}
 {If Detected.s2s.initialized}
 S2S Status:
   Plans: {Detected.s2s.plans_count}
-  Current plan: {Detected.s2s.current_plan}
+  Active plan: {Detected.s2s.current_plan or "none"}
+  Active sessions: {Detected.s2s.active_sessions_count}
   Changes detected: {Detected.changes_detected.any_changes}
 {/If}
 

@@ -52,17 +52,26 @@ Only read files that EXIST in the directory:
 
 **Do NOT search recursively unless config files indicate a complex project.**
 
-### Step 3: Count S2S Plans (if .s2s exists)
+### Step 3: Count S2S Plans and Sessions (if .s2s exists)
 
 Use `Glob("*.md", path=directory + "/.s2s/plans")` to count plans.
+Use `Glob("*.yaml", path=directory + "/.s2s/sessions")` to list sessions.
 
-### Step 4: Assess Implementation Status
+For each plan file, read first 10 lines to check `**Status**: active` - if found, that's the `current_plan`.
+For sessions, count those with `status: "active"` to get `active_sessions_count`.
+
+### Step 4: Assess Implementation Status and Complexity
 
 Based on files present, determine current implementation status:
 - **none**: Empty or only docs/config files
 - **minimal**: Some source files, basic structure
 - **partial**: Substantial code, tests present
 - **complete**: Full implementation with tests and docs
+
+Assess complexity level:
+- **simple**: Few files, single language, no complex dependencies
+- **moderate**: Multiple modules, some dependencies, standard patterns
+- **complex**: Monorepo, multiple services, extensive configuration
 
 This is used by init to decide the flow (new project vs existing).
 
@@ -86,6 +95,7 @@ s2s:
   has_context: {true|false}    # .s2s/CONTEXT.md exists
   has_sessions: {true|false}   # .s2s/sessions/ exists
   plans_count: {number}
+  current_plan: "{plan-id or null}"  # ID of active plan, if any
   active_sessions_count: {number}
 
 tech_stack:
@@ -98,6 +108,10 @@ detected_files:
   config_files: ["{files found}"]
 
 implementation_status: "{none|minimal|partial|complete}"  # Current state of the project
+
+complexity:
+  level: "{simple|moderate|complex}"
+  reasons: ["{why this level}"]
 
 changes_detected:
   any_changes: {true|false}
@@ -134,9 +148,10 @@ s2s:
   type: null
   has_config: false
   has_context: false
-  has_state: false
+  has_sessions: false
   plans_count: 0
   current_plan: null
+  active_sessions_count: 0
 tech_stack:
   languages: []
   frameworks: []
@@ -145,6 +160,9 @@ detected_files:
   readme: null
   config_files: []
 implementation_status: "none"
+complexity:
+  level: "simple"
+  reasons: ["Empty or minimal project"]
 changes_detected:
   any_changes: false
   details: null
@@ -164,9 +182,10 @@ s2s:
   type: null           # Unknown - no config.yaml to determine type
   has_config: false    # MISSING - needs to be generated
   has_context: true
-  has_state: false     # MISSING - needs to be generated
+  has_sessions: false  # MISSING - needs to be created
   plans_count: 0
   current_plan: null
+  active_sessions_count: 0
 tech_stack:
   languages: []
   frameworks: []
@@ -175,8 +194,11 @@ detected_files:
   readme: null
   config_files: []
 implementation_status: "none"
+complexity:
+  level: "simple"
+  reasons: ["No source code detected"]
 changes_detected:
   any_changes: false
   details: null
-recommendations: ["S2S incomplete - run /s2s:init to add missing config.yaml or CONTEXT.md"]
+recommendations: ["S2S incomplete - run /s2s:init to add missing config.yaml"]
 ```
