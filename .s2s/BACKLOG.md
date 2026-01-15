@@ -1,6 +1,6 @@
 # Spec2Ship Development Backlog
 
-**Updated**: 2026-01-15
+**Updated**: 2026-01-15T22:00:00Z
 **Format**: Single markdown file for LLM consumption
 
 ---
@@ -10,6 +10,7 @@
 | Prefix | Category | Example |
 |--------|----------|---------|
 | ARCH | Architecture decisions | ARCH-001 |
+| PATH | Path/structure changes | PATH-001 |
 | EXT | Extensions/customization | EXT-001 |
 | QUAL | Quality/validation | QUAL-001 |
 | TEST | Testing | TEST-001 |
@@ -132,18 +133,21 @@
 
 ### INIT-001: Optional Structure Creation
 
-**Status**: draft | **Created**: 2026-01-11
+**Status**: draft | **Created**: 2026-01-11 | **Updated**: 2026-01-15
 
-**Context**: `/s2s:init` creates predefined folder structure but many users have existing structure.
+**Context**: `/s2s:init` creates `.s2s/` structure. Users may want minimal setup.
+
+**Note**: As of PATH-001, init no longer creates `docs/` - all output goes to `.s2s/`.
 
 **Proposal**:
-1. Add `--no-structure` flag to skip folder creation
+1. Add `--minimal` flag to create only config.yaml and CONTEXT.md
 2. Interactive prompt when no flag provided
-3. Detect existing structure
+3. Detect existing `.s2s/` structure
 
 **Acceptance Criteria**:
-- [ ] `--no-structure` flag works
+- [ ] `--minimal` flag works
 - [ ] CONTEXT.md and config always created
+- [ ] Existing .s2s/ structure detected
 
 ---
 
@@ -227,17 +231,21 @@
 
 ### INIT-002: Intelligent Project Assessment
 
-**Status**: draft | **Created**: 2026-01-11
+**Status**: draft | **Created**: 2026-01-11 | **Updated**: 2026-01-15
 
 **Context**: Commands don't assess project state before starting.
 
 **Proposal**:
-1. Analyze: CONTEXT.md, requirements.md, architecture/, git status
-2. Suggest next step: "No requirements? Run /s2s:specs"
+1. Analyze project state using dual-path search (PATH-001):
+   - First check `docs/` (exported/public documentation)
+   - Then check `.s2s/` (internal working files)
+2. Detect: CONTEXT.md, requirements.md, architecture.md, decisions/, git status
+3. Suggest next step: "No requirements? Run /s2s:specs"
 
 **Acceptance Criteria**:
 - [ ] Project state analysis runs before workflow commands
 - [ ] Clear suggestions based on detected state
+- [ ] Dual-path search for documentation (docs/ → .s2s/)
 
 ---
 
@@ -295,9 +303,51 @@ Real-time structured output (JSON) for potential GUI consumption.
 
 ---
 
-### OUT-002: Export Commands
+### OUT-002: Export Commands (Superseded by OUT-003)
 
-`/s2s:specs:export --format ieee830` and `/s2s:design:export --format arc42`
+**Status**: rejected | **Reason**: Consolidated into OUT-003
+
+Original proposal was `/s2s:specs:export` and `/s2s:design:export` as subcommands.
+New approach: Single `/s2s:export` command that handles all artifact types.
+
+---
+
+### OUT-003: Unified Export Command
+
+**Status**: planned | **Created**: 2026-01-15 | **Priority**: High
+
+**Context**: With PATH-001, all S2S output now goes to `.s2s/`. Need a way to export/publish artifacts to project `docs/` folder for public documentation.
+
+**Proposal**: Single `/s2s:export` command:
+
+```bash
+# Export all artifacts
+/s2s:export
+
+# Export specific types
+/s2s:export --specs          # .s2s/requirements.md → docs/specifications/
+/s2s:export --design         # .s2s/architecture.md → docs/architecture/
+/s2s:export --decisions      # .s2s/decisions/ → docs/decisions/
+
+# Export with format conversion
+/s2s:export --specs --format ieee830
+/s2s:export --design --format arc42
+
+# First-time export asks for target path confirmation
+```
+
+**Behavior**:
+1. First export of each type asks user to confirm destination path
+2. Subsequent exports use confirmed path (stored in config)
+3. Warns if target file exists, asks to overwrite or merge
+4. Adds header comment: `<!-- Exported by S2S from .s2s/requirements.md -->`
+
+**Acceptance Criteria**:
+- [ ] `/s2s:export` command created
+- [ ] Supports --specs, --design, --decisions flags
+- [ ] First-time path confirmation
+- [ ] Overwrite/merge prompt for existing files
+- [ ] Format conversion optional (ieee830, arc42)
 
 ---
 
@@ -327,6 +377,7 @@ _Unstructured ideas and observations for future consideration._
 
 | ID | Description | Completed | Notes |
 |----|-------------|-----------|-------|
+| PATH-001 | Consolidate output to .s2s with dual-path reading | 2026-01-15 | Commit 036e6e7 |
 | ARCH-001 | Session management simplification | 2026-01-15 | 7 commits, ADR-0007 |
 | OSS-001 | OSS compliance and documentation | 2026-01-14 | - |
 | SESS-001 | Intelligent auto-resume | 2026-01-15 | Merged into ARCH-001 |
@@ -337,4 +388,5 @@ _Unstructured ideas and observations for future consideration._
 
 | ID | Description | Reason |
 |----|-------------|--------|
+| OUT-002 | Subcommand exports (specs:export, design:export) | Superseded by OUT-003 unified export |
 | MISC-001 | Release v0.2.5 | Doc-only changes don't require version tags |
