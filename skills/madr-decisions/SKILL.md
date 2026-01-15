@@ -223,15 +223,23 @@ Chosen option: "Event-driven with message queue", because it provides decoupling
 
 In Spec2Ship projects:
 
-| Scope | Location | Format |
-|-------|----------|--------|
-| **Internal/WIP** | `.s2s/decisions/` | `NNNN-slug.md` |
-| **Public/Stable** | `docs/architecture/decisions/` | `NNNN-slug.md` |
+| Scope | Location | Created by |
+|-------|----------|------------|
+| **Internal (WIP)** | `.s2s/decisions/` | `/s2s:design` |
+| **External (public)** | `docs/decisions/` or `docs/architecture/decisions/` | Future `/s2s:export` |
 
-- Internal decisions: exploratory, work-in-progress, implementation details
-- Public decisions: stable, significant for contributors, curated
-- Roundtable discussions may produce ADR candidates
-- Plans reference relevant ADRs
+**Writing behavior**:
+- All commands (`/s2s:design`, etc.) write ADRs to `.s2s/decisions/`
+- External/public ADRs are created via export command (to be implemented)
+
+**Reading behavior** (for exploration agents and `/s2s:plan`):
+- First check `docs/` paths (exported/public - higher priority)
+- Then check `.s2s/decisions/` (internal/working)
+- This ensures public documentation takes precedence
+
+**Naming**:
+- Internal: `NNNN-slug.md` (4-digit, zero-padded)
+- External: Same format, exported to project docs folder
 
 ## ADR Index Template
 

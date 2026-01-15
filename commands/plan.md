@@ -29,8 +29,12 @@ Based on the context output above, determine:
 
 If S2S is initialized, use Read tool to:
 - Read `.s2s/CONTEXT.md` for project context and phase
-- Read `docs/specifications/requirements.md` if exists
-- Read `docs/architecture/README.md` and `docs/architecture/components.md` if exist
+- **Search for requirements** (use first found, prefer docs/ if both exist):
+  - First check `docs/specifications/requirements.md` (exported/public)
+  - Then check `.s2s/requirements.md` (internal/working)
+- **Search for architecture** (use first found, prefer docs/ if both exist):
+  - First check `docs/architecture/` (exported/public)
+  - Then check `.s2s/architecture.md` (internal/working)
 - List existing plans in `.s2s/plans/`
 
 ## Instructions
@@ -65,10 +69,12 @@ Based on available documentation:
 
     Available inputs:
     ✓ Project context (.s2s/CONTEXT.md)
-    {✓ or ✗} Requirements (docs/specifications/requirements.md)
-    {✓ or ✗} Architecture (docs/architecture/)
+    {✓ or ✗} Requirements ({source path found, or "not found"})
+    {✓ or ✗} Architecture ({source path found, or "not found"})
 
     Mode: {Full Documentation | Basic}
+
+Note: Requirements/Architecture are searched in `docs/` first (exported), then `.s2s/` (internal).
 
 ### Parse arguments
 

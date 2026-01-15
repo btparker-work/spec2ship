@@ -10,7 +10,7 @@ The specs workflow uses a roundtable discussion to define requirements for your 
 
 **Purpose**: Define what to build through collaborative discussion.
 
-**Output**: `docs/specifications/requirements.md`
+**Output**: `.s2s/requirements.md`
 
 ## Prerequisites
 
@@ -78,7 +78,7 @@ After each round, you'll see:
 
 ### Final Output
 
-The `docs/specifications/requirements.md` contains:
+The `.s2s/requirements.md` contains:
 
 ```markdown
 # Software Requirements Specification

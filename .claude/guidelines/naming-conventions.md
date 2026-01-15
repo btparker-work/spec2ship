@@ -94,9 +94,10 @@ Examples:
 
 ### Output Documents
 ```
-docs/specifications/requirements.md        # specs output
-docs/architecture/                         # design output
-docs/brainstorm/                          # brainstorm output
+.s2s/requirements.md                       # specs output
+.s2s/architecture.md                       # design output
+.s2s/decisions/                            # ADRs from design
+.s2s/BACKLOG.md                            # project backlog
 ```
 
 ---
@@ -215,8 +216,11 @@ Examples:
 - `0006-session-embedded-artifacts.md`
 
 **Rules**:
-- 4-digit zero-padded number, sequential
+- 4-digit zero-padded number, sequential (MADR standard)
 - Lowercase slug, hyphenated
 - Use MADR format (Markdown Any Decision Records)
-- Internal ADRs: `.s2s/decisions/`
-- Public ADRs: `docs/architecture/decisions/`
+
+**Locations**:
+- **Writing**: `.s2s/decisions/` (all S2S commands write here)
+- **Reading**: `docs/decisions/` → `.s2s/decisions/` (prefer exported if exists)
+- **Export**: Future `/s2s:export` will copy to `docs/`

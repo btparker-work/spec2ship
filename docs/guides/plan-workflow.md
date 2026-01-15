@@ -24,8 +24,8 @@ Plans break features into actionable tasks with clear steps and dependencies.
 ```
 
 This will:
-1. Analyze requirements from `docs/specifications/`
-2. Review architecture from `docs/architecture/`
+1. Analyze requirements from `.s2s/requirements.md`
+2. Review architecture from `.s2s/architecture.md`
 3. Generate a step-by-step implementation plan
 4. Save to `.s2s/plans/`
 

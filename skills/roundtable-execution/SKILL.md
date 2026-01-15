@@ -32,7 +32,7 @@ Each workflow has specific goals, participants, artifacts, and outputs:
 | **Default Strategy** | consensus-driven |
 | **Primary Artifacts** | REQ-* (requirements), BR-* (business rules), NFR-* (non-functional) |
 | **Secondary Artifacts** | OQ-* (open questions), CONF-* (conflicts), EX-* (exclusions) |
-| **Output** | `docs/specifications/requirements.md` |
+| **Output** | `.s2s/requirements.md` |
 | **Agenda** | `references/agenda-specs.md` |
 
 ### design Workflow
@@ -44,7 +44,7 @@ Each workflow has specific goals, participants, artifacts, and outputs:
 | **Default Strategy** | debate |
 | **Primary Artifacts** | ARCH-* (decisions), COMP-* (components), INT-* (interfaces) |
 | **Secondary Artifacts** | ADR-* (decision records), OQ-*, CONF-* |
-| **Output** | `docs/architecture/` + ADR files |
+| **Output** | `.s2s/architecture.md` + `.s2s/decisions/` |
 | **Agenda** | `references/agenda-design.md` |
 
 ### brainstorm Workflow
@@ -556,8 +556,8 @@ Extract:
 ### Step 3.4: Generate Output
 
 Based on workflow_type, generate appropriate output document:
-- **specs**: `docs/specifications/requirements.md`
-- **design**: `docs/architecture/` files + ADRs
+- **specs**: `.s2s/requirements.md`
+- **design**: `.s2s/architecture.md` + `.s2s/decisions/`
 - **brainstorm**: `.s2s/sessions/{session-id}-summary.md`
 
 ### Step 3.5: Display Completion

@@ -10,7 +10,7 @@ The design workflow uses a roundtable discussion to define architecture for your
 
 **Purpose**: Design how to build through collaborative discussion.
 
-**Output**: `docs/architecture/` (ADRs, components, interfaces)
+**Output**: `.s2s/architecture.md` + `.s2s/decisions/`
 
 ## Prerequisites
 
@@ -46,7 +46,7 @@ The roundtable covers these architecture topics (agenda):
 ```
 
 The roundtable will:
-1. Load requirements from `docs/specifications/` if available
+1. Load requirements from `.s2s/requirements.md` if available
 2. Generate architecture questions based on context
 3. Collect perspectives from participants (debate format)
 4. Synthesize into architecture decisions
@@ -108,16 +108,15 @@ After each round, you'll see:
 
 ### Final Output
 
-The `docs/architecture/` folder contains:
+The `.s2s/` folder contains:
 
 ```
-docs/architecture/
-├── decisions/
-│   ├── ARCH-001-architecture-style.md
-│   ├── ARCH-002-data-storage.md
-│   └── ...
-├── components.md
-└── interfaces.md
+.s2s/
+├── architecture.md              # Combined architecture document
+└── decisions/
+    ├── ADR-001-architecture-style.md
+    ├── ADR-002-data-storage.md
+    └── ...
 ```
 
 ### Decision Record Format (MADR)

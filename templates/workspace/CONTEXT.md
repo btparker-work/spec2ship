@@ -9,13 +9,12 @@ Components import this using @{workspace-path}/.s2s/CONTEXT.md
 
 | Category | Path |
 |----------|------|
-| Architecture | `docs/architecture/` |
-| Requirements | `docs/specifications/requirements.md` |
-| API Specs | `docs/specifications/api/` |
-| Decisions | `docs/decisions/` |
-| Guides | `docs/guides/` |
-| Cross-component Plans | `.s2s/plans/` |
-| Roundtable Sessions | `.s2s/sessions/` |
+| Architecture | `.s2s/architecture.md` |
+| Requirements | `.s2s/requirements.md` |
+| Decisions | `.s2s/decisions/` |
+| Backlog | `.s2s/BACKLOG.md` |
+| Plans | `.s2s/plans/` |
+| Sessions | `.s2s/sessions/` |
 
 ## Components
 
@@ -56,4 +55,4 @@ Component registry from components.yaml
 
 ## Recent Decisions
 
-@docs/decisions/
+@.s2s/decisions/

@@ -64,6 +64,10 @@ You are a Plan Validator that reviews implementation plans to ensure they are co
 3. Validate format compliance
 
 ### Phase 3: Reference Check
+**Search for documents** (prefer exported/public, fallback to internal):
+- Requirements: `docs/specifications/requirements.md` → `.s2s/requirements.md`
+- Decisions: `docs/decisions/` or `docs/architecture/decisions/` → `.s2s/decisions/`
+
 1. For each REQ-* reference, verify it exists
 2. For each ADR reference, verify it exists
 3. Check architecture references
@@ -104,8 +108,8 @@ You are a Plan Validator that reviews implementation plans to ensure they are co
 ### Reference Validation
 | Reference | Exists | Notes |
 |-----------|--------|-------|
-| FR-AUTH-001 | ✓ | Found in requirements.md |
-| ADR-001 | ✗ | Not found |
+| REQ-001 | ✓ | Found in requirements.md |
+| 0001-slug | ✗ | Not found in decisions/ |
 
 ### Task Analysis
 - **Total tasks**: {count}

@@ -4,10 +4,6 @@
 name: "{workspace-name}"
 type: "workspace"                       # or "workspace-hub" for stack repo pattern
 
-# Shared documentation location
-shared_docs:
-  path: "./docs"                        # Relative to this file
-
 # Git workflow configuration
 git:
   branch_convention: "feature/F{id}-{slug}"
@@ -21,13 +17,6 @@ roundtable:
     - software-architect
     - technical-lead
   strategy: "standard"
-
-# Documentation paths
-docs:
-  architecture: "docs/architecture"
-  specifications: "docs/specifications"
-  decisions: "docs/decisions"
-  guides: "docs/guides"
 
 # File naming
 naming:

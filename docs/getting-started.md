@@ -47,7 +47,7 @@ A roundtable of AI agents will discuss and define:
 - Non-functional requirements
 - Business rules
 
-Output: `docs/specifications/requirements.md`
+Output: `.s2s/requirements.md`
 
 ### 3. Design Architecture
 
@@ -62,7 +62,7 @@ The roundtable discusses and produces:
 - Component definitions
 - Interface specifications
 
-Output: `docs/architecture/`
+Output: `.s2s/architecture.md` + `.s2s/decisions/`
 
 ### 4. Create Implementation Plan
 

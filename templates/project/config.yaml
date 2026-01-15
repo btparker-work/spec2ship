@@ -88,13 +88,6 @@ roundtable:
 #   design: "debate"              # Best for evaluating architectural options
 #   brainstorm: "disney"          # Best for creative ideation
 
-# Documentation paths
-docs:
-  architecture: "docs/architecture"
-  specifications: "docs/specifications"
-  decisions: "docs/decisions"
-  guides: "docs/guides"
-
 # File naming
 naming:
   timestamp_format: "YYYYMMDD-HHMMSS"

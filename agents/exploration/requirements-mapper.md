@@ -27,7 +27,10 @@ You are a Requirements Mapper that traces how requirements are implemented in co
 ## Process
 
 ### Phase 1: Requirements Review
-1. Read requirements documentation (`docs/specifications/requirements.md`)
+1. **Search for requirements documentation** (priority order):
+   - First check `docs/specifications/requirements.md` (exported/public)
+   - Then check `.s2s/requirements.md` (internal/working)
+   - Use the first one found; if both exist, prefer docs/ (public version)
 2. Parse functional requirements (REQ-*)
 3. Parse non-functional requirements (NREQ-*)
 4. Create requirements checklist
@@ -111,7 +114,9 @@ Code without matching requirements (potential cleanup):
 
 ## What to Look For
 
-- Requirements documents in `docs/specifications/`
+- Requirements documents (check both locations):
+  - `docs/specifications/requirements.md` (exported/public - higher priority)
+  - `.s2s/requirements.md` (internal/working)
 - Feature specifications
 - Test files that verify requirements
 - API documentation

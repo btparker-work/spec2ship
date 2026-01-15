@@ -10,15 +10,15 @@
 
 ### Requirements
 <!-- Link to relevant functional requirements -->
-<!-- Format: - FR-XXX: description @docs/specifications/requirements.md#anchor -->
+<!-- Format: - REQ-XXX: description @.s2s/requirements.md -->
 
 ### Architecture
 <!-- Link to relevant architecture sections -->
-<!-- Format: - Component: role @docs/architecture/components.md#anchor -->
+<!-- Format: - Component: role @.s2s/architecture.md -->
 
 ### Decisions
 <!-- Link to relevant ADRs -->
-<!-- Format: - ADR: summary @docs/decisions/YYYYMMDD-HHMMSS-topic.md -->
+<!-- Format: - ADR-NNN: summary @.s2s/decisions/ADR-NNN-topic.md -->
 
 ## Design Notes
 

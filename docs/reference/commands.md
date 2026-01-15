@@ -35,7 +35,7 @@ Define requirements through roundtable discussion.
 
 **Default participants**: `product-manager`, `business-analyst`, `qa-lead`
 
-**Output**: `docs/specifications/requirements.md`
+**Output**: `.s2s/requirements.md`
 
 ### `/s2s:design`
 
@@ -49,7 +49,7 @@ Design architecture through roundtable discussion.
 
 **Default participants**: `software-architect`, `technical-lead`, `devops-engineer`
 
-**Output**: `docs/architecture/`
+**Output**: `.s2s/architecture.md` + `.s2s/decisions/`
 
 ### `/s2s:brainstorm "topic"`
 

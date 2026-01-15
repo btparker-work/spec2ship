@@ -187,7 +187,7 @@ AS-001               Users have stable internet
 ## Integration with S2S
 
 In Spec2Ship projects:
-- Requirements go in `docs/specifications/requirements.md`
+- Requirements go in `.s2s/requirements.md`
 - Use consistent ID format (REQ-*, NFR-*)
 - Reference requirements in plans
 - Link to ADRs for quality decisions

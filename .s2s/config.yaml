@@ -65,13 +65,6 @@ roundtable:
     max_rounds: 20
     max_rounds_per_phase: 10
 
-# Documentation paths
-docs:
-  architecture: "docs/architecture"
-  specifications: "docs/specifications"
-  decisions: "docs/decisions"
-  guides: "docs/guides"
-
 # File naming
 naming:
   timestamp_format: "YYYYMMDD-HHMMSS"
