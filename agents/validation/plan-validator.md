@@ -34,7 +34,7 @@ You are a Plan Validator that reviews implementation plans to ensure they are co
 
 ### References Validation
 - [ ] Requirements section has entries or explicit "N/A"
-- [ ] Referenced requirements (FR-*) exist in specs
+- [ ] Referenced requirements (REQ-*) exist in specs
 - [ ] Architecture section has entries or explicit "N/A"
 - [ ] Decisions section has entries or explicit "N/A"
 - [ ] Referenced ADRs exist
@@ -64,7 +64,7 @@ You are a Plan Validator that reviews implementation plans to ensure they are co
 3. Validate format compliance
 
 ### Phase 3: Reference Check
-1. For each FR-* reference, verify it exists
+1. For each REQ-* reference, verify it exists
 2. For each ADR reference, verify it exists
 3. Check architecture references
 

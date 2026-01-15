@@ -28,7 +28,7 @@ You are a Specification Validator that reviews project specifications to ensure 
 
 ### Requirements (`docs/specifications/requirements.md`)
 Based on ISO 25010 structure:
-- [ ] Functional requirements with IDs (FR-*)
+- [ ] Functional requirements with IDs (REQ-*)
 - [ ] Non-functional requirements with IDs (NFR-*)
 - [ ] Quality characteristics addressed
 - [ ] Priority/MoSCoW indicators
@@ -123,7 +123,7 @@ For each document:
 ### Cross-Reference Check
 | Reference | Source | Target | Status |
 |-----------|--------|--------|--------|
-| FR-001 | plan-xyz | requirements.md | ✓ Found |
+| REQ-001 | plan-xyz | requirements.md | ✓ Found |
 | ADR-001 | components.md | decisions/ | ✗ Not found |
 
 ### Issues Found
