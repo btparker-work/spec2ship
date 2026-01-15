@@ -98,7 +98,7 @@ You are a Plan Validator that reviews implementation plans to ensure they are co
 |-------|--------|-------|
 | Title | ✓ | Present |
 | Plan ID | ✓ | Valid format |
-| Status | ✓ | "planning" |
+| Status | ✓ | "active" |
 | Tasks | ✗ | Only 2 tasks - needs breakdown |
 
 ### Reference Validation

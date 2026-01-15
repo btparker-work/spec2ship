@@ -1,7 +1,7 @@
 ---
 description: List all implementation plans with their status.
 allowed-tools: Bash(ls:*), Read, Glob, Grep
-argument-hint: [--status planning|active|closed|blocked]
+argument-hint: [--status active|closed]
 ---
 
 # List Implementation Plans
@@ -60,17 +60,11 @@ If $ARGUMENTS contains "--status", filter the results to show only plans matchin
 
 Group plans by status and display:
 
-**Active plans** (prefix with *):
+**Active plans** (prefix with →):
 - Show plan ID, topic, branch, progress (completed/total tasks), start date
 
-**Planning plans** (prefix with -):
-- Show plan ID, topic, task count, creation date
-
-**Completed plans** (prefix with ✓):
-- Show plan ID, topic, completion date
-
-**Blocked plans** (prefix with !):
-- Show plan ID, topic, branch
+**Closed plans** (prefix with ✓):
+- Show plan ID, topic, closed date
 
 End with a summary line showing total counts by status.
 

@@ -305,7 +305,7 @@ Write plan file `.s2s/plans/{timestamp}-{slug}.md`:
 # Implementation Plan: {Name}
 
 **ID**: {timestamp}-{slug}
-**Status**: planning
+**Status**: active
 **Branch**: {branch-name if --with-branches, else N/A}
 **Created**: {ISO timestamp}
 **Updated**: {ISO timestamp}
@@ -392,5 +392,5 @@ Update `.s2s/CONTEXT.md`:
     View all plans:
       /s2s:plan:list
 
-    Close a completed plan:
+    Close a plan:
       /s2s:plan:close

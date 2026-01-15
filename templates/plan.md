@@ -1,7 +1,7 @@
 # Implementation Plan: {TOPIC}
 
 **ID**: {YYYYMMDD-HHMMSS-slug}
-**Status**: planning
+**Status**: active
 **Branch**: {feature/FNN-slug}
 **Created**: {YYYY-MM-DDTHH:MM:SSZ}
 **Updated**: {YYYY-MM-DDTHH:MM:SSZ}
