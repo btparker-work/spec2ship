@@ -495,7 +495,10 @@ participant_context:
 
 **IF verbose_flag == true**: Write dump to `rounds/{NNN}-01-facilitator-question.yaml`:
 
-**IMPORTANT**: Save FULL content, not just keys or placeholders.
+**CRITICAL - ALL fields below are REQUIRED**:
+- Save FULL content, not just keys or placeholders
+- You MUST save `response.participant_context.shared` with ALL sub-fields
+- ALL fields are REQUIRED regardless of resume mode
 
 ```yaml
 # Round {N} - Facilitator Question
@@ -742,6 +745,9 @@ references:
 **Store responses** for synthesis and verbose dump.
 
 **IF verbose_flag == true**: Write dump for each participant to `rounds/{NNN}-02-{participant-id}.yaml`:
+
+**CRITICAL - ALL fields below are REQUIRED** (including in resume mode):
+
 ```yaml
 # Round {N} - {Participant Role} Response
 round: {N}
@@ -751,7 +757,9 @@ action: "response"
 started_at: "{ISO timestamp}"
 completed_at: "{ISO timestamp}"
 
-input: {... the YAML input sent to participant ...}
+input:
+  question: "{the question}"
+  context: {... context sent ...}
 
 response:
   participant: "{participant-id}"
@@ -819,6 +827,12 @@ question_asked: "{facilitator's question from step 2.2}"
 # Participant responses to synthesize (full content for decision-making)
 responses:
   product-manager:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: {0.0-1.0}
+  ux-researcher:
     position: "{position}"
     rationale: [...]
     concerns: [...]
@@ -894,6 +908,12 @@ responses:
     concerns: [...]
     suggestions: [...]
     confidence: 0.85
+  ux-researcher:
+    position: "{position}"
+    rationale: [...]
+    concerns: [...]
+    suggestions: [...]
+    confidence: 0.8
   business-analyst:
     position: "{position}"
     rationale: [...]

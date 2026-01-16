@@ -410,6 +410,12 @@ TBD - to be defined during design phase
 {Detected.tech_stack formatted or Context.tech_stack}
 {/If}
 
+## Project Tracking
+
+**Backlog**: `.s2s/BACKLOG.md` - Single source of truth for planned work, ideas, and technical debt.
+
+**Decisions**: `.s2s/decisions/` - Architecture Decision Records (ADRs) in MADR format.
+
 ## Open Questions
 
 - {any unresolved items}

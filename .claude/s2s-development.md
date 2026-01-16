@@ -355,6 +355,24 @@ In complex multi-agent systems, LLMs can "forget" instructions from earlier cont
 | All content in SKILL.md | Token bloat | Progressive disclosure |
 | Generic trigger phrases | Skill never activates | Exact phrases users would say |
 
+### File Writing (CRITICAL)
+
+| Anti-Pattern | Problem | Correct Approach |
+|--------------|---------|------------------|
+| Writing to `docs/` directly | Bypasses export control | Write to `.s2s/`, export via command |
+| Creating ADRs in `docs/decisions/` | Public docs without review | Write to `.s2s/decisions/`, export later |
+
+**File Output Boundaries:**
+
+| Scope | Path | Written By |
+|-------|------|------------|
+| **Internal (working)** | `.s2s/decisions/`, `.s2s/sessions/`, `.s2s/plans/` | All commands |
+| **External (public)** | `docs/decisions/`, `docs/specifications/`, `docs/architecture/` | `/s2s:export` only (TBD) |
+
+Commands write to `.s2s/` ONLY. Public documentation in `docs/` is created ONLY via explicit export command (to be implemented).
+
+See also: `skills/madr-decisions/SKILL.md` for ADR-specific rules.
+
 ---
 
 ## Session File Management
@@ -423,6 +441,43 @@ Claude may decide to batch operations for efficiency:
 Initially used `Task(subagent_type="general-purpose", prompt="...")` which created generic agents without the specialized configuration.
 
 **Solution**: Use `**Use the roundtable-X agent**` pattern to trigger proper agent loading.
+
+---
+
+## Deferred Features
+
+Features intentionally not implemented due to current limitations. Track here with reintroduction conditions.
+
+### Validation: LLM-Based Semantic Checks
+
+**ADR**: `.s2s/decisions/0008-validation-simplification.md`
+**Deferred in**: v0.x (2026-01-16)
+
+| Feature | Why Deferred | Reintroduce When |
+|---------|--------------|------------------|
+| State Transitions Valid | Session file has current state only, no history | Track `state_history[]` per artifact |
+| Participant Coherence Check | Requires cross-round memory; LLM forgets earlier positions | Vector store or persistent memory for session history |
+| Context Integrity Check | Massive cross-reference, high error rate | Track `context_hash` per round for deterministic comparison |
+| Quality Assessment Check | Too subjective, high false positive rate | Define quantitative criteria (word count, structure patterns) |
+| Blocking Concerns Resolution | Semantic parsing unreliable | Structured output format for concerns in participant responses |
+
+### Validation: Strategy-Specific Phase Tracking
+
+**ADR**: `.s2s/decisions/0008-validation-simplification.md`
+**Deferred in**: v0.x (2026-01-16)
+
+| Feature | Why Deferred | Reintroduce When |
+|---------|--------------|------------------|
+| Consensus Phase Validation | Field `consent_phase` not in session schema | Add `consent_phase` to session file and command writes |
+| Disney Phase Validation | Field `disney_phase` not in session schema | Add `disney_phase` to session file and command writes |
+| Phase Tone Analysis | Too subjective for reliable validation | Likely not reintroducible; tone is inherently qualitative |
+
+### Wisdom Gained
+
+1. **Script-first for structural checks**: yq/bash are deterministic, LLM is not
+2. **Only validate what you track**: If a field doesn't exist in the session file, you can't validate it
+3. **LLM judgment is expensive**: Reserve for genuinely qualitative assessments, not counting or cross-referencing
+4. **Deferred ≠ deleted**: Track conditions so future work can reintroduce features systematically
 
 ---
 

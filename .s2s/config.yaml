@@ -1,7 +1,7 @@
 # Spec2Ship Project Configuration
 # This file is created by /s2s:init
 
-name: "Spec2Ship"
+name: "spec2ship"
 type: "standalone"
 version: "0.1.0"
 
@@ -64,6 +64,13 @@ roundtable:
     min_rounds: 3
     max_rounds: 20
     max_rounds_per_phase: 10
+
+# Documentation paths
+docs:
+  architecture: "docs/architecture"
+  specifications: "docs/specifications"
+  decisions: "docs/decisions"
+  guides: "docs/guides"
 
 # File naming
 naming:

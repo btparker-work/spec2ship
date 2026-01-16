@@ -487,7 +487,10 @@ participant_context:
 
 **IF verbose_flag == true**: Write dump to `rounds/{NNN}-01-facilitator-question.yaml`:
 
-**IMPORTANT**: Save FULL content, not just keys or placeholders.
+**CRITICAL - ALL fields below are REQUIRED**:
+- Save FULL content, not just keys or placeholders
+- You MUST save `response.participant_context.shared` with ALL sub-fields
+- ALL fields are REQUIRED regardless of resume mode
 
 ```yaml
 # Round {N} - Facilitator Question
@@ -730,6 +733,9 @@ references:
 **Store responses** for synthesis and verbose dump.
 
 **IF verbose_flag == true**: Write dump for each participant to `rounds/{NNN}-02-{participant-id}.yaml`:
+
+**CRITICAL - ALL fields below are REQUIRED** (including in resume mode):
+
 ```yaml
 # Round {N} - {Role} Response
 round: {N}
@@ -739,7 +745,9 @@ action: "response"
 started_at: "{ISO timestamp}"
 completed_at: "{ISO timestamp}"
 
-input: {... the YAML input sent to participant ...}
+input:
+  question: "{the question}"
+  context: {... context sent ...}
 
 response:
   participant: "{participant-id}"
@@ -1170,6 +1178,7 @@ rounds:
   - round: {N}
     timestamp: "{ISO timestamp}"
     topic_id: "{focus topic_id}"
+    debate_phase: "{opening|rebuttal|closing|synthesis}"  # Include for debate strategy
 
     # Facilitator question (for audit)
     facilitator_question: |
