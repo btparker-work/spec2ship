@@ -28,6 +28,7 @@ Fast, focused detection agent. Returns YAML for init command orchestration.
 ```yaml
 directory: "/path/to/project"  # ONLY analyze this directory
 check_changes: true|false      # Compare README vs CONTEXT.md dates
+check_workspace: true|false    # Check parent/sibling for workspace structure
 ```
 
 ## Process (Fast Path)
@@ -60,7 +61,33 @@ Use `Glob("*.yaml", path=directory + "/.s2s/sessions")` to list sessions.
 For each plan file, read first 10 lines to check `**Status**: active` - if found, that's the `current_plan`.
 For sessions, count those with `status: "active"` to get `active_sessions_count`.
 
-### Step 4: Assess Implementation Status and Complexity
+### Step 4: Workspace Detection (if check_workspace: true)
+
+**IMPORTANT**: Only perform if `check_workspace: true` in input. Otherwise skip to Step 5.
+
+**Check parent directory (ONE level up only):**
+1. Use `Glob("*", path=parent_directory)` - note: use `..` relative to input directory
+2. Look for `.git` in parent → `parent_has_git: true`
+3. Look for `.s2s` in parent → `parent_has_s2s: true`
+
+**Count sibling directories:**
+From parent glob results, count directories (exclude files).
+For each sibling directory that is NOT the current project:
+- Check if it has `.s2s/` subfolder
+
+**Determine suggested_mode:**
+- If `parent_has_git: true` AND `parent_has_s2s: false` → `"monorepo"` (Option B)
+- If `parent_has_git: false` AND siblings have their own git → `"multi-repo"` (Option A)
+- If both parent and siblings have .s2s → `"hybrid"` (Option D)
+- If project appears standalone → `"standalone"`
+
+**Generate warning:**
+- If workspace mode suggested AND parent_has_git: false →
+  `"Parent folder has no git repository. Creating .s2s in parent won't be versioned."`
+
+**STAY WITHIN BOUNDS**: Do NOT go beyond parent directory. Do NOT explore sibling directory contents deeply.
+
+### Step 5: Assess Implementation Status and Complexity
 
 Based on files present, determine current implementation status:
 - **none**: Empty or only docs/config files
@@ -75,7 +102,7 @@ Assess complexity level:
 
 This is used by init to decide the flow (new project vs existing).
 
-### Step 5: Return YAML
+### Step 6: Return YAML
 
 ## Output Format
 
@@ -97,6 +124,16 @@ s2s:
   plans_count: {number}
   current_plan: "{plan-id or null}"  # ID of active plan, if any
   active_sessions_count: {number}
+
+# Workspace context for multi-component detection
+# Only populated when check_workspace: true in input
+workspace_context:
+  parent_has_git: {true|false|null}    # Parent folder has .git/
+  parent_has_s2s: {true|false|null}    # Parent folder has .s2s/
+  sibling_count: {number}              # Number of sibling directories
+  sibling_s2s_folders: ["{names}"]     # Sibling folders that have .s2s/
+  suggested_mode: "{standalone|monorepo|multi-repo|hybrid|null}"
+  warning: "{message or null}"         # e.g., "Parent has no git - .s2s won't be versioned"
 
 tech_stack:
   languages: ["{detected}"]
@@ -152,6 +189,13 @@ s2s:
   plans_count: 0
   current_plan: null
   active_sessions_count: 0
+workspace_context:
+  parent_has_git: null
+  parent_has_s2s: null
+  sibling_count: 0
+  sibling_s2s_folders: []
+  suggested_mode: null
+  warning: null
 tech_stack:
   languages: []
   frameworks: []
@@ -186,6 +230,13 @@ s2s:
   plans_count: 0
   current_plan: null
   active_sessions_count: 0
+workspace_context:
+  parent_has_git: null
+  parent_has_s2s: null
+  sibling_count: 0
+  sibling_s2s_folders: []
+  suggested_mode: null
+  warning: null
 tech_stack:
   languages: []
   frameworks: []
@@ -201,4 +252,45 @@ changes_detected:
   any_changes: false
   details: null
 recommendations: ["S2S incomplete - run /s2s:init to add missing config.yaml"]
+```
+
+### Component in Multi-Repo Workspace (with check_workspace: true)
+```yaml
+project:
+  name: "frontend"
+  directory: "/workspace/frontend"
+  description: "React frontend application"
+git:
+  initialized: true
+s2s:
+  initialized: false
+  type: null
+  has_config: false
+  has_context: false
+  has_sessions: false
+  plans_count: 0
+  current_plan: null
+  active_sessions_count: 0
+workspace_context:
+  parent_has_git: false              # Parent is not a git repo
+  parent_has_s2s: false              # No workspace-level .s2s
+  sibling_count: 2                   # backend, mobile
+  sibling_s2s_folders: ["backend"]   # Backend already has .s2s
+  suggested_mode: "multi-repo"       # Option A - per-component .s2s
+  warning: null                      # No warning - each component has own git
+tech_stack:
+  languages: ["TypeScript"]
+  frameworks: ["React"]
+  package_managers: ["npm"]
+detected_files:
+  readme: "README.md"
+  config_files: ["package.json", "tsconfig.json"]
+implementation_status: "partial"
+complexity:
+  level: "moderate"
+  reasons: ["Multiple dependencies", "TypeScript configuration"]
+changes_detected:
+  any_changes: false
+  details: null
+recommendations: ["Consider workspace mode - sibling 'backend' already has .s2s"]
 ```

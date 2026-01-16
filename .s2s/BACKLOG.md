@@ -33,7 +33,7 @@
 
 ### WORK-001: Workspace Support
 
-**Status**: planned | **Created**: 2026-01-16 | **Priority**: High
+**Status**: in_progress | **Created**: 2026-01-16 | **Priority**: High
 
 **Context**: S2S is designed for both standalone projects and multi-component workspaces. Currently only standalone is implemented.
 
@@ -60,16 +60,16 @@
 - **Warning**: If parent folder has no git repo, warn user that `.s2s/` won't be versioned
 
 **Implementation Tasks**:
-1. Enhance project-detector agent to detect workspace structure
-2. Add workspace detection questions to init Phase 3
-3. Generate appropriate config based on detected/selected mode
-4. Warn if .s2s created in non-git folder
-5. Update templates for workspace mode (TEMPL-002)
+1. ✅ Enhance project-detector agent to detect workspace structure
+2. ✅ Add workspace detection questions to init Phase 3
+3. ✅ Generate appropriate config based on detected/selected mode
+4. ✅ Warn if .s2s created in non-git folder
+5. Update templates for workspace mode (TEMPL-002) - blocked
 
 **Acceptance Criteria**:
-- [ ] Detect workspace vs standalone during init
-- [ ] Support all 4 configuration options
-- [ ] Warn if .s2s created in non-git folder
+- [x] Detect workspace vs standalone during init
+- [x] Support all 4 configuration options
+- [x] Warn if .s2s created in non-git folder
 - [ ] Cross-component references use absolute URLs
 - [ ] Update templates for workspace mode
 

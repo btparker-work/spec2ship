@@ -33,6 +33,7 @@ Parse $ARGUMENTS:
 ```yaml
 directory: {current directory}
 check_changes: true
+check_workspace: true
 ```
 
 Store the agent's YAML output as **Detected**.
@@ -64,6 +65,18 @@ S2S Status:
   Active plan: {Detected.s2s.current_plan or "none"}
   Active sessions: {Detected.s2s.active_sessions_count}
   Changes detected: {Detected.changes_detected.any_changes}
+{/If}
+
+{If Detected.workspace_context.suggested_mode is NOT null AND NOT "standalone"}
+Workspace Context:
+  Parent has git: {Detected.workspace_context.parent_has_git}
+  Parent has .s2s: {Detected.workspace_context.parent_has_s2s}
+  Sibling count: {Detected.workspace_context.sibling_count}
+  Siblings with .s2s: {Detected.workspace_context.sibling_s2s_folders}
+  Suggested mode: {Detected.workspace_context.suggested_mode}
+{If Detected.workspace_context.warning}
+  ⚠️ {Detected.workspace_context.warning}
+{/If}
 {/If}
 
 {Detected.recommendations}
@@ -153,6 +166,46 @@ If yes: run `git init`
 ### Workspace Relationship (standalone only)
 
 If mode is "standalone":
+
+**Check if workspace context was detected:**
+
+If **Detected.workspace_context.suggested_mode** is NOT "standalone" AND NOT null:
+
+Display detected workspace context:
+```
+Workspace structure detected:
+─────────────────────────────
+Parent folder git: {Detected.workspace_context.parent_has_git}
+Parent folder .s2s: {Detected.workspace_context.parent_has_s2s}
+Sibling folders: {Detected.workspace_context.sibling_count}
+Siblings with .s2s: {Detected.workspace_context.sibling_s2s_folders}
+
+Suggested configuration: {Detected.workspace_context.suggested_mode}
+```
+
+**If Detected.workspace_context.warning is NOT null**:
+Display warning prominently:
+```
+⚠️ WARNING: {Detected.workspace_context.warning}
+```
+
+Ask using AskUserQuestion:
+- "This appears to be part of a workspace. How would you like to configure it?"
+- Options:
+  - "Option A: Per-component .s2s (each component has own .s2s, versioned separately)"
+  - "Option B: Single .s2s in parent (monorepo style, shared documentation)"
+  - "Option C: Sibling docs folder (separate docs repo alongside components)"
+  - "Option D: Hybrid (system-level docs + component-specific .s2s)"
+  - "Standalone (ignore workspace structure)"
+
+Based on selection:
+- **Option A**: Set mode to "standalone" (each component independent)
+- **Option B**: Set mode to "workspace", target parent folder
+- **Option C**: Ask for sibling docs folder name, set mode to "workspace"
+- **Option D**: Set mode to "hybrid" (generate both workspace.yaml and component.yaml)
+- **Standalone**: Continue as standalone
+
+**Else** (no workspace detected or suggested_mode is "standalone"):
 
 Ask using AskUserQuestion:
 - "Is this project part of a workspace?"
