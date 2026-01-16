@@ -36,6 +36,12 @@ Run /s2s:init to populate or update this file.
 
 {To be determined - run /s2s:design to define}
 
+## Project Tracking
+
+**Backlog**: `.s2s/BACKLOG.md` - Single source of truth for planned work, ideas, and technical debt.
+
+**Decisions**: `.s2s/decisions/` - Architecture Decision Records (ADRs) in MADR format.
+
 ## Open Questions
 
 - {Questions to be resolved}
