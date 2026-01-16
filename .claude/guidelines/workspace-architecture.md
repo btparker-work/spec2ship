@@ -247,35 +247,40 @@ Based on detection, suggest appropriate workspace configuration.
 
 ---
 
-## Implementation Notes
+## Implementation Approach
 
-### Future Commands (Not Yet Implemented)
+**Decision (2026-01-16)**: Enhanced `/s2s:init` with guided setup.
 
-| Command | Purpose |
-|---------|---------|
-| `/s2s:init --workspace` | Initialize as workspace hub |
-| `/s2s:init --component` | Initialize as component of workspace |
-| `/s2s:workspace:add` | Register a component in workspace |
-| `/s2s:workspace:status` | Show workspace structure |
+### Rationale
 
-### Alternative: Guided Setup in `/s2s:init`
+- User already familiar with init command
+- Detection already partially implemented (project-detector agent)
+- Reduces cognitive load (no new commands to learn)
+- Workspace is a variant of init, not a separate concept
 
-Instead of separate commands, enhance `/s2s:init` with interactive prompts:
+### Commands
 
-1. Detect project structure
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `/s2s:init --workspace` | Initialize as workspace hub | Existing |
+| `/s2s:init --component` | Initialize as component of workspace | Existing |
+
+**Note**: Separate `/s2s:workspace:*` commands were considered but rejected in favor of enhanced init.
+
+### Implementation Flow
+
+1. Detect project structure (project-detector agent)
 2. Ask: "Is this part of a larger workspace?"
 3. If yes, ask for configuration preference (A/B/C/D)
-4. Generate appropriate structure
-
-This approach keeps the command surface small while supporting complex setups.
+4. Generate appropriate structure with warnings for non-git folders
 
 ---
 
 ## Open Questions
 
-1. **Component registry format**: Should we use `workspace.yaml` with `components:[]` or a separate `COMPONENTS.md`?
-2. **Cross-component references**: How to handle relative vs absolute URLs in artifacts?
-3. **Session scope**: Should cross-component sessions be stored in system-docs or replicated?
+1. **Component registry format**: Use `workspace.yaml` with `components:[]` (current approach)
+2. **Cross-component references**: Use absolute URLs (GitHub/GitLab) - relative paths don't work across repos
+3. **Session scope**: Cross-component sessions stored in system-docs folder
 
 ---
 

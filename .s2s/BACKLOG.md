@@ -33,13 +33,21 @@
 
 ### WORK-001: Workspace Support
 
-**Status**: draft | **Created**: 2026-01-16 | **Priority**: High
+**Status**: planned | **Created**: 2026-01-16 | **Priority**: High
 
 **Context**: S2S is designed for both standalone projects and multi-component workspaces. Currently only standalone is implemented.
 
 **Reference**: `.claude/guidelines/workspace-architecture.md`
 
-**Workspace Configurations**:
+**Decision (2026-01-16)**: Enhanced `/s2s:init` with guided setup instead of separate commands.
+
+**Rationale**:
+- User already familiar with init command
+- Detection already partially implemented (project-detector agent)
+- Reduces cognitive load (no new commands to learn)
+- Workspace is a variant of init, not a separate concept
+
+**Workspace Configurations** (all supported via enhanced init):
 - **Option A**: Per-component `.s2s/` (separate repos per component)
 - **Option B**: Single `.s2s/` in parent (monorepo)
 - **Option C**: Sibling folder for system docs
@@ -51,9 +59,12 @@
 - For cross-component discussions → sibling docs folder (versionable separately)
 - **Warning**: If parent folder has no git repo, warn user that `.s2s/` won't be versioned
 
-**Implementation Options**:
-1. **Separate commands**: `/s2s:workspace:init`, `/s2s:workspace:add`, etc.
-2. **Enhanced `/s2s:init`**: Guided setup with interactive detection (preferred)
+**Implementation Tasks**:
+1. Enhance project-detector agent to detect workspace structure
+2. Add workspace detection questions to init Phase 3
+3. Generate appropriate config based on detected/selected mode
+4. Warn if .s2s created in non-git folder
+5. Update templates for workspace mode (TEMPL-002)
 
 **Acceptance Criteria**:
 - [ ] Detect workspace vs standalone during init
