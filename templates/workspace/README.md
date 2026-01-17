@@ -56,4 +56,3 @@ The component will be registered in `workspace.yaml` and its `CONTEXT.md` will r
 ## More Information
 
 - [Spec2Ship Documentation](https://github.com/spec2ship/spec2ship)
-- [ADR-0009: Workspace Context Cascade](decisions/0009-workspace-context-cascade.md)
