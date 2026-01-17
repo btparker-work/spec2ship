@@ -513,75 +513,50 @@ Skill for creating new participant types with templates.
 
 ---
 
-### EXT-003: Plugin Extension Skill (s2s-extend)
+### EXT-003: Spec2Ship Guide Skill (s2s-guide)
 
-**Status**: planned | **Created**: 2026-01-17 | **Priority**: Medium
+**Status**: completed | **Created**: 2026-01-17 | **Completed**: 2026-01-17 | **Priority**: Medium
 
-**Context**: Development guidelines are scattered in `.claude/guidelines/` (~6,800 words, ~9,000 tokens). Loading all in memory is excessive. Need a structured way for:
-- **Contributors** to extend the plugin (commands, agents, skills)
-- **End users** to create custom agents and understand the system
+**Context**: Development guidelines were scattered in `.claude/guidelines/` (~6,800 words). Users needed a single entry point for both usage questions and extension guidance.
 
-**Current State**:
-- `s2s-development.md` - Core patterns (2,218 words) - CRITICAL
-- `llm-patterns.md` - Instruction patterns (1,369 words) - CRITICAL for command writers
-- `glossary.md` - Terminology (~1,400 words) - Reference
-- `naming-conventions.md` - ID formats (608 words) - Reference
-- `state-machine.md` - State transitions (666 words) - Reference
-- `workspace-architecture.md` - Workspace info (571 words) - Reference
-
-**Proposed Solution**: Create `skills/s2s-extend/` with progressive disclosure
+**Solution**: Created `skills/s2s-guide/` with progressive disclosure - a comprehensive guide for both **users** and **contributors**.
 
 ```
-skills/s2s-extend/
-├── SKILL.md              # ~500 words - critical patterns + triggers
+skills/s2s-guide/
+├── SKILL.md              # Core guide (~700 words)
 ├── references/
-│   ├── llm-patterns.md
-│   ├── naming-conventions.md
-│   ├── state-machine.md
-│   ├── glossary.md
-│   └── workspace-architecture.md
+│   ├── workflows.md      # Detailed workflow explanations
+│   ├── commands.md       # Complete command reference
+│   ├── glossary.md       # Terminology and artifact types
+│   ├── extension-patterns.md  # LLM patterns for writing commands
+│   ├── naming-conventions.md  # ID formats and naming rules
+│   ├── state-machine.md  # State transitions
+│   └── workspace.md      # Workspace architecture
 └── examples/
-    ├── new-command.md    # Step-by-step guide
     ├── new-agent.md      # Step-by-step guide
-    └── new-skill.md      # Step-by-step guide
+    ├── new-skill.md      # Step-by-step guide
+    └── new-command.md    # Step-by-step guide
 ```
 
-**Trigger Phrases**:
-- "come creo un nuovo comando"
-- "come estendo s2s"
-- "voglio creare un agente"
-- "create new command"
-- "extend plugin"
-- "add new agent"
+**Trigger Phrases** (in SKILL.md description):
+- "what is s2s", "how do I use specs"
+- "which command for requirements", "difference between specs and design"
+- "how to create custom agent", "extend s2s", "add new command"
+- "workspace vs standalone", "what are roundtables"
+- "come funziona s2s", "quale comando uso", "come estendo il plugin"
 
-**SKILL.md Content** (quick reference always loaded):
-1. Agent invocation pattern (CRITICAL - most common mistake)
-2. YAML I/O pattern for agents
-3. Command structure basics
-4. Pointers to references for deep dives
+**Key Features**:
+- Single entry point for all s2s questions
+- Progressive disclosure (SKILL.md ~700 words, details on demand)
+- Covers usage AND extension
+- Bilingual trigger phrases (EN/IT)
+- Step-by-step examples for command/agent/skill creation
 
-**Additional Cleanup**:
-1. Remove confusing `@` notation from CLAUDE.md table (lines 122-126)
-2. Add minimal quick reference inline in CLAUDE.md (~200 words)
-3. Keep `.claude/guidelines/` for direct file access during development
+**Remaining Cleanup** (deferred):
+- [ ] Consider removing confusing `@` notation from CLAUDE.md table
+- [ ] Evaluate redundancy with `.claude/guidelines/` and `docs/`
 
-**Tasks**:
-1. [ ] Create `skills/s2s-extend/SKILL.md` with critical patterns
-2. [ ] Move/copy guidelines to `skills/s2s-extend/references/`
-3. [ ] Create `examples/new-command.md` step-by-step guide
-4. [ ] Create `examples/new-agent.md` step-by-step guide
-5. [ ] Create `examples/new-skill.md` step-by-step guide
-6. [ ] Update CLAUDE.md - remove @ table, add quick reference
-7. [ ] Add trigger phrases to skill description
-
-**Acceptance Criteria**:
-- [ ] Skill loads only ~500 words by default
-- [ ] References available on-demand via progressive disclosure
-- [ ] Examples cover all extension types (command, agent, skill)
-- [ ] Works for both contributors and end users
-- [ ] CLAUDE.md is cleaner (no confusing @ table)
-
-**Related**: EXT-001 (project agents), EXT-002 (custom participants), QUAL-001 (code reviewer)
+**Related**: EXT-001 (project agents), EXT-002 (custom participants)
 
 ---
 
@@ -674,6 +649,7 @@ _Unstructured ideas and observations for future consideration._
 
 | ID | Description | Completed | Notes |
 |----|-------------|-----------|-------|
+| EXT-003 | Spec2Ship Guide Skill (s2s-guide) | 2026-01-17 | Comprehensive guide for usage and extension |
 | WORK-002 | Roundtable Scope Awareness | 2026-01-17 | Facilitator workspace/component context, topic validation |
 | WORK-001 | Workspace Support - Core Structure (Phase 1) | 2026-01-17 | workspace.yaml, init scenarios A-F, component linking |
 | TEMPL-002 | Workspace Template Cleanup | 2026-01-17 | Aligned with WORK-001 spec |
