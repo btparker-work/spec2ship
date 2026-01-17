@@ -426,11 +426,8 @@ project_scope:
 # Workspace scope (from config-snapshot.yaml, null if standalone)
 workspace_scope: {from config-snapshot.yaml: workspace_scope}
 
-# Component contexts (from context-snapshot.yaml, null if not workspace)
-component_contexts: {from context-snapshot.yaml: component_contexts}
-
-# Workspace context (from context-snapshot.yaml, null if not component)
-workspace_context: {from context-snapshot.yaml: workspace_context}
+# Cross-cutting decisions (from config-snapshot.yaml, null if not workspace)
+cross_cutting_decisions: {from config-snapshot.yaml: cross_cutting_decisions}
 
 escalation_config:
   min_rounds: {from config-snapshot.yaml: limits.min_rounds}

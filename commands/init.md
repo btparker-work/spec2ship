@@ -520,9 +520,11 @@ Create `.s2s/sessions/` directory for session files.
 
 ### 5.4 Generate CONTEXT.md
 
-**For standalone/component mode**:
+**For standalone mode**:
 
 Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
+
+**Remove Workspace Context section**: Delete everything between `<!-- WORKSPACE_CONTEXT_START -->` and `<!-- WORKSPACE_CONTEXT_END -->` (inclusive).
 
 **Replace placeholders**:
 - `{Project description - run /s2s:init to populate}` → `{Context.description or Detected.project.description}`
@@ -539,6 +541,22 @@ Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
 **Keep unchanged**: The "Project Tracking" section with Backlog and Decisions references.
 
 **Remove**: The `*Phase: init*` line at the end.
+
+**For component mode**:
+
+Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
+
+**Populate Workspace Context section** (keep the section, replace placeholders):
+- `{workspace-name}` → name from parent `workspace.yaml`
+- `{component-role-description}` → description from this component's entry in parent `workspace.yaml`, or "Component of {workspace-name}"
+- `{workspace-path}` → `{workspace_path}` (e.g., "..")
+- Remove the HTML comments (`<!-- WORKSPACE_CONTEXT_START -->` etc.) but keep the content
+
+**Replace other placeholders** (same as standalone):
+- `{Project description...}` → `{Context.description or Detected.project.description}`
+- ... (same replacements as standalone)
+
+**Note**: The `@{workspace-path}/.s2s/CONTEXT.md` reference allows Claude to automatically include workspace context when reading this file.
 
 **For workspace mode**:
 

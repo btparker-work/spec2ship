@@ -1,6 +1,6 @@
 # Spec2Ship Development Backlog
 
-**Updated**: 2026-01-17T15:00:00Z
+**Updated**: 2026-01-17T16:00:00Z
 **Format**: Single markdown file for LLM consumption
 
 ---
@@ -101,8 +101,12 @@
 
 **Implementation**:
 - Updated `roundtable-execution/SKILL.md` with Steps 1.3b, 1.3c, 1.4 for workspace scope
-- Updated `facilitator.md` with project_scope, workspace_scope, component_contexts inputs
+- Updated `facilitator.md` with project_scope, workspace_scope, cross_cutting_decisions inputs
 - Updated specs.md, design.md, brainstorm.md to pass workspace context to facilitator
+- **Simplified (post-review)**: Component CONTEXT.md includes @ reference to workspace context
+  - No runtime aggregation needed - @ references resolved automatically
+  - templates/project/CONTEXT.md has conditional "Workspace Context" section
+  - init.md populates for component mode, removes for standalone
 
 **Acceptance Criteria**:
 - [x] Facilitator aggregates workspace + component contexts when appropriate

@@ -168,39 +168,29 @@ workspace_scope:
   inherits_context_from: "workspace"
 ```
 
-### Step 1.3c: Aggregate Context (workspace only)
+### Step 1.3c: Context References (workspace/component)
 
-**IF project.type == "workspace"**:
+**Context is handled via @ references in CONTEXT.md files:**
 
-Read workspace.yaml `components[]` and for each component:
-1. Read `{component.path}/.s2s/CONTEXT.md` (first 500 chars)
-2. Read `{component.path}/.s2s/BACKLOG.md` (extract key concerns)
+- **Component CONTEXT.md** includes `@{workspace-path}/.s2s/CONTEXT.md` reference
+- **Claude resolves @ references** when reading files, so workspace context is automatically included
 
-Append to context-snapshot.yaml:
+**No runtime aggregation needed.** The @ reference approach:
+- Avoids duplication
+- Stays consistent (workspace changes are automatically visible)
+- Simplifies execution
+
+**IF project.type == "workspace"** (optional enhancement):
+
+Read cross_cutting decisions from workspace.yaml and add to context-snapshot:
 ```yaml
-component_contexts:
-  - id: "{component.id}"
-    name: "{component.name}"
-    summary: "{first 500 chars of CONTEXT.md}"
-    key_concerns:
-      - "{from BACKLOG.md: high priority items}"
-
 cross_cutting_decisions:
   - id: "{from workspace.yaml: cross_cutting[].id}"
     decision: "{ADR reference}"
     affects: ["{component ids}"]
 ```
 
-**IF project.type == "component"**:
-
-Read parent workspace context at `{workspace_path}/.s2s/CONTEXT.md`:
-```yaml
-workspace_context:
-  name: "{workspace name}"
-  summary: "{first 500 chars of workspace CONTEXT.md}"
-  relevant_decisions:
-    - "{ADRs that affect this component}"
-```
+This helps facilitator understand which decisions affect which components.
 
 ### Step 1.4: Topic Validation
 

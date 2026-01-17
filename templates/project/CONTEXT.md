@@ -6,6 +6,20 @@ Import this in CLAUDE.md using @.s2s/CONTEXT.md
 Run /s2s:init to populate or update this file.
 -->
 
+<!-- WORKSPACE_CONTEXT_START - Only present for type: component -->
+## Workspace Context
+
+This component is part of **{workspace-name}** workspace.
+
+**Role**: {component-role-description}
+
+**Workspace path**: `{workspace-path}`
+
+**Full workspace context**: @{workspace-path}/.s2s/CONTEXT.md
+
+---
+<!-- WORKSPACE_CONTEXT_END -->
+
 ## Overview
 
 {Project description - run /s2s:init to populate}

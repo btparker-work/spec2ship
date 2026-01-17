@@ -48,19 +48,16 @@ workspace_scope: null  # or:
 #   defer_indicators: ["internal", "UI specific", ...]  # workspace only
 #   escalate_indicators: ["affects other", ...]  # component only
 
-# Component contexts (only if workspace-level roundtable)
-# Use to ensure all components are considered in discussion
-component_contexts: null  # or:
-#   - id: "frontend"
-#     summary: "Web application for..."
-#     key_concerns: ["Performance", "Accessibility"]
+# Cross-cutting decisions (only if workspace-level roundtable)
+# Helps understand which decisions affect which components
+cross_cutting_decisions: null  # or:
+#   - id: "authentication"
+#     decision: "ADR-001"
+#     affects: ["frontend", "backend"]
 
-# Workspace context (only if component-level roundtable)
-# Background context from parent workspace
-workspace_context: null  # or:
-#   name: "MySystem"
-#   summary: "System overview..."
-#   relevant_decisions: ["ADR-001: Authentication"]
+# NOTE: Component/workspace context is NOT passed here.
+# CONTEXT.md files use @ references to include workspace context automatically.
+# The context-snapshot.yaml contains full project context after @ resolution.
 
 escalation_config:
   min_rounds: 3
@@ -211,14 +208,15 @@ participant_context:
 
 #### Workspace-Aware Context
 
+**Context inheritance via @ references**: Component CONTEXT.md files include `@../.s2s/CONTEXT.md` references to workspace context. This is resolved automatically when context-snapshot.yaml is created. No manual aggregation needed.
+
 **IF project_scope.type == "workspace"**:
-- **MUST** include component_contexts in participant_context.shared
 - Reference which components are affected by current topic
 - Include cross_cutting_decisions if relevant to discussion
 - Frame questions to consider system-wide impact
 
 **IF project_scope.type == "component"**:
-- **MUST** include workspace_context as background
+- Workspace context is already included via @ reference in CONTEXT.md
 - Reference relevant workspace decisions (ADRs)
 - Note if topic might affect other components (escalate_indicators)
 
