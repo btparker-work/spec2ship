@@ -26,6 +26,8 @@ spec2ship/
 │   └── ...
 ├── templates/                # File templates
 ├── docs/                     # Documentation
+│   ├── README.md             # Core concepts
+│   └── architecture/         # Architecture docs and ADRs
 └── examples/                 # Sample outputs
 ```
 

@@ -104,25 +104,25 @@ Roundtable is **the fundamental abstraction** of Spec2Ship.
 Every major decision flows through a structured discussion:
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                        ROUNDTABLE                              │
-│                                                                │
-│   FACILITATOR                                                  │
-│   ├── Generates questions from agenda                         │
-│   ├── Prepares context for each participant                   │
-│   └── Synthesizes responses into artifacts                    │
-│                                                                │
-│   PARTICIPANTS (respond in parallel, blind to each other)     │
-│   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│   │    PM    │ │ Architect│ │ QA Lead  │ │ Security │  ...   │
-│   │          │ │          │ │          │ │ Champion │        │
-│   │  Value   │ │  System  │ │  Edge    │ │  Threat  │        │
-│   │ & scope  │ │  design  │ │  cases   │ │  model   │        │
-│   └──────────┘ └──────────┘ └──────────┘ └──────────┘        │
-│                                                                │
-│   OUTPUT: Numbered artifacts with provenance                   │
-│   REQ-001, ARCH-002, CONF-003...                              │
-└────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                        ROUNDTABLE                            │
+│                                                              │
+│  FACILITATOR                                                 │
+│  ├── Generates questions from agenda                         │
+│  ├── Prepares context for each participant                   │
+│  └── Synthesizes responses into artifacts                    │
+│                                                              │
+│  PARTICIPANTS (respond in parallel, blind to each other)     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+│  │    PM    │ │ Architect│ │ QA Lead  │ │ Security │  ...    │
+│  │          │ │          │ │          │ │ Champion │         │
+│  │  Value   │ │  System  │ │  Edge    │ │  Threat  │         │
+│  │ & scope  │ │  design  │ │  cases   │ │  model   │         │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘         │
+│                                                              │
+│  OUTPUT: Numbered artifacts with provenance                  │
+│  REQ-001, ARCH-002, CONF-003...                              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ### Why This Matters
