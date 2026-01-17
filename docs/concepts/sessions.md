@@ -155,4 +155,4 @@ Adds:
 
 ---
 
-*See also: [Roundtable](./roundtable.md) | [Configuration](../reference/configuration.md)*
+*See also: [Roundtable](./roundtable.md) | [Configuration](../roundtable/configuration.md)*

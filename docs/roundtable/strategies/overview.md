@@ -97,7 +97,7 @@ Different workflows default to different strategies:
 
 ## Creating Custom Strategies
 
-See [Creating New Strategies](../../extending/new-strategy.md) for guidance on building custom facilitation strategies.
+For guidance on building custom strategies, ask Claude: "how to create a new strategy in s2s"
 
 ---
 *For detailed information on each strategy, see individual strategy documentation.*

@@ -101,4 +101,4 @@ Workflow Command
 
 ---
 
-*See also: [Roundtable](./roundtable.md) | [Extending: New Agent](../extending/new-agent.md)*
+*See also: [Roundtable](./roundtable.md) | Ask Claude: "how to create a new agent in s2s"*

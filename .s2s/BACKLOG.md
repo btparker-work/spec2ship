@@ -552,9 +552,10 @@ skills/s2s-guide/
 - Bilingual trigger phrases (EN/IT)
 - Step-by-step examples for command/agent/skill creation
 
-**Remaining Cleanup** (deferred):
-- [ ] Consider removing confusing `@` notation from CLAUDE.md table
-- [ ] Evaluate redundancy with `.claude/guidelines/` and `docs/`
+**Completed Cleanup**:
+- [x] Removed confusing `@` notation from CLAUDE.md table
+- [x] Deleted `.claude/guidelines/` (content consolidated in skill)
+- [ ] Simplify `docs/` structure (in progress)
 
 **Related**: EXT-001 (project agents), EXT-002 (custom participants)
 

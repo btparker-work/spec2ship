@@ -1,6 +1,6 @@
 # Spec2Ship Workspace Configuration
 # This file is created by /s2s:init --workspace
-# See: .claude/guidelines/workspace-architecture.md
+# For help, ask Claude: "how do workspaces work in s2s" (loads s2s-guide skill)
 
 name: "{workspace-name}"
 version: "0.1.0"

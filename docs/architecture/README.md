@@ -177,7 +177,7 @@ OUTPUT DOCS (requirements.md, etc.)
 | New strategy | Add to `skills/roundtable-strategies/` |
 | New command | Create `commands/{name}.md` |
 
-See [Extending Spec2Ship](../extending/) for detailed guides.
+For extension guides, ask Claude: "how to extend s2s"
 
 ## Architecture Decisions
 
@@ -187,4 +187,4 @@ For detailed design rationale, see the [ADR index](./decisions/README.md).
 
 ---
 
-*See also: [Contributing](../../CONTRIBUTING.md) | [Extending](../extending/)*
+*See also: [Contributing](../../CONTRIBUTING.md)*

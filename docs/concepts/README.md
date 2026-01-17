@@ -2,6 +2,11 @@
 
 This section explains the key concepts behind Spec2Ship.
 
+> **Interactive Help**: Ask Claude for detailed explanations:
+> - "what is a roundtable in s2s"
+> - "how do strategies work"
+> - "explain s2s workflows"
+
 ## Contents
 
 | Concept | Description |

@@ -2,13 +2,23 @@
 
 Spec2Ship is a Claude Code plugin that automates the software development lifecycle: from specifications through planning, implementation, and shipping.
 
+> **Interactive Help**: For detailed questions about s2s, ask Claude directly:
+> - "what is s2s" / "how do I use specs" / "which command for..."
+> - "how to create custom agent" / "extend s2s"
+>
+> This activates the `s2s-guide` skill with comprehensive reference material.
+
 ## Quick Start
 
 ```bash
-# Initialize a new project
+# Install the plugin
+/plugin marketplace add https://github.com/spec2ship/spec2ship.git
+/plugin install s2s@spec2ship
+
+# Initialize a project
 /s2s:init
 
-# Define requirements through collaborative roundtable
+# Define requirements
 /s2s:specs
 
 # Design architecture
@@ -16,10 +26,27 @@ Spec2Ship is a Claude Code plugin that automates the software development lifecy
 
 # Create implementation plan
 /s2s:plan --new "feature-name"
-
-# Start working on a plan
-/s2s:plan --session
 ```
+
+**Detailed setup**: See [Getting Started](./getting-started.md)
+
+## Core Workflow
+
+```
+/s2s:init → /s2s:specs → /s2s:design → /s2s:plan → Implementation
+  Setup      Define        Design        Plan         Build
+             WHAT          HOW           STEPS
+```
+
+Each phase uses a **roundtable** - multiple AI agents with different perspectives discuss and produce artifacts.
+
+## Key Features
+
+- **AI Roundtables**: Multiple AI agents discuss and debate
+- **Anti-Sycophancy**: Agents designed to disagree constructively
+- **Session Persistence**: Resume discussions anytime
+- **Multiple Strategies**: Disney (creative), Debate, Consensus-Driven, Six Hats
+- **Extensible**: Add custom agents, skills, and strategies
 
 ## Documentation
 
@@ -27,59 +54,22 @@ Spec2Ship is a Claude Code plugin that automates the software development lifecy
 
 | Guide | Description |
 |-------|-------------|
-| [Getting Started](./getting-started.md) | Installation and first project setup |
-| [Concepts](./concepts/) | Core concepts: workflows, roundtable, strategies |
-| [Workflow Guides](./guides/) | Step-by-step guides for each workflow |
-| [Command Reference](./reference/commands.md) | All `/s2s:*` commands |
-| [Configuration](./reference/configuration.md) | Config options and customization |
+| [Getting Started](./getting-started.md) | Installation and first project |
+| [Concepts](./concepts/) | Core concepts overview |
 
 ### For Contributors
 
 | Guide | Description |
 |-------|-------------|
-| [Contributing](../CONTRIBUTING.md) | Development setup and guidelines |
-| [Architecture](./architecture/) | System architecture overview |
-| [Extending Spec2Ship](./extending/) | Add agents, skills, and strategies |
+| [Architecture](./architecture/) | System architecture and decisions |
 
-### Deep Dives
+### Interactive Help (via Claude)
 
-| Topic | Description |
-|-------|-------------|
-| [Roundtable System](./roundtable/) | Multi-agent discussion system |
-| [Strategies](./roundtable/strategies/) | Facilitation strategies (Disney, Debate, etc.) |
-
-## Core Workflows
-
-```
-/s2s:init          Define project context
-     │
-     ▼
-/s2s:brainstorm    Explore ideas (optional)
-     │
-     ▼
-/s2s:specs         Define requirements via roundtable
-     │
-     ▼
-/s2s:design        Design architecture via roundtable
-     │
-     ▼
-/s2s:plan --new    Create implementation plan
-     │
-     ▼
-/s2s:plan --session  Execute plan with guidance
-```
-
-## Key Features
-
-- **AI Roundtables**: Multiple AI agents discuss and debate to produce better outcomes
-- **Anti-Sycophancy**: Agents are designed to disagree constructively
-- **Session Persistence**: Resume discussions anytime
-- **Multiple Strategies**: Disney (creative), Debate, Consensus-Driven, Six Hats
-- **Extensible**: Add custom agents, skills, and strategies
-
-## Examples
-
-See [examples/](../examples/) for sample outputs from Spec2Ship workflows.
+For detailed reference, ask Claude:
+- **Commands**: "what commands does s2s have"
+- **Workflows**: "how do I use specs vs design"
+- **Extension**: "how to create a new agent"
+- **Glossary**: "what is a roundtable in s2s"
 
 ---
 

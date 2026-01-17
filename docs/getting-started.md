@@ -126,10 +126,11 @@ Most commands support these flags:
 ## Next Steps
 
 - [Concepts](./concepts/) - Understand how Spec2Ship works
-- [Workflow Guides](./guides/) - Detailed guides for each workflow
-- [Configuration](./reference/configuration.md) - Customize behavior
-- [Extending](./extending/) - Add custom agents and strategies
+- [Roundtable Configuration](./roundtable/configuration.md) - Customize participants and strategies
 
----
+For detailed guidance, ask Claude:
+- "what commands does s2s have" - Full command reference
+- "how to extend s2s" - Add custom agents, skills, strategies
+- "how do workflows work" - Detailed workflow explanations
 
-*See also: [Command Reference](./reference/commands.md)*
+This activates the `s2s-guide` skill with comprehensive reference material.

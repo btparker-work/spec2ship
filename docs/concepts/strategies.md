@@ -116,4 +116,4 @@ De Bono's comprehensive analysis method.
 
 ---
 
-*See also: [Roundtable](./roundtable.md) | [Extending: New Strategy](../extending/new-strategy.md)*
+*See also: [Roundtable](./roundtable.md) | Ask Claude: "how to create a new strategy in s2s"*
