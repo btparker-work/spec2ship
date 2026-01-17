@@ -305,56 +305,29 @@ Return the plan in this format:
 )
 ```
 
-Write plan file `.s2s/plans/{timestamp}-{slug}.md`:
+**Write plan file** `.s2s/plans/{timestamp}-{slug}.md`:
 
-```markdown
-# Implementation Plan: {Name}
+**Read template from plugin**:
 
-**ID**: {timestamp}-{slug}
-**Status**: active
-**Branch**: {branch-name if --with-branches, else N/A}
-**Created**: {ISO timestamp}
-**Updated**: {ISO timestamp}
+Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/plan.md`
 
-## References
+**Replace placeholders**:
+- `{topic}` → `{Name}`
+- `{plan-id}` → `{timestamp}-{slug}`
+- `{branch-name}` → `{branch-name if --with-branches, else "N/A"}`
+- `{created-timestamp}` → `{ISO timestamp}`
+- `{updated-timestamp}` → `{ISO timestamp}`
+- `{requirements-list}` → `{list of REQ-xxx covered, or "N/A"}`
+- `{architecture-list}` → `{list of ARCH-xxx or component references, or "N/A"}`
+- `{decisions-list}` → `{relevant ADRs, or "N/A"}`
+- `{dependencies-list}` → `{list of other plan IDs that must complete first, or "none"}`
+- `{overview-description}` → `{description of what this plan implements}`
+- `{task-1}`, `{task-2}`, `{task-3}` → `{generated task list from agent response}`
+- `{criterion-1}`, `{criterion-2}` → `{generated acceptance criteria}`
+- `{testing-description}` → `{how to verify this implementation}`
+- `{integration-description}` → `{how this connects to other components}`
 
-### Requirements
-{list of REQ-xxx covered, or "N/A"}
-
-### Architecture
-{list of ARCH-xxx or component references, or "N/A"}
-
-### Dependencies
-{list of other plan IDs that must complete first, or "none"}
-
-## Overview
-
-{description of what this plan implements}
-
-## Tasks
-
-- [ ] {Task 1}
-- [ ] {Task 2}
-- [ ] {Task 3}
-...
-
-## Acceptance Criteria
-
-- [ ] {criterion 1}
-- [ ] {criterion 2}
-
-## Testing Approach
-
-{how to verify this implementation}
-
-## Integration Notes
-
-{how this connects to other components}
-
-## Notes
-
-<!-- Progress notes, blockers, decisions -->
-```
+**Write**: Save the modified content to `.s2s/plans/{timestamp}-{slug}.md`
 
 ### Create Git Branches (if --with-branches)
 
