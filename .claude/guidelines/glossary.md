@@ -196,6 +196,36 @@ The facilitator agent performs two main actions per round.
 
 ---
 
+## Project Structure Terms
+
+| Term | Definition |
+|------|------------|
+| **Workspace** | Configuration that coordinates multiple related projects |
+| **Component** | A project that is part of a workspace |
+| **Standalone** | A single project not part of any workspace |
+| **Monorepo** | Workspace where all components share ONE git repository |
+| **Multi-repo** | Workspace where components have SEPARATE git repositories |
+| **Hybrid** | Mix of monorepo and multi-repo (some components share repo, others separate) |
+
+### Project Types
+
+| Type | config.yaml `type` | Has workspace.yaml | Description |
+|------|-------------------|-------------------|-------------|
+| **Standalone** | `standalone` | No | Single independent project |
+| **Workspace** | `workspace` | Yes | Coordinates multiple components |
+| **Component** | `component` | No (parent has) | Part of a workspace |
+
+### Reference Patterns
+
+| Context | Pattern | When to Use |
+|---------|---------|-------------|
+| **Internal reference** | `@../path` | In `.s2s/` files, relative filesystem path |
+| **External reference** | `[text](URL)` | In `docs/` files, absolute URL for publication |
+
+**Rule**: Internal = relative, External = absolute.
+
+---
+
 ## Diagnostic Mode
 
 Diagnostic mode (`--diagnostic` flag) enables post-round analysis to detect anomalies during roundtable execution.

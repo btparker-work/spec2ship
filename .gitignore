@@ -53,6 +53,8 @@ temp/
 !.s2s/config.yaml
 !.s2s/decisions/
 !.s2s/decisions/**
+!.s2s/specs/
+!.s2s/specs/**
 
 # All docs/ content is public - no exclusions
 

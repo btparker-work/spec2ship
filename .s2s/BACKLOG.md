@@ -1,6 +1,6 @@
 # Spec2Ship Development Backlog
 
-**Updated**: 2026-01-17T09:50:00Z
+**Updated**: 2026-01-17T10:30:00Z
 **Format**: Single markdown file for LLM consumption
 
 ---
@@ -31,49 +31,120 @@
 
 ## High Priority
 
-### WORK-001: Workspace Support
+### WORK-001: Workspace Support - Core Structure
 
-**Status**: in_progress | **Created**: 2026-01-16 | **Priority**: High
+**Status**: in_progress | **Created**: 2026-01-16 | **Updated**: 2026-01-17 | **Priority**: High
 
-**Context**: S2S is designed for both standalone projects and multi-component workspaces. Currently only standalone is implemented.
+**Context**: S2S supports both standalone projects and multi-component workspaces (monorepo or multi-repo).
 
-**Reference**: `.claude/guidelines/workspace-architecture.md`
+**Specification**: `.s2s/specs/WORK-001-workspace-specification.md` (complete functional spec)
 
-**Decision (2026-01-16)**: Enhanced `/s2s:init` with guided setup instead of separate commands.
+**Terminology** (decided 2026-01-17):
+- **Workspace**: Configuration that coordinates multiple projects
+- **Component**: A project that is part of a workspace
+- **Standalone**: A single project not part of any workspace
 
-**Rationale**:
-- User already familiar with init command
-- Detection already partially implemented (project-detector agent)
-- Reduces cognitive load (no new commands to learn)
-- Workspace is a variant of init, not a separate concept
+**Git Structure Support**:
+- **Monorepo**: All components in one git repo
+- **Multi-repo**: Components in separate git repos
+- **Hybrid**: Mix of both
 
-**Workspace Configurations** (all supported via enhanced init):
-- **Option A**: Per-component `.s2s/` (separate repos per component)
-- **Option B**: Single `.s2s/` in parent (monorepo)
-- **Option C**: Sibling folder for system docs
-- **Option D**: Hybrid (recommended for complex projects)
+**Reference Patterns** (decided 2026-01-17):
+- **Internal** (in .s2s/): Relative paths with `@` → `@../backend/.s2s/CONTEXT.md`
+- **External** (in docs/): Absolute URLs → `[Backend](https://github.com/org/backend/docs/)`
 
-**Versioning Considerations**:
-- If each component has its own repo → `.s2s/` in each component
-- If monorepo → single `.s2s/` in parent
-- For cross-component discussions → sibling docs folder (versionable separately)
-- **Warning**: If parent folder has no git repo, warn user that `.s2s/` won't be versioned
+**Implementation Phases**:
 
-**Implementation Tasks**:
-1. ✅ Enhance project-detector agent to detect workspace structure
+| Phase | ID | Description | Status |
+|-------|-----|-------------|--------|
+| 1 | WORK-001 | Core structure (workspace.yaml, init) | in_progress |
+| 2 | WORK-002 | Roundtable scope (facilitator awareness) | planned |
+| 3 | WORK-003 | Decision propagation (workspace→components) | planned |
+| 4 | WORK-004 | Dependency graph (auto-detect, affected) | planned |
+
+**Phase 1 Tasks**:
+1. ✅ Enhance project-detector to detect workspace structure
 2. ✅ Add workspace detection questions to init Phase 3
 3. ✅ Generate appropriate config based on detected/selected mode
 4. ✅ Warn if .s2s created in non-git folder
-5. Update templates for workspace mode (TEMPL-002) - blocked
+5. [ ] Create workspace.yaml template
+6. [ ] Init creates workspace.yaml when --workspace or detected
+7. [ ] Init links new component to existing workspace
+8. [ ] Component config.yaml includes workspace reference
+
+**Acceptance Criteria** (Phase 1):
+- [x] Detect workspace vs standalone during init
+- [x] Support monorepo/multi-repo/hybrid structures
+- [x] Warn if .s2s created in non-git folder
+- [ ] workspace.yaml created with component registry
+- [ ] Components auto-linked when init run in subfolder
+- [ ] Reference patterns documented and working
+
+**Related**: TEMPL-002, WORK-002, WORK-003, WORK-004
+
+---
+
+### WORK-002: Roundtable Scope Awareness
+
+**Status**: planned | **Created**: 2026-01-17 | **Depends on**: WORK-001
+
+**Context**: Facilitator must understand workspace vs component scope and guide discussions appropriately.
+
+**Specification**: `.s2s/specs/WORK-001-workspace-specification.md` Section 6
+
+**Tasks**:
+1. [ ] Facilitator reads project type from config-snapshot.yaml
+2. [ ] For workspace-level: aggregate context from all components
+3. [ ] For component-level: include workspace context as background
+4. [ ] Validate topic appropriateness for scope
+5. [ ] Suggest correct scope if topic mismatch detected
 
 **Acceptance Criteria**:
-- [x] Detect workspace vs standalone during init
-- [x] Support all 4 configuration options
-- [x] Warn if .s2s created in non-git folder
-- [ ] Cross-component references use absolute URLs
-- [ ] Update templates for workspace mode
+- [ ] Facilitator aggregates workspace + component contexts when appropriate
+- [ ] Topics outside scope trigger suggestion to run elsewhere
+- [ ] Workspace roundtable considers all components
 
-**Related**: TEMPL-002 (workspace templates need revision)
+---
+
+### WORK-003: Decision Propagation
+
+**Status**: planned | **Created**: 2026-01-17 | **Depends on**: WORK-001
+
+**Context**: Workspace-level decisions must propagate to affected components as backlog items.
+
+**Specification**: `.s2s/specs/WORK-001-workspace-specification.md` Section 5
+
+**Tasks**:
+1. [ ] ADR template includes `affects: [components]` field
+2. [ ] Session close suggests creating backlog items in affected components
+3. [ ] Backlog items include reference to originating workspace decision
+4. [ ] workspace.yaml `cross_cutting` section tracks propagation status
+
+**Acceptance Criteria**:
+- [ ] Decisions with `affects` field trigger propagation prompt
+- [ ] Component backlog items reference workspace ADR
+- [ ] Propagation status tracked in workspace.yaml
+
+---
+
+### WORK-004: Dependency Graph
+
+**Status**: planned | **Created**: 2026-01-17 | **Depends on**: WORK-001
+
+**Context**: Auto-detect and maintain dependency relationships between components.
+
+**Specification**: `.s2s/specs/WORK-001-workspace-specification.md` Section 4.3
+
+**Tasks**:
+1. [ ] Scan imports/requires during init to detect dependencies
+2. [ ] Update workspace.yaml `depends_on` field for each component
+3. [ ] `/s2s:init --update-deps` command to refresh dependencies
+4. [ ] Consider dependencies when generating plans (affected analysis)
+
+**Acceptance Criteria**:
+- [ ] Dependencies auto-detected during component init
+- [ ] Manual refresh command available
+- [ ] Plan command considers dependency order
 
 ---
 
@@ -153,21 +224,23 @@ This approach:
 
 ### TEMPL-002: Workspace Template Cleanup
 
-**Status**: blocked | **Blocked by**: WORK-001 | **Created**: 2026-01-16
+**Status**: planned | **Created**: 2026-01-16 | **Updated**: 2026-01-17 | **Unblocked by**: WORK-001 spec
 
-**Context**: Workspace templates contain references to non-existent commands.
+**Context**: Workspace templates need to align with WORK-001 specification.
 
-**Current Issues in `templates/workspace/`**:
-- `CONTEXT.md` references `/s2s:init:detect` (doesn't exist)
-- `CONTEXT.md` references `/s2s:workspace:add-component` (doesn't exist)
-- `CONTEXT.md` references `/s2s:workspace:sync` (doesn't exist)
-- `CONTEXT.md` references `@.s2s/components.yaml` (never created)
-- `workspace.yaml` has complex structure but init generates simple one
+**Specification Reference**: `.s2s/specs/WORK-001-workspace-specification.md`
 
-**Resolution**:
-- Wait for WORK-001 (workspace support) decisions
-- Either implement referenced commands OR simplify templates
-- Align `workspace.yaml` template with actual init output
+**Tasks**:
+1. [ ] Create `templates/workspace/workspace.yaml` per Section 3.1 of spec
+2. [ ] Update `templates/workspace/CONTEXT.md` - remove non-existent command refs
+3. [ ] Create `templates/workspace/BACKLOG.md` for workspace-level backlog
+4. [ ] Update `templates/project/config.yaml` to support `type: "component"` and `workspace:` section
+5. [ ] Remove or update obsolete templates
+
+**Files to Change**:
+- `templates/workspace/workspace.yaml` - rewrite per spec
+- `templates/workspace/CONTEXT.md` - simplify, remove invalid refs
+- `templates/project/config.yaml` - add workspace reference fields
 
 **Acceptance Criteria**:
 - [ ] All referenced commands exist OR are removed from templates

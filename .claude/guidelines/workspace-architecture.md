@@ -2,286 +2,167 @@
 
 This document defines how Spec2Ship supports multi-component projects (workspaces) in addition to standalone projects.
 
+**Detailed specification**: `.s2s/specs/WORK-001-workspace-specification.md`
+
 ---
 
-## Project Types
+## Terminology
 
-### Standalone Project
+| Term | Definition |
+|------|------------|
+| **Workspace** | Configuration that coordinates multiple related projects |
+| **Component** | A project that is part of a workspace |
+| **Standalone** | A single project not part of any workspace |
+| **Monorepo** | Workspace where all components share ONE git repo |
+| **Multi-repo** | Workspace where components have SEPARATE git repos |
 
-Single project with one git repository and one `.s2s/` folder.
+---
+
+## Supported Structures
+
+### Monorepo
+
+All components in one git repository.
 
 ```
-my-project/
-├── .git/
-├── .s2s/              # Single S2S instance
+workspace/
+├── .git/                    # Single git repo
+├── .s2s/                    # Workspace-level S2S
+│   ├── workspace.yaml       # Component registry
 │   ├── config.yaml
 │   ├── CONTEXT.md
-│   ├── BACKLOG.md
-│   ├── requirements.md
-│   ├── architecture.md
-│   ├── decisions/
-│   ├── plans/
-│   └── sessions/
-└── src/
-```
-
-### Workspace (Multi-Component)
-
-Project with multiple sub-projects (components) such as:
-- Frontend, Backend, Mobile App
-- Core, Ingestion, Analysis modules
-- Shared libraries
-
----
-
-## Workspace Configuration Options
-
-The `.s2s/` folder placement depends on project structure and versioning strategy.
-
-### Option A: Per-Component `.s2s/`
-
-Each component has its own `.s2s/` folder, versioned with the component.
-
-```
-workspace/
-├── frontend/
-│   ├── .git/
-│   └── .s2s/          # Frontend-specific
-├── backend/
-│   ├── .git/
-│   └── .s2s/          # Backend-specific
-└── mobile/
-    ├── .git/
-    └── .s2s/          # Mobile-specific
-```
-
-**Use when**:
-- Each component has its own git repository
-- Components evolve independently
-- Teams work on separate components
-
-**Advantages**:
-- Clear ownership per component
-- Versioned with component code
-- Independent evolution
-
-**Disadvantages**:
-- No central place for cross-component decisions
-- Duplication of shared context
-
----
-
-### Option B: Single `.s2s/` in Parent Folder
-
-One `.s2s/` folder at workspace level, containing all documentation.
-
-```
-workspace/
-├── .git/              # Single repo (monorepo)
-├── .s2s/              # Shared for all components
-│   ├── config.yaml
-│   ├── CONTEXT.md
-│   ├── requirements.md
 │   └── ...
 ├── frontend/
+│   └── .s2s/                # Component-level S2S
 ├── backend/
-└── mobile/
+│   └── .s2s/
+└── shared-lib/
+    └── .s2s/
 ```
 
-**Use when**:
-- Monorepo with single git repository
-- Centralized documentation ownership
-- Tightly coupled components
+### Multi-repo
 
-**Advantages**:
-- Single source of truth
-- Easy cross-component references
-- No duplication
-
-**Disadvantages**:
-- All teams share same documentation
-- Harder to version component-specific decisions
-
----
-
-### Option C: Sibling Folder for System Documentation
-
-Dedicated sibling folder for system-level documentation, with optional component `.s2s/` folders.
+Components in separate git repositories.
 
 ```
-workspace/
-├── docs-system/           # Sibling folder for system-level docs
-│   ├── .git/              # Separate repo for docs
-│   └── .s2s/              # High-level architecture, cross-component decisions
-│       ├── CONTEXT.md     # System overview
-│       ├── architecture.md # System architecture
-│       └── decisions/     # Cross-component ADRs
+parent-folder/               # NO .git here
+├── system-docs/             # Dedicated docs project
+│   ├── .git/                # Own git repo for workspace docs
+│   └── .s2s/                # Workspace-level S2S
+│       └── workspace.yaml
 ├── frontend/
-│   ├── .git/
-│   └── .s2s/              # Frontend details (optional)
+│   ├── .git/                # Own git repo
+│   └── .s2s/
 ├── backend/
 │   ├── .git/
-│   └── .s2s/              # Backend details (optional)
-└── mobile/
+│   └── .s2s/
+└── shared-lib/
     ├── .git/
-    └── .s2s/              # Mobile details (optional)
+    └── .s2s/
 ```
 
-**Use when**:
-- Separate repos per component
-- Need for cross-component roundtables and decisions
-- Want system-level documentation versioned separately
+### Hybrid
 
-**Advantages**:
-- System-level docs are versionable and shareable
-- Component details remain with component code
-- Clear separation of concerns
-
-**Disadvantages**:
-- More complex structure
-- Need to manage references between system and component docs
+Some components share parent repo, others have own repos.
 
 ---
 
-### Option D: Hybrid (Recommended for Complex Projects)
+## Reference Patterns
 
-Sibling folder for high-level documentation with references to component `.s2s/` folders.
+**Key distinction**:
+- **Internal** (`.s2s/` files): ALWAYS use relative paths
+- **External** (`docs/` public files): ALWAYS use absolute URLs
 
-```
-workspace/
-├── system-docs/
-│   ├── .git/
-│   └── .s2s/
-│       ├── CONTEXT.md        # System overview, component list
-│       ├── architecture.md   # High-level architecture only
-│       ├── decisions/        # Cross-component ADRs only
-│       └── COMPONENTS.md     # Links to component docs (via repo URLs)
-├── frontend/
-│   ├── .git/
-│   └── .s2s/
-│       └── ...               # Detailed frontend specs, architecture
-├── backend/
-│   └── ...
-└── mobile/
-    └── ...
-```
+| Context | Pattern | Example |
+|---------|---------|---------|
+| Internal | Relative `@` | `@../backend/.s2s/CONTEXT.md` |
+| External | Absolute URL | `[Backend](https://github.com/org/backend/docs/)` |
 
-**COMPONENTS.md structure**:
-```markdown
-# Components
-
-| Component | Repo | Documentation |
-|-----------|------|---------------|
-| Frontend | https://github.com/org/frontend | [.s2s/](https://github.com/org/frontend/tree/main/.s2s) |
-| Backend | https://github.com/org/backend | [.s2s/](https://github.com/org/backend/tree/main/.s2s) |
-```
-
-**Note**: Use absolute URLs (GitHub/GitLab) instead of relative paths. Relative paths don't work across separate repos.
+**Rationale**: Local filesystem structure is predictable (parent + subfolders). Public docs need URLs that work when published anywhere.
 
 ---
 
-## Versioning Considerations
+## Configuration Files
 
-### Critical Rule: Parent Folder Without Git
+### workspace.yaml
 
-If the parent folder does NOT have a git repository and user wants to create `.s2s/` there:
+Located at workspace root: `.s2s/workspace.yaml`
 
-**⚠️ WARNING**: The `.s2s/` folder will NOT be versioned.
+Contains:
+- Component registry with paths and dependencies
+- Cross-cutting concerns (decisions affecting multiple components)
+- Roundtable scope configuration
 
-**Implications**:
-1. Documentation cannot be shared with team
-2. History will not be preserved
-3. Collaboration is impossible
-4. Risk of data loss
+See specification Section 3.1 for full schema.
 
-**Recommendation**: Create a sibling folder with its own git repo instead.
+### Component config.yaml
+
+When a project is part of a workspace:
+
+```yaml
+name: "frontend"
+type: "component"            # NOT "standalone"
+
+workspace:
+  path: ".."                 # Relative path to workspace root
+```
 
 ---
 
-## What to Version in `.s2s/`
+## Init Behavior
 
-### Always Version (Commit to Git)
+Init is ALWAYS interactive - it detects context and guides the user.
 
-| File/Folder | Purpose |
-|-------------|---------|
+### Key Scenarios
+
+1. **New standalone**: Simple project, no workspace indicators → create .s2s/
+2. **New workspace** (`--workspace`): Create workspace.yaml, optionally init components
+3. **Detected workspace**: Multiple subfolders found → suggest workspace structure
+4. **Adding component**: Parent has workspace.yaml → link as component
+5. **Convert to workspace**: Existing standalone → add workspace.yaml
+
+### Dependency Detection
+
+- Only detects dependencies between WORKSPACE COMPONENTS (not third-party libs)
+- If uncertain, asks user for confirmation
+- No separate command needed - init handles interactively
+
+---
+
+## Versioning
+
+### Always Version (commit to git)
+
+| File | Purpose |
+|------|---------|
+| `workspace.yaml` | Workspace configuration |
 | `config.yaml` | Project configuration |
-| `CONTEXT.md` | Project context and overview |
-| `BACKLOG.md` | Planned work and ideas |
-| `requirements.md` | Requirements specification |
-| `architecture.md` | Architecture documentation |
-| `decisions/` | Architecture Decision Records |
+| `CONTEXT.md` | Context and overview |
+| `BACKLOG.md` | Planned work |
+| `decisions/` | ADRs |
 | `plans/` | Implementation plans |
 
-### Never Version (Add to .gitignore)
+### Never Version (add to .gitignore)
 
-| File/Folder | Reason |
-|-------------|--------|
-| `sessions/` | Volatile, large, contains conversation artifacts |
-
-**Suggested `.gitignore` entry**:
-```
-.s2s/sessions/
-```
+| File | Reason |
+|------|--------|
+| `sessions/` | Volatile, large |
 
 ---
 
-## Cross-Component Roundtables
+## Roundtable Scope
 
-For discussions that span multiple components:
+Facilitator uses **decision principles** (not topic lists) to determine appropriate scope.
 
-1. **Start from system-docs folder**: Run `/s2s:roundtable` from the sibling docs folder
-2. **Reference components**: Use absolute URLs in artifacts
-3. **Assign follow-ups**: Create tasks in component-specific BACKLOG.md files
+**Workspace-level principle**:
+> Does this decision require coordination between teams?
 
----
+**Component-level principle**:
+> Does this affect only this component's implementation?
 
-## Init Detection Logic
-
-When running `/s2s:init`, detect:
-
-1. **Is parent a git repo?** Check for `.git/` in parent
-2. **Are sibling folders git repos?** Check for `.git/` in siblings
-3. **Are there existing `.s2s/` folders?** Scan siblings and parent
-
-Based on detection, suggest appropriate workspace configuration.
+If topic doesn't match scope, facilitator suggests running from the appropriate location.
 
 ---
 
-## Implementation Approach
-
-**Decision (2026-01-16)**: Enhanced `/s2s:init` with guided setup.
-
-### Rationale
-
-- User already familiar with init command
-- Detection already partially implemented (project-detector agent)
-- Reduces cognitive load (no new commands to learn)
-- Workspace is a variant of init, not a separate concept
-
-### Commands
-
-| Command | Purpose | Status |
-|---------|---------|--------|
-| `/s2s:init --workspace` | Initialize as workspace hub | Existing |
-| `/s2s:init --component` | Initialize as component of workspace | Existing |
-
-**Note**: Separate `/s2s:workspace:*` commands were considered but rejected in favor of enhanced init.
-
-### Implementation Flow
-
-1. Detect project structure (project-detector agent)
-2. Ask: "Is this part of a larger workspace?"
-3. If yes, ask for configuration preference (A/B/C/D)
-4. Generate appropriate structure with warnings for non-git folders
-
----
-
-## Open Questions
-
-1. **Component registry format**: Use `workspace.yaml` with `components:[]` (current approach)
-2. **Cross-component references**: Use absolute URLs (GitHub/GitLab) - relative paths don't work across repos
-3. **Session scope**: Cross-component sessions stored in system-docs folder
-
----
-
-*Last updated: 2026-01-16*
+*Last updated: 2026-01-17*
+*See also: `.s2s/specs/WORK-001-workspace-specification.md`*

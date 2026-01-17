@@ -354,3 +354,143 @@ Provide actionable recovery for errors.
   2. If repair fails, offer user choice: reset or abandon
   3. Log corruption details for debugging
 ```
+
+---
+
+## LLM Decision Patterns
+
+Use patterns optimized for LLM reasoning capabilities.
+
+### Use Principles Instead of Lists
+
+**Problem**: Topic matching against lists is brittle. LLM semantic matching is imprecise.
+
+**Bad** (brittle list matching):
+```yaml
+appropriate_topics:
+  - "System-wide architecture decisions"
+  - "Cross-component interfaces"
+  - "API versioning"
+```
+
+**Good** (principle-based reasoning):
+```yaml
+decision_principle: |
+  Workspace discussions focus on decisions that AFFECT MULTIPLE components.
+  Key question: "Does this require coordination between teams?"
+  If yes → workspace level. If no → component level.
+
+indicators:
+  - "cross-component"
+  - "shared"
+  - "interface"
+```
+
+**Why**: LLM can reason about principles ("does this affect multiple components?") better than matching against a finite list of topics.
+
+---
+
+### Use Indicators Over Exact Matches
+
+When semantic categorization is needed, provide **keyword indicators** that help LLM recognize patterns.
+
+**Pattern**:
+```yaml
+# Keywords that suggest category A
+category_a_indicators:
+  - "keyword1"
+  - "keyword2"
+
+# Keywords that suggest category B
+category_b_indicators:
+  - "keyword3"
+  - "keyword4"
+```
+
+**Example** (roundtable scope):
+```yaml
+workspace_indicators:
+  - "cross-component"
+  - "shared"
+  - "system-wide"
+  - "interface"
+
+component_indicators:
+  - "internal"
+  - "implementation"
+  - "refactoring"
+  - "only affects"
+```
+
+---
+
+### Interactive Over Automatic for Complex Decisions
+
+When operation complexity is uncertain, prefer asking the user over making assumptions.
+
+**Pattern**:
+```markdown
+**IF** {complexity uncertain}:
+  Ask user: "I detected {situation}. Would you like me to:
+  a. {automatic option}
+  b. {guided option}
+  c. {manual option}"
+
+**IF** {straightforward}:
+  Proceed automatically with confirmation
+```
+
+**Example** (init detecting workspace):
+```markdown
+**IF** multiple subfolders detected AND user didn't specify --workspace:
+  Ask: "Detected potential workspace structure. Initialize as:
+  a. Workspace (recommended)
+  b. Standalone project"
+```
+
+---
+
+### Confirm When Uncertain
+
+For auto-detection that may be wrong, always confirm with user.
+
+**Pattern**:
+```markdown
+**IF** auto-detection is uncertain:
+  Present finding and ask for confirmation:
+  "It looks like {detected situation}. Is this correct? [Y/n]"
+```
+
+**Example** (dependency detection):
+```markdown
+"Detected dependencies:
+- backend → shared-lib
+- frontend → shared-lib
+
+Is this correct? Would you like to add or remove any?"
+```
+
+---
+
+## Configuration Patterns
+
+### Placeholder Formats for Templates
+
+Use consistent placeholder patterns that LLM can easily identify and replace.
+
+| Format | Use Case | Example |
+|--------|----------|---------|
+| `{placeholder-name}` | Simple values | `{project-name}`, `{date}` |
+| `{opt1 \| opt2 \| opt3}` | Finite choices | `{standalone \| workspace \| component}` |
+| `{description - hint}` | Self-documenting | `{Project description - run init to populate}` |
+
+**Rule**: All placeholders use `{...}` format for easy regex matching: `\{[^}]+\}`
+
+**Anti-patterns**:
+- Fixed values like `"standalone"` - LLM may not know to replace
+- Pseudo-code like `{Context.X}` - looks like code, confuses pattern matching
+- Nested braces `{{...}}` - harder to parse
+
+---
+
+*Last updated: 2026-01-17*
