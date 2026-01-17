@@ -520,25 +520,37 @@ Create `.s2s/sessions/` directory for session files.
 
 ### 5.4 Generate CONTEXT.md
 
+> **Header Convention**: CONTEXT.md files use prefixed headers to avoid ambiguity when
+> workspace and component contexts are loaded together via @ cascade.
+> - Workspace: "System Overview", "System Objectives", "System Constraints", "Workspace Open Questions"
+> - Component: "Component Overview", "Component Constraints", "Component Open Questions"
+> See ADR-0009 for rationale.
+
 **For standalone mode**:
 
 Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
 
-**Remove Workspace Context section**: Delete everything between `<!-- WORKSPACE_CONTEXT_START -->` and `<!-- WORKSPACE_CONTEXT_END -->` (inclusive).
+**Remove conditional sections**:
+- Delete everything between `<!-- WORKSPACE_CONTEXT_START -->` and `<!-- WORKSPACE_CONTEXT_END -->` (inclusive)
+- Delete everything between `<!-- COMPONENT_CONSTRAINTS_START -->` and `<!-- COMPONENT_CONSTRAINTS_END -->` (inclusive)
+- **Keep** everything between `<!-- STANDALONE_CONTEXT_START -->` and `<!-- STANDALONE_CONTEXT_END -->` (remove only the HTML comments)
 
 **Replace placeholders**:
-- `{Project description - run /s2s:init to populate}` → `{Context.description or Detected.project.description}`
-- `{Business domain - run /s2s:init to populate}` → `{Context.domain}`
-- `- {Objectives - run /s2s:init to populate}` → `{Context.objectives as bullet points, each on its own line}`
-- `{MVP | Full Implementation | Proof of Concept}` → `{Context.scope_type}`
-- First `- {To be defined}` (In scope) → `- {inferred from objectives}`
-- Second `- {To be defined}` (Out of scope) → `- {Context.out_of_scope}`
-- `{Constraints - run /s2s:init to populate}` → `{Context.constraints or "No significant constraints identified."}`
-- `{To be determined - run /s2s:design to define}` → `{Detected.tech_stack formatted or Context.tech_stack or "TBD - to be defined during design phase"}`
-- `- {Questions to be resolved}` → `- {any unresolved items or "None identified"}`
+- `{project-name}` → `{Detected.project.name or Context.name}`
+- `{business-domain}` → `{Context.domain}`
+- `{objective-1}` → `{Context.objectives[0]}`
+- `{objective-2}` → `{Context.objectives[1] or remove line}`
+- `{constraint-1}` → `{Context.constraints[0] or "None identified"}`
+- `{constraint-2}` → `{Context.constraints[1] or remove line}`
+- `{description}` → `{Context.description or Detected.project.description}`
+- `{scope-type}` → `{Context.scope_type}`
+- `{in-scope}` → `{inferred from objectives}`
+- `{out-of-scope}` → `{Context.out_of_scope or "TBD"}`
 - `{date}` → `{current ISO date}`
 
-**Keep unchanged**: The "Project Tracking" section with Backlog and Decisions references.
+**Keep as-is** (user-visible hints for future commands):
+- "TBD - run `/s2s:design`..." → Keep if tech stack not detected
+- "None identified yet" → Keep for open questions
 
 **Remove**: The `*Phase: init*` line at the end.
 
@@ -546,17 +558,28 @@ Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
 
 Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/CONTEXT.md`
 
-**Populate Workspace Context section** (keep the section, replace placeholders):
+**Remove conditional sections**:
+- Delete everything between `<!-- STANDALONE_CONTEXT_START -->` and `<!-- STANDALONE_CONTEXT_END -->` (inclusive)
+- **Keep** everything between `<!-- WORKSPACE_CONTEXT_START -->` and `<!-- WORKSPACE_CONTEXT_END -->` (remove only the HTML comments)
+- **Keep** everything between `<!-- COMPONENT_CONSTRAINTS_START -->` and `<!-- COMPONENT_CONSTRAINTS_END -->` (remove only the HTML comments)
+
+**Populate Workspace Context section**:
 - `{workspace-name}` → name from parent `workspace.yaml`
 - `{component-role-description}` → description from this component's entry in parent `workspace.yaml`, or "Component of {workspace-name}"
 - `{workspace-path}` → `{workspace_path}` (e.g., "..")
-- Remove the HTML comments (`<!-- WORKSPACE_CONTEXT_START -->` etc.) but keep the content
 
-**Replace other placeholders** (same as standalone):
-- `{Project description...}` → `{Context.description or Detected.project.description}`
-- ... (same replacements as standalone)
+**Replace other placeholders**:
+- `{project-name}` → `{Detected.project.name or Context.name}`
+- `{description}` → `{Context.description or Detected.project.description}`
+- `{scope-type}` → `{Context.scope_type}`
+- `{in-scope}` → `{inferred from objectives}`
+- `{out-of-scope}` → `{Context.out_of_scope or "TBD"}`
+- `{component-constraints}` → `{Context.constraints or "None identified"}`
+- `{date}` → `{current ISO date}`
 
-**Note**: The `@{workspace-path}/.s2s/CONTEXT.md` reference allows Claude to automatically include workspace context when reading this file.
+**Keep as-is**: "TBD - run `/s2s:design`...", "None identified yet"
+
+**Note**: The `@{workspace-path}/.s2s/CONTEXT.md` reference uses @ cascade to load workspace context into memory automatically.
 
 **For workspace mode**:
 
@@ -564,11 +587,16 @@ Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/workspace/CONTEXT.md`
 
 **Replace placeholders**:
 - `{workspace-name}` → `{Context.name or Detected.project.name}`
-- `{Workspace description...}` → `{Context.description}`
-- `{Business domain...}` → `{Context.domain}`
-- Component table rows → one row per registered component
-- Cross-cutting concerns → defaults or "TBD"
+- `{description}` → `{Context.description}`
+- `{business-domain}` → `{Context.domain}`
+- `{objective-1}` → `{Context.objectives[0]}`
+- `{objective-2}` → `{Context.objectives[1] or remove line}`
+- `{constraint-1}` → `{Context.constraints[0] or "None identified"}`
+- `{constraint-2}` → `{Context.constraints[1] or remove line}`
+- `{component-name}` / `{component-role}` → one row per registered component
 - `{date}` → `{current ISO date}`
+
+**Keep as-is**: Cross-cutting "TBD", Architecture "TBD - run `/s2s:design`...", "None identified yet"
 
 **Write**: Save the modified content to `.s2s/CONTEXT.md`
 
@@ -614,6 +642,47 @@ Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/BACKLOG.md`
 
 **Write**: Save the modified content to `.s2s/BACKLOG.md`
 
+### 5.7 Generate README.md
+
+> **Purpose**: README.md contains S2S documentation for humans (paths, commands, how-to).
+> This content is NOT loaded into Claude's memory - only CONTEXT.md is loaded via @ cascade.
+> See ADR-0009 for rationale on separating semantic context from documentation.
+
+**For workspace mode**:
+
+Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/workspace/README.md`
+
+**Replace placeholders**:
+- `{workspace-name}` → `{Context.name or Detected.project.name}`
+
+**Write**: Save the modified content to `.s2s/README.md`
+
+**For standalone mode**:
+
+Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/README.md`
+
+**Remove conditional sections**:
+- Delete everything between `<!-- WORKSPACE_SECTION_START -->` and `<!-- WORKSPACE_SECTION_END -->` (inclusive)
+
+**Replace placeholders**:
+- `{project-name}` → `{Detected.project.name or Context.name}`
+
+**Write**: Save the modified content to `.s2s/README.md`
+
+**For component mode**:
+
+Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/README.md`
+
+**Populate Workspace section** (keep the section, replace placeholders):
+- `{workspace-name}` → name from parent `workspace.yaml`
+- `{workspace-path}` → `{workspace_path}` (e.g., "..")
+- Remove the HTML comments but keep the content
+
+**Replace other placeholders**:
+- `{project-name}` → `{Detected.project.name or Context.name}`
+
+**Write**: Save the modified content to `.s2s/README.md`
+
 ---
 
 ## Phase 5 (Context Update): Update CONTEXT.md Only
@@ -656,7 +725,8 @@ Scope: {Context.scope_type}
 
 Created:
 - .s2s/config.yaml
-- .s2s/CONTEXT.md
+- .s2s/CONTEXT.md (semantic context, loaded in Claude's memory)
+- .s2s/README.md (documentation for humans, NOT loaded in memory)
 - .s2s/BACKLOG.md
 - .s2s/sessions/
 - .s2s/plans/

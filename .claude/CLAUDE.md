@@ -1,5 +1,7 @@
 # Spec2Ship Development Context
 
+@.s2s/CONTEXT.md
+
 Spec2Ship (s2s) is a Claude Code plugin that automates the software lifecycle: specifications → planning → implementation → shipping.
 
 ## Project Structure

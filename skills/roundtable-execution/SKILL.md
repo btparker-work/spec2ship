@@ -168,21 +168,24 @@ workspace_scope:
   inherits_context_from: "workspace"
 ```
 
-### Step 1.3c: Context References (workspace/component)
+### Step 1.3c: Context Loading Strategy (ADR-0009)
 
-**Context is handled via @ references in CONTEXT.md files:**
+**Workspace context is handled via @ cascade in CLAUDE.md files:**
 
-- **Component CONTEXT.md** includes `@{workspace-path}/.s2s/CONTEXT.md` reference
-- **Claude resolves @ references** when reading files, so workspace context is automatically included
+```
+CLAUDE.md → @.s2s/CONTEXT.md → @../.s2s/CONTEXT.md (workspace)
+```
 
-**No runtime aggregation needed.** The @ reference approach:
-- Avoids duplication
-- Stays consistent (workspace changes are automatically visible)
-- Simplifies execution
+- **Component sessions**: Workspace context is already in memory (loaded at session start)
+- **Workspace sessions**: Only workspace CONTEXT.md is in memory (components listed as text)
+- **No runtime aggregation needed** for workspace context
 
-**IF project.type == "workspace"** (optional enhancement):
+**Path resolution**: All @ paths are relative to the file containing them (not CWD).
+This is verified Claude Code behavior - sibling references work correctly.
 
-Read cross_cutting decisions from workspace.yaml and add to context-snapshot:
+**IF project.type == "workspace"** (cross-component discussions):
+
+1. Read cross_cutting decisions from workspace.yaml and add to context-snapshot:
 ```yaml
 cross_cutting_decisions:
   - id: "{from workspace.yaml: cross_cutting[].id}"
@@ -190,7 +193,17 @@ cross_cutting_decisions:
     affects: ["{component ids}"]
 ```
 
-This helps facilitator understand which decisions affect which components.
+2. **On-demand sibling loading**: When topic involves specific components:
+   - Read component list from workspace CONTEXT.md or workspace.yaml
+   - For each relevant component, read `{component-path}/.s2s/CONTEXT.md`
+   - Include in facilitator's context for that round
+   - This keeps memory low (~1K tokens) for normal discussions
+   - Only loads siblings (~300-500 tokens each) when cross-component context needed
+
+**Example**: Topic "API contract between frontend and backend"
+- Load `./frontend/.s2s/CONTEXT.md` (relevant component)
+- Load `./backend/.s2s/CONTEXT.md` (relevant component)
+- Skip `./mobile/.s2s/CONTEXT.md` (not involved in this topic)
 
 ### Step 1.4: Topic Validation
 

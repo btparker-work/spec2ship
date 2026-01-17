@@ -521,22 +521,26 @@ Read the file at `${CLAUDE_PLUGIN_ROOT}/templates/project/config.yaml`
 
 | Format | Use Case | Example |
 |--------|----------|---------|
-| `{placeholder-name}` | Simple values | `{project-name}`, `{date}` |
+| `{placeholder-name}` | Simple values replaced by init | `{project-name}`, `{date}`, `{description}` |
 | `{opt1 \| opt2 \| opt3}` | Finite choices | `{standalone \| workspace \| component}` |
-| `{description - hint}` | Self-documenting | `{Project description - run /s2s:init to populate}` |
+| Human-readable default | User-visible hints | `TBD - run /s2s:design to define` |
 
 **Why this pattern**:
 1. All placeholders start with `{` and end with `}` - easy regex: `\{[^}]+\}`
 2. LLM can identify ALL placeholders by pattern matching
 3. `|` separator indicates valid options (LLM knows allowed values)
-4. Hint text helps LLM understand intent without reading command
+4. User-visible text (not in `{}`) serves as hint for future commands
+
+**Key insight**: Users never see template placeholders - init replaces them. So:
+- `{business-domain}` is fine (init replaces it)
+- `TBD - run /s2s:design` is fine (user sees it after init, knows what to do)
 
 **Anti-patterns to avoid**:
-- Fixed values like `"standalone"` - LLM may not know to replace
+- `{description - run /s2s:init to populate}` - hint text inside placeholder is never seen
 - Pseudo-code like `{Context.X}` - confuses (looks like code, not placeholder)
 - Nested braces `{{...}}` - harder to parse
 
-**Verified in**: TEMPL-001 test (2026-01-17)
+**Verified in**: TEMPL-001 test (2026-01-17), updated 2026-01-17 for simplified placeholders
 
 ---
 

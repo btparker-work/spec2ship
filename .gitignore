@@ -50,6 +50,7 @@ temp/
 # But track development artifacts for s2s itself
 !.s2s/BACKLOG.md
 !.s2s/CONTEXT.md
+!.s2s/README.md
 !.s2s/config.yaml
 !.s2s/decisions/
 !.s2s/decisions/**
