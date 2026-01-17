@@ -185,9 +185,9 @@ Checks session consistency with semantic analysis.
 
 ### Branches
 
-- `main` — Stable releases
-- `develop` — Development branch
-- `feature/*` — Feature branches
+- `main`: stable releases
+- `develop`: development branch
+- `feature/*`: feature branches
 
 ### Commit Messages
 

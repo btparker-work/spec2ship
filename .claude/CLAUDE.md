@@ -68,8 +68,6 @@ Task(subagent_type="general-purpose", prompt="You are a facilitator...")
 - **YAML**: 2-space indent, quoted strings with special chars
 - **File encoding**: UTF-8, LF line endings
 
----
-
 ## Key Reminders
 
 1. **Agent invocation**: Use `**Use the roundtable-X agent**` pattern, not Task with generic prompt

@@ -14,11 +14,11 @@ This directory contains public Architecture Decision Records (ADRs) for Spec2Shi
 
 ## Status Legend
 
-- **accepted** — Currently in effect
-- **proposed** — Under discussion
-- **deprecated** — No longer applicable
-- **superseded** — Replaced by another ADR
-- **rejected** — Considered but not adopted
+- **accepted**: currently in effect
+- **proposed**: under discussion
+- **deprecated**: no longer applicable
+- **superseded**: replaced by another ADR
+- **rejected**: considered but not adopted
 
 ## About ADRs
 

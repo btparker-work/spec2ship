@@ -29,7 +29,7 @@ The Roundtable is Spec2Ship's multi-agent discussion system.
 ### How It Works
 
 1. **Facilitator** generates a question based on the agenda
-2. **Participants** respond in parallel (blind voting—cannot see each other's responses)
+2. **Participants** respond in parallel (blind voting, cannot see each other's responses)
 3. **Facilitator** synthesizes responses into artifacts and decisions
 4. **Session** is updated with round summary and artifacts
 5. Repeat until topics are covered or escalation triggered

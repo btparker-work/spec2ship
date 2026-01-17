@@ -16,7 +16,7 @@
 
 Spec2Ship is a **Claude Code plugin** that adds structured orchestration for requirements, architecture, and implementation planning.
 
-The core idea: instead of prompting Claude Code directly, you run **roundtable discussions** where multiple agents—each representing a real role—debate and refine decisions collaboratively.
+The core idea: instead of prompting Claude Code directly, you run **roundtable discussions** where multiple agents, each representing a real role, debate and refine decisions collaboratively.
 
 **It is:**
 - A spec-driven framework where specifications are treated as executable intent
@@ -92,8 +92,8 @@ When you prompt Claude Code directly for requirements or architecture decisions:
 ```
 
 After `/s2s:specs` completes, you'll have:
-- `.s2s/sessions/YYYYMMDD-specs-*.yaml` — full discussion transcript
-- `.s2s/requirements.md` — structured requirements with IDs (REQ-001, REQ-002...)
+- `.s2s/sessions/YYYYMMDD-specs-*.yaml`: full discussion transcript
+- `.s2s/requirements.md`: structured requirements with IDs (REQ-001, REQ-002...)
 
 ---
 
@@ -136,7 +136,7 @@ Every major decision flows through a structured discussion:
 - **Security Champion** catches vulnerabilities and compliance gaps
 - **DevOps Engineer** catches operational burden and scaling limits
 
-**Concrete output**: Not chat transcripts—structured artifacts:
+**Concrete output**: Not chat transcripts, but structured artifacts:
 
 ```markdown
 ## REQ-001: User Authentication
@@ -202,7 +202,7 @@ Each phase can run independently. Missing prerequisites trigger prompts, not fai
 
 ## Autonomous vs Interactive Mode
 
-Spec2Ship supports both modes—this is a **design choice**, not a limitation.
+Spec2Ship supports both modes. This is a **design choice**, not a limitation.
 
 ### Autonomous Mode (default)
 
@@ -232,7 +232,7 @@ Even in autonomous mode, the system pauses for human input when:
 - **Unresolved conflicts** after maximum rounds
 - **Blocking questions** that prevent progress
 
-This means Spec2Ship knows when to ask for help—it's not a black-box generator.
+This means Spec2Ship knows when to ask for help. It's not a black-box generator.
 
 ---
 
@@ -261,11 +261,11 @@ Why this matters:
 
 | Command | Purpose | Default strategy |
 |---------|---------|------------------|
-| `/s2s:init` | Analyze project, create context | — |
+| `/s2s:init` | Analyze project, create context | - |
 | `/s2s:brainstorm "topic"` | Creative exploration | Disney |
 | `/s2s:specs` | Define requirements | Consensus-driven |
 | `/s2s:design` | Design architecture | Debate |
-| `/s2s:plan` | Generate implementation plan | — |
+| `/s2s:plan` | Generate implementation plan | - |
 | `/s2s:roundtable "topic"` | Generic roundtable | Auto-detected |
 
 ### Session management
@@ -305,13 +305,13 @@ For extension guides, ask Claude: `"how to extend s2s"`
 
 ## Documentation
 
-- [Core Concepts](docs/concepts.md) — Workflows, roundtables, sessions
-- [Architecture](docs/architecture/) — System design and ADRs
+- [Core Concepts](docs/concepts.md): workflows, roundtables, sessions
+- [Architecture](docs/architecture/): system design and ADRs
 
 For interactive help:
-- `"what commands does s2s have"` — Command reference
-- `"how do roundtables work"` — Detailed explanation
-- `"how to create a new agent"` — Extension guide
+- `"what commands does s2s have"`: command reference
+- `"how do roundtables work"`: detailed explanation
+- `"how to create a new agent"`: extension guide
 
 ---
 
@@ -329,4 +329,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT:see [LICENSE](LICENSE)
