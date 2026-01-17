@@ -4,18 +4,18 @@ Thank you for your interest in contributing to Spec2Ship!
 
 ## Table of Contents
 
-- [Quick Start](#quick-start)
-- [Development Setup](#development-setup)
-- [Project Structure](#project-structure)
-- [Making Changes](#making-changes)
-- [Testing](#testing)
-- [Debugging](#debugging)
-- [Git Workflow](#git-workflow)
-- [What to Contribute](#what-to-contribute)
-- [Guidelines](#guidelines)
-- [Getting Help](#getting-help)
+- [Quick Start](#-quick-start)
+- [Development Setup](#️-development-setup)
+- [Project Structure](#-project-structure)
+- [Making Changes](#-making-changes)
+- [Testing](#-testing)
+- [Debugging](#-debugging)
+- [Git Workflow](#-git-workflow)
+- [What to Contribute](#-what-to-contribute)
+- [Guidelines](#-guidelines)
+- [Getting Help](#-getting-help)
 
-## Quick Start
+## 🚀 Quick Start
 
 1. **Fork and Clone**
    ```bash
@@ -51,11 +51,17 @@ Thank you for your interest in contributing to Spec2Ship!
    git push origin feature/your-feature
    ```
 
-## Development Setup
+> [!TIP]
+> Use `--verbose` flag when testing to see detailed logs in `.s2s/sessions/{id}/rounds/`.
+
+## 🛠️ Development Setup
 
 ### Prerequisites
 
-- [Claude Code](https://claude.ai/claude-code) CLI installed
+> [!NOTE]
+> Spec2Ship requires Claude Code CLI to run. Make sure you have it installed before proceeding.
+
+- [Claude Code](https://claude.ai) CLI installed
 - Git
 - A test project directory
 
@@ -79,7 +85,7 @@ cd spec2ship
 /plugin list
 ```
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 spec2ship/
@@ -91,7 +97,7 @@ spec2ship/
 ├── agents/                   # AI agents (roundtable, exploration, validation)
 ├── skills/                   # Knowledge bases
 ├── templates/                # File templates
-├── docs/                     # Documentation (for humans)
+├── docs/                     # Documentation
 │   ├── README.md             # Core concepts
 │   └── architecture/         # Architecture docs and ADRs
 └── examples/                 # Sample outputs
@@ -101,19 +107,19 @@ spec2ship/
 
 | File | Purpose |
 |------|---------|
-| `.claude/CLAUDE.md` | Main architecture context |
+| `.claude/CLAUDE.md` | Main development context |
 | `.claude/s2s-development.md` | Development patterns and anti-patterns |
 | `commands/specs.md` | Example of workflow command |
 | `agents/roundtable/facilitator.md` | Core orchestration agent |
 | `docs/architecture/README.md` | Architecture overview |
 
-## Making Changes
+## ✏️ Making Changes
 
 1. Edit files in the repository
 2. Changes take effect immediately (no rebuild needed)
 3. Test in a separate project directory
 
-## Testing
+## 🧪 Testing
 
 ### Common Test Scenarios
 
@@ -136,7 +142,13 @@ cd /tmp && mkdir s2s-test && cd s2s-test
 /s2s:session:validate
 ```
 
-## Debugging
+> [!TIP]
+> **For smoother testing:** Disable auto-compact (`/config` → "Auto-compact" = false) to avoid mid-round interruptions during workflow tests.
+
+> [!WARNING]
+> **Recommended for testing:** Run `claude --dangerously-skip-permissions` to prevent permission prompts that disrupt roundtable execution.
+
+## 🐛 Debugging
 
 ### Enable Verbose Mode
 
@@ -157,14 +169,16 @@ Adds post-round analysis and anomaly detection.
 ### Validate Sessions
 
 ```bash
-/s2s:session:validate --level deep
+/s2s:session:validate
 ```
 
-Checks session consistency with semantic analysis.
+Runs structural and strategy-specific consistency checks.
 
 ### Common Issues
 
-**Plugin Not Updating**
+> [!WARNING]
+> **Plugin Not Updating?** This is the most common issue. Always reinstall after pulling changes:
+
 ```bash
 /plugin marketplace remove spec2ship
 /plugin marketplace add https://github.com/YOUR-USERNAME/spec2ship.git#YOUR-BRANCH
@@ -179,7 +193,7 @@ Checks session consistency with semantic analysis.
 - Check location: `skills/{name}/SKILL.md`
 - Verify frontmatter has `name` and `description`
 
-## Git Workflow
+## 🌿 Git Workflow
 
 ### Branches
 
@@ -207,7 +221,7 @@ git commit -m "docs(roundtable): update architecture diagram"
 6. Include tests or test evidence
 7. Update documentation if needed
 
-## What to Contribute
+## 🤝 What to Contribute
 
 ### Good First Issues
 
@@ -217,11 +231,12 @@ git commit -m "docs(roundtable): update architecture diagram"
 
 ### Feature Contributions
 
-For extension guides, ask Claude: "how to extend s2s" (loads s2s-guide skill)
-
 - New agents
 - New skills
 - New strategies
+
+> [!TIP]
+> For extension guides, ask Claude: `"how to extend s2s"` (loads s2s-guide skill with step-by-step instructions).
 
 ### Core Contributions
 
@@ -229,7 +244,7 @@ For extension guides, ask Claude: "how to extend s2s" (loads s2s-guide skill)
 - Facilitator enhancements
 - Session management
 
-## Guidelines
+## 📋 Guidelines
 
 ### Code Style
 
@@ -242,12 +257,8 @@ For extension guides, ask Claude: "how to extend s2s" (loads s2s-guide skill)
 - Update relevant docs when changing functionality
 - For architecture changes, consider adding an ADR
 
-## Getting Help
+## ❓ Getting Help
 
 - [GitHub Issues](https://github.com/spec2ship/spec2ship/issues)
 - [Core Concepts](docs/)
 - [Architecture](docs/architecture/)
-
----
-
-*See also: [Architecture](docs/architecture/)*

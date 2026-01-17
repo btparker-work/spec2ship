@@ -1,6 +1,9 @@
 # Core Concepts
 
-This page provides a conceptual overview of Spec2Ship. For detailed reference, ask Claude: `"how do roundtables work in s2s"` (loads the `s2s-guide` skill).
+This page provides a conceptual overview of Spec2Ship.
+
+> [!TIP]
+> For detailed reference, ask Claude: `"how do roundtables work in s2s"` (loads the `s2s-guide` skill).
 
 ## Workflow Phases
 
@@ -124,6 +127,3 @@ Spec2Ship produces artifacts in established formats:
 | **Conventional Commits** | Commit messages |
 | **STRIDE** | Threat modeling |
 
----
-
-*For detailed reference on any concept, ask Claude in your Claude Code session.*

@@ -17,10 +17,11 @@ Spec2Ship is a Claude Code plugin that runs entirely locally within the Claude C
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Spec2Ship, please report it by:
+> [!IMPORTANT]
+> If you discover a security vulnerability, please report it responsibly.
 
-1. **Opening a GitHub Issue** for non-sensitive issues
-2. **Contacting the maintainers directly** for sensitive vulnerabilities
+1. **Open a GitHub Issue** for non-sensitive issues
+2. **Contact maintainers directly** for sensitive vulnerabilities
 
 ### What to Include
 
@@ -42,17 +43,19 @@ Since Spec2Ship executes as a Claude Code plugin:
 1. **Review plugin code**: All source code is open and available for inspection
 2. **Trust boundary**: The plugin operates within Claude Code's sandbox
 3. **Local files**: Plugin reads/writes only to `.s2s/` directory (gitignored by default)
-4. **No secrets**: Never store API keys or credentials in `.s2s/` files
+
+> [!WARNING]
+> **Never store API keys or credentials in `.s2s/` files.** Session files may contain project context that could be shared.
 
 ## Scope
 
-Security issues we care about:
+**Security issues we care about:**
 - Prompt injection vulnerabilities in commands or agents
 - Malicious code execution paths
 - Unintended file system access outside project scope
 - Information disclosure through session files
 
-Out of scope:
+**Out of scope:**
 - Vulnerabilities in Claude Code itself (report to Anthropic)
 - Vulnerabilities in the Claude API (report to Anthropic)
 - Social engineering attacks

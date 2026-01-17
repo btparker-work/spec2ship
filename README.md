@@ -7,12 +7,13 @@
 </h3>
 
 <p align="center">
-  A Claude Code plugin for structured spec-driven design, planning, and execution.
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://claude.ai"><img src="https://img.shields.io/badge/requires-Claude%20Code-blueviolet.svg" alt="Requires Claude Code"></a>
 </p>
 
 ---
 
-## What Spec2Ship Is
+## 🎯 What Spec2Ship Is
 
 Spec2Ship is a **Claude Code plugin** that adds structured orchestration for requirements, architecture, and implementation planning.
 
@@ -28,9 +29,12 @@ The core idea: instead of prompting Claude Code directly, you run **roundtable d
 - A prompt library or template pack
 - A code generator (it produces specs and plans; you write the code)
 
+> [!NOTE]
+> Spec2Ship requires [Claude Code](https://claude.ai) to run. It extends Claude Code with structured workflows, not replaces it.
+
 ---
 
-## Why Not Just Prompt Claude Code Directly?
+## ❓ Why Not Just Prompt Claude Code Directly?
 
 When you prompt Claude Code directly for requirements or architecture decisions:
 
@@ -51,7 +55,7 @@ When you prompt Claude Code directly for requirements or architecture decisions:
 
 ---
 
-## How Spec2Ship Compares
+## ⚖️ How Spec2Ship Compares
 
 | Aspect | Spec2Ship | [Claude-Flow](https://github.com/ruvnet/claude-flow) | [Spec-Kit](https://github.com/github/spec-kit) | [OpenSpec](https://github.com/Fission-AI/OpenSpec) |
 |--------|-----------|-------------|----------|----------|
@@ -75,7 +79,7 @@ When you prompt Claude Code directly for requirements or architecture decisions:
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
 # 1. Add the plugin
@@ -95,9 +99,12 @@ After `/s2s:specs` completes, you'll have:
 - `.s2s/sessions/YYYYMMDD-specs-*.yaml`: full discussion transcript
 - `.s2s/requirements.md`: structured requirements with IDs (REQ-001, REQ-002...)
 
+> [!TIP]
+> For your first run, use `/s2s:specs --interactive` to pause after each round and see how the discussion unfolds.
+
 ---
 
-## Roundtable: The Core Primitive
+## 🔄 Roundtable: The Core Primitive
 
 Roundtable is **the fundamental abstraction** of Spec2Ship.
 
@@ -130,11 +137,25 @@ Every major decision flows through a structured discussion:
 **Blind voting**: Participants respond without seeing each other. This prevents anchoring, reduces sycophancy, and surfaces genuine disagreements.
 
 **Role-based expertise**: Each agent anchors to domain principles:
-- **Product Manager** catches feature creep and unclear value
-- **Architect** catches scalability issues and tech debt
-- **QA Lead** catches missing acceptance criteria and edge cases
-- **Security Champion** catches vulnerabilities and compliance gaps
-- **DevOps Engineer** catches operational burden and scaling limits
+
+<details>
+<summary><strong>View all 12 specialized agents</strong></summary>
+
+| Agent | Focus |
+|-------|-------|
+| **Product Manager** | User value, priorities, scope |
+| **Software Architect** | System structure, patterns, scalability |
+| **Technical Lead** | Implementation feasibility, effort |
+| **QA Lead** | Testability, edge cases, acceptance criteria |
+| **Security Champion** | Vulnerabilities, compliance, threat modeling |
+| **DevOps Engineer** | Deployment, monitoring, operational burden |
+| **UX Researcher** | Usability, accessibility, user journeys |
+| **Business Analyst** | Domain rules, use cases, requirements clarity |
+| **Documentation Specialist** | Clarity, completeness, maintainability |
+| **Claude Code Expert** | Platform constraints, best practices |
+| **OSS Community Manager** | Contributor experience, governance |
+
+</details>
 
 **Concrete output**: Not chat transcripts, but structured artifacts:
 
@@ -173,7 +194,7 @@ Strategies are auto-detected from topic keywords or explicitly specified:
 
 ---
 
-## Operational Flow
+## 📋 Operational Flow
 
 Spec2Ship guides you through a real development pipeline:
 
@@ -200,7 +221,7 @@ Each phase can run independently. Missing prerequisites trigger prompts, not fai
 
 ---
 
-## Autonomous vs Interactive Mode
+## 🤖 Autonomous vs Interactive Mode
 
 Spec2Ship supports both modes. This is a **design choice**, not a limitation.
 
@@ -232,11 +253,18 @@ Even in autonomous mode, the system pauses for human input when:
 - **Unresolved conflicts** after maximum rounds
 - **Blocking questions** that prevent progress
 
-This means Spec2Ship knows when to ask for help. It's not a black-box generator.
+> [!IMPORTANT]
+> Spec2Ship knows when to ask for help. It's not a black-box generator.
+
+> [!TIP]
+> **Disable auto-compact for better control.** Run `/config` and set "Auto-compact" to `false`. Auto-compact triggers at ~85% context and may interrupt the facilitator mid-round, compromising context passed to participants. Sessions save all artifacts, so you can resume if needed, but completing each round uninterrupted produces better results.
+
+> [!WARNING]
+> **Avoid permission interrupts.** Start Claude Code with `claude --dangerously-skip-permissions` to prevent permission prompts during roundtable execution. Workflows invoke multiple tools in sequence, and permission dialogs can disrupt the facilitator's flow.
 
 ---
 
-## Supported Standards
+## 📐 Supported Standards
 
 Specifications and designs use established formats:
 
@@ -255,7 +283,7 @@ Why this matters:
 
 ---
 
-## Commands
+## 💻 Commands
 
 ### Workflow
 
@@ -288,7 +316,7 @@ Why this matters:
 
 ---
 
-## Extensibility
+## 🔧 Extensibility
 
 Spec2Ship is designed to be extended:
 
@@ -299,11 +327,12 @@ Spec2Ship is designed to be extended:
 | New output format | Add template to `templates/` |
 | New workflow | Add `commands/{name}.md` |
 
-For extension guides, ask Claude: `"how to extend s2s"`
+> [!TIP]
+> For extension guides, ask Claude: `"how to extend s2s"` (loads the s2s-guide skill with step-by-step instructions).
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 - [Core Concepts](docs/): workflows, roundtables, sessions
 - [Architecture](docs/architecture/): system design and ADRs
@@ -315,18 +344,18 @@ For interactive help:
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
 See [BACKLOG.md](.s2s/BACKLOG.md) for planned work.
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## License
+## 📄 License
 
-MIT:see [LICENSE](LICENSE)
+MIT - see [LICENSE](LICENSE)
