@@ -116,6 +116,11 @@ scope:
 # Captured: {ISO timestamp}
 source: ".s2s/config.yaml"
 
+# Project type for scope awareness
+project:
+  type: "{from config.yaml: type}"  # standalone | workspace | component
+  workspace_path: "{from config.yaml: workspace.path if component, else null}"
+
 verbose: {verbose_flag}
 interactive: {interactive_flag}
 strategy: "{strategy}"
@@ -127,6 +132,10 @@ escalation:
   confidence_below: 0.5
   critical_keywords: ["security", "must-have", "blocking", "legal"]
 participants: [...]
+
+# Workspace scope (only if type is workspace or component)
+# Used by facilitator to validate topic appropriateness
+workspace_scope: null  # See Step 1.3b for population
 ```
 
 **agenda.yaml**: Copy workflow agenda from `references/agenda-{workflow_type}.md`:
@@ -137,7 +146,111 @@ workflow: "{workflow_type}"
 topics: [...]  # Full topic definitions with done_when criteria
 ```
 
-### Step 1.4: Create Session Index File
+### Step 1.3b: Load Workspace Scope (if applicable)
+
+**IF project.type == "workspace"**:
+
+Read `.s2s/workspace.yaml` and update config-snapshot.yaml:
+```yaml
+workspace_scope:
+  decision_principle: "{from workspace.yaml: roundtable_scope.workspace_level.decision_principle}"
+  indicators: ["{from workspace.yaml: roundtable_scope.workspace_level.indicators}"]
+  defer_indicators: ["{from workspace.yaml: roundtable_scope.workspace_level.defer_indicators}"]
+```
+
+**IF project.type == "component"**:
+
+Read parent workspace.yaml at `{workspace_path}/.s2s/workspace.yaml` and update config-snapshot.yaml:
+```yaml
+workspace_scope:
+  decision_principle: "{from parent workspace.yaml: roundtable_scope.component_level.decision_principle}"
+  escalate_indicators: ["{from parent workspace.yaml: roundtable_scope.component_level.escalate_indicators}"]
+  inherits_context_from: "workspace"
+```
+
+### Step 1.3c: Aggregate Context (workspace only)
+
+**IF project.type == "workspace"**:
+
+Read workspace.yaml `components[]` and for each component:
+1. Read `{component.path}/.s2s/CONTEXT.md` (first 500 chars)
+2. Read `{component.path}/.s2s/BACKLOG.md` (extract key concerns)
+
+Append to context-snapshot.yaml:
+```yaml
+component_contexts:
+  - id: "{component.id}"
+    name: "{component.name}"
+    summary: "{first 500 chars of CONTEXT.md}"
+    key_concerns:
+      - "{from BACKLOG.md: high priority items}"
+
+cross_cutting_decisions:
+  - id: "{from workspace.yaml: cross_cutting[].id}"
+    decision: "{ADR reference}"
+    affects: ["{component ids}"]
+```
+
+**IF project.type == "component"**:
+
+Read parent workspace context at `{workspace_path}/.s2s/CONTEXT.md`:
+```yaml
+workspace_context:
+  name: "{workspace name}"
+  summary: "{first 500 chars of workspace CONTEXT.md}"
+  relevant_decisions:
+    - "{ADRs that affect this component}"
+```
+
+### Step 1.4: Topic Validation
+
+**IF project.type == "workspace"**:
+
+Check if topic appears component-specific:
+1. Compare topic against `workspace_scope.defer_indicators`
+2. If any indicator matches:
+   ```
+   ⚠️ SCOPE NOTICE
+   ─────────────────────────────────────────
+   This topic appears component-specific:
+   Topic: "{topic}"
+   Matched indicator: "{matched indicator}"
+
+   Workspace-level discussions focus on:
+   {workspace_scope.decision_principle}
+
+   Options:
+   1. Continue here (treat as cross-component pattern)
+   2. Run from component folder instead
+   ```
+   Use AskUserQuestion to let user decide.
+
+**IF project.type == "component"**:
+
+Check if topic should escalate to workspace:
+1. Compare topic against `workspace_scope.escalate_indicators`
+2. If any indicator matches:
+   ```
+   ⚠️ SCOPE NOTICE
+   ─────────────────────────────────────────
+   This topic may affect other components:
+   Topic: "{topic}"
+   Matched indicator: "{matched indicator}"
+
+   Component discussions focus on:
+   {workspace_scope.decision_principle}
+
+   Options:
+   1. Continue here (internal to this component)
+   2. Run from workspace folder instead
+   ```
+   Use AskUserQuestion to let user decide.
+
+**IF project.type == "standalone"**:
+
+No topic validation needed. All topics are appropriate.
+
+### Step 1.5: Create Session Index File
 
 Write `.s2s/sessions/{session-id}.yaml`:
 ```yaml

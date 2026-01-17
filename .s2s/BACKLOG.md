@@ -1,6 +1,6 @@
 # Spec2Ship Development Backlog
 
-**Updated**: 2026-01-17T14:00:00Z
+**Updated**: 2026-01-17T15:00:00Z
 **Format**: Single markdown file for LLM consumption
 
 ---
@@ -58,7 +58,7 @@
 | Phase | ID | Description | Status |
 |-------|-----|-------------|--------|
 | 1 | WORK-001 | Core structure (workspace.yaml, init) | completed |
-| 2 | WORK-002 | Roundtable scope (facilitator awareness) | planned |
+| 2 | WORK-002 | Roundtable scope (facilitator awareness) | completed |
 | 3 | WORK-003 | Decision propagation (workspace→components) | planned |
 | 4 | WORK-004 | Dependency graph (auto-detect, affected) | planned |
 
@@ -86,23 +86,28 @@
 
 ### WORK-002: Roundtable Scope Awareness
 
-**Status**: planned | **Created**: 2026-01-17 | **Depends on**: WORK-001
+**Status**: completed | **Created**: 2026-01-17 | **Completed**: 2026-01-17 | **Depends on**: WORK-001
 
 **Context**: Facilitator must understand workspace vs component scope and guide discussions appropriately.
 
 **Specification**: `.s2s/specs/WORK-001-workspace-specification.md` Section 6
 
 **Tasks**:
-1. [ ] Facilitator reads project type from config-snapshot.yaml
-2. [ ] For workspace-level: aggregate context from all components
-3. [ ] For component-level: include workspace context as background
-4. [ ] Validate topic appropriateness for scope
-5. [ ] Suggest correct scope if topic mismatch detected
+1. ✅ Facilitator reads project type from config-snapshot.yaml
+2. ✅ For workspace-level: aggregate context from all components
+3. ✅ For component-level: include workspace context as background
+4. ✅ Validate topic appropriateness for scope
+5. ✅ Suggest correct scope if topic mismatch detected
+
+**Implementation**:
+- Updated `roundtable-execution/SKILL.md` with Steps 1.3b, 1.3c, 1.4 for workspace scope
+- Updated `facilitator.md` with project_scope, workspace_scope, component_contexts inputs
+- Updated specs.md, design.md, brainstorm.md to pass workspace context to facilitator
 
 **Acceptance Criteria**:
-- [ ] Facilitator aggregates workspace + component contexts when appropriate
-- [ ] Topics outside scope trigger suggestion to run elsewhere
-- [ ] Workspace roundtable considers all components
+- [x] Facilitator aggregates workspace + component contexts when appropriate
+- [x] Topics outside scope trigger suggestion to run elsewhere
+- [x] Workspace roundtable considers all components
 
 ---
 
@@ -593,6 +598,7 @@ _Unstructured ideas and observations for future consideration._
 
 | ID | Description | Completed | Notes |
 |----|-------------|-----------|-------|
+| WORK-002 | Roundtable Scope Awareness | 2026-01-17 | Facilitator workspace/component context, topic validation |
 | WORK-001 | Workspace Support - Core Structure (Phase 1) | 2026-01-17 | workspace.yaml, init scenarios A-F, component linking |
 | TEMPL-002 | Workspace Template Cleanup | 2026-01-17 | Aligned with WORK-001 spec |
 | PLAN-002 | Refactor plan.md to use template copy | 2026-01-17 | Follows TEMPL-001 decision, merged template sections |
