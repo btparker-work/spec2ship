@@ -81,3 +81,13 @@ roundtable:
 naming:
   timestamp_format: "YYYYMMDD-HHMMSS"
   slug_max_length: 50
+
+# Execution engine
+execution:
+  engine: "claude-code"           # claude-code | copilot-cli
+  copilot_cli:
+    enabled: false
+    model: "gpt-5.3-codex"
+    command: "gh copilot"
+    allow_all_tools: true
+    no_ask_user: true

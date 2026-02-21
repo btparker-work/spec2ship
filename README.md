@@ -3,34 +3,38 @@
 </p>
 
 <h3 align="center">
-  Spec-driven development framework that orchestrates multi-agent workflows on top of Claude Code
+  Spec-driven development framework that orchestrates multi-agent workflows on top of Claude Code or GitHub Copilot CLI
 </h3>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://claude.ai"><img src="https://img.shields.io/badge/requires-Claude%20Code-blueviolet.svg" alt="Requires Claude Code"></a>
+  <a href="https://claude.ai"><img src="https://img.shields.io/badge/works%20with-Claude%20Code-blueviolet.svg" alt="Works with Claude Code"></a>
+  <a href="https://cli.github.com/"><img src="https://img.shields.io/badge/works%20with-GitHub%20Copilot%20CLI-black.svg" alt="Works with GitHub Copilot CLI"></a>
 </p>
 
 ---
 
 ## 🎯 What Spec2Ship Is
 
-Spec2Ship is a **Claude Code plugin** that adds structured orchestration for requirements, architecture, and implementation planning.
+Spec2Ship is a spec-driven framework that adds structured orchestration for requirements, architecture, and implementation planning.
+
+This fork supports two execution modes:
+- **Claude Code plugin mode**: run `/s2s:*` commands inside Claude Code
+- **Copilot CLI mode**: run the standalone scripts in `scripts/` using `gh copilot`
 
 The core idea: instead of prompting Claude Code directly, you run **roundtable discussions** where multiple agents, each representing a real role, debate and refine decisions collaboratively.
 
 **It is:**
 - A spec-driven framework where specifications are treated as executable intent
-- An orchestration layer built on Claude Code primitives
+- An orchestration layer built on agentic LLM primitives (Claude Code or Copilot CLI)
 - A deliberation system with configurable facilitation strategies
 
 **It is not:**
-- A standalone CLI or generic tool (requires Claude Code)
+- A single-purpose code generator (it produces specs and plans; you write the code, or use the optional Copilot mode to scaffold)
 - A prompt library or template pack
-- A code generator (it produces specs and plans; you write the code)
 
 > [!NOTE]
-> Spec2Ship requires [Claude Code](https://claude.ai) to run. It extends Claude Code with structured workflows, not replaces it.
+> Upstream Spec2Ship is a Claude Code plugin. This fork also includes an optional Copilot CLI runner for generating the same style of artifacts without installing Claude Code.
 
 ---
 
@@ -81,6 +85,10 @@ When you prompt Claude Code directly for requirements or architecture decisions:
 
 ## 🚀 Quick Start
 
+Choose one of the following:
+
+### Option A: Claude Code (Plugin)
+
 ```bash
 # 1. Add the plugin
 /plugin marketplace add spec2ship/spec2ship
@@ -101,6 +109,54 @@ After `/s2s:specs` completes, you'll have:
 
 > [!TIP]
 > For your first run, use `/s2s:specs --interactive` to pause after each round and see how the discussion unfolds.
+
+### Option B: GitHub Copilot CLI (Standalone)
+
+This repository includes a standalone runner for users who want Spec2Ship-style artifacts using `gh copilot`.
+
+## 🧪 Copilot CLI Mode (Standalone Fork Usage)
+
+This repository now includes a standalone runner for users who want Spec2Ship-style artifacts without installing Claude Code.
+
+Prerequisites:
+- `gh` CLI installed and authenticated
+- Copilot CLI available via `gh copilot`
+- PowerShell (Windows) or Bash (Linux)
+
+Run from repository root:
+
+```powershell
+# Initialize Copilot mode and generate requirements/design/plan
+powershell -ExecutionPolicy Bypass -File .\scripts\s2s-copilot.ps1 -Mode all -Topic "Operations dashboard for sales and incidents" -AppName OpsDashboard
+
+# Optional: generate docs only
+powershell -ExecutionPolicy Bypass -File .\scripts\s2s-copilot.ps1 -Mode specs
+powershell -ExecutionPolicy Bypass -File .\scripts\s2s-copilot.ps1 -Mode design
+powershell -ExecutionPolicy Bypass -File .\scripts\s2s-copilot.ps1 -Mode plan
+```
+
+Linux / container runner:
+
+```bash
+chmod +x ./scripts/s2s-copilot.sh
+
+# Initialize and run full flow
+./scripts/s2s-copilot.sh \
+  --mode all \
+  --topic "Operations dashboard for sales and incidents" \
+  --app-name OpsDashboard
+
+# Optional: docs only
+./scripts/s2s-copilot.sh --mode specs
+./scripts/s2s-copilot.sh --mode design
+./scripts/s2s-copilot.sh --mode plan
+```
+
+Notes:
+- Existing `/s2s:*` Claude Code workflows are unchanged.
+- If `.NET` SDK is not installed, code generation automatically falls back from ASP.NET to a Node dashboard template.
+- For container agents, Linux runner is the recommended path; PowerShell runner is mainly for local Windows bootstrap.
+- Alpine images may require additional runtime setup for Copilot CLI dependencies; Ubuntu/Debian images are typically easier to harden first.
 
 ---
 

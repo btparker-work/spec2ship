@@ -61,3 +61,6 @@ temp/
 
 # Local archive (development notes, test suites, etc.)
 .archive/
+
+# Personal notes and conversation docs (not for distribution)
+mydocs/
